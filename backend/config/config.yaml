@@ -1,0 +1,13 @@
+app:
+  cors_allow_origins: https://crewapparat.test
+  db_filename: crewapparat
+  frontend_url: "https://crewapparat.test"
+  log_format: json
+  log_level: debug
+  version: dev
+sentry:
+  dsn: ""
+  environment: development
+  replay_error_sample_rate: 0.1
+  replay_session_sample_rate: 0.1
+  trace_sample_rate: 0.1
