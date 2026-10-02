@@ -10,6 +10,6 @@
 package deps
 
 import (
+	// AWS SES v2 für die Magic-Link-Einladungen (CONCEPT.md 4.1).
 	_ "github.com/aws/aws-sdk-go-v2/service/sesv2"
-	_ "github.com/google/uuid"
 )

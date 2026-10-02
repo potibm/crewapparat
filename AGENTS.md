@@ -11,10 +11,11 @@ Compact cheat-sheet for OpenCode. Omit anything an agent could guess from filena
 - **Infra**: `docker-compose.yaml` (Traefik, Dex, OpenObserve, OTel collector, Redis, MinIO)
 - **Root `go.work`**: points only to `./backend`. Run Go commands from `backend/`.
 
-**Status: no business logic yet.** There is exactly one frontend app (`@admin`, mounted at the
-root path) with zero `<Resource>`s, and the backend exposes only `GET /api/config`. The data model
-and endpoints are described in `CONCEPT.md` but not implemented. Do not assume models, repositories
-or routes exist — check first.
+**Status: data model done, no business logic yet.** The persistence layer implements the
+five models from `CONCEPT.md` (Organizer, EventYear, Team, Participation, Invite) with
+repository interfaces and tests, but no HTTP endpoints exist for them: the backend still
+serves only `GET /api/config` and the frontend has zero `<Resource>`s. Do not assume
+handlers or routes exist — check first.
 
 Path aliases (vite + tsconfig): `@core`, `@admin`.
 
@@ -102,9 +103,16 @@ Three pieces must stay in sync or styles silently vanish (the generated CSS drop
 The extension points are deliberately the only places that need touching:
 
 - **Models/migrations**: `allModels` in `backend/internal/app/store/gorm/store.go` — it feeds both
-  `AutoMigrate` and `PurgeAll`. Add GORM models embedding `GormModel` + `AuditModel` there.
-- **Repository interfaces**: `backend/internal/app/repository/` (currently empty — create it).
-- **Domain types**: `backend/internal/app/domain/`.
+  `AutoMigrate` and `PurgeAll`. Add GORM models embedding `TimestampModel` + `AuditModel` there.
+  The base model has **no** `ID`: UUID primary keys are declared per model and filled by the
+  `BeforeCreate` hook in `store/gorm/uuid.go` (SQLite has no `uuid_generate_v4()`).
+- **Repository interfaces**: `backend/internal/app/repository/`. Interfaces are split per
+  concern where one aggregate grew too large (`InviteRepository`, `InviteTokenRepository`,
+  `InviteWorkflowRepository`, `InviteTeamRepository`) — the `Store` returns one handle per
+  interface over the same underlying repo.
+- **Domain types**: `backend/internal/app/domain/` — no GORM tags, only `json:` tags.
+- **Field parity is enforced**: `store/gorm/mapper_parity_test.go` fails when a domain field is
+  missing from a mapper. Never silence it; fix the mapper.
 - **API endpoints**: implement `RegisterAdminRoutes` in `hub.Config` (see
   `backend/internal/app/hub/hub.go`); routes registered on the returned group inherit the OIDC
   middleware. `GET /api/config` is public by design.
