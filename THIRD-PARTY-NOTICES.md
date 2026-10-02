@@ -686,6 +686,6 @@ This project is licensed under MIT. Below are the licenses of the dependencies u
 
 ## Assets
 
-| Package                                                               | License                                                               |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Logo Icon "Cell Tower" by [Phosphor Icons](https://phosphoricons.com) | [MIT](https://github.com/phosphor-icons/homepage/blob/master/LICENSE) |
+| Package                                                                         | License                                                               |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Logo Icon "Identification Badge" by [Phosphor Icons](https://phosphoricons.com) | [MIT](https://github.com/phosphor-icons/homepage/blob/master/LICENSE) |

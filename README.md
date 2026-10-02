@@ -1,5 +1,7 @@
 # Crewapparat
 
+![crewapparat logo](doc/crewapparat.svg)
+
 > **Part of the Apparat Suite** ⚙️
 > This tool is part of a decoupled set of single-purpose event management tools built for demoparties.
 > [➔ Read more about the full Apparat suite here](https://github.com/potibm/apparat)
