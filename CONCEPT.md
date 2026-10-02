@@ -103,7 +103,7 @@ type Invite struct {
 ### 4.1 The Invite Workflow (New Organizers)
 
 1. **Creation:** A Main Organizer enters an email address in React Admin. The backend creates an `Invite` (`status: sent`) and sends a magic link via AWS SES v2.
-2. **Data Entry (Public Frontend):** The invitee clicks the link, lands on a public `CustomRoute` (no OIDC required), and fills in their basic details, desired teams, and mandatory check of the _Organizer Code of Conduct_. Submit changes status to `pending_review`.
+2. **Data Entry (Public Frontend):** The invitee clicks the link, lands on a public `CustomRoute` (no OIDC required), and fills in their basic details and the mandatory check of the _Organizer Code of Conduct_. Submit changes status to `pending_review`. Team assignment happens at approval, not here.
 3. **Approval:** A Main Organizer reviews the submitted data in React Admin's "Pending Invites" view.
 4. **Provisioning:**
    - Main Organizer manually creates the Slack and Rauthy accounts.

@@ -11,12 +11,12 @@ import (
 	"github.com/potibm/crewapparat/internal/app/domain"
 )
 
-// TestMapperRoundtrip mappt einen vollständig befüllten Domain-Satz nach db
-// und zurück und vergleicht Feld für Feld.
+// TestMapperRoundtrip maps a fully populated domain record to db and back,
+// comparing field by field.
 //
-// Das ist die Absicherung gegen fehlende Felder im Mapper: einst wurden OidcSub
-// und Languages stillschweigend verworfen, und das fiel erst auf, wenn die
-// Daten schon in der Datenbank standen.
+// This guards against fields missing from a mapper: OidcSub and Languages were
+// silently dropped at one point, and that only surfaced once the data was
+// already in the database.
 func TestMapperRoundtrip(t *testing.T) {
 	t.Run("Organizer", func(t *testing.T) {
 		sub := "rauthy-sub-123"
@@ -82,7 +82,7 @@ func TestMapperRoundtrip(t *testing.T) {
 			ID:            uuid.New(),
 			Email:         "new@example.com",
 			Status:        domain.InviteStatusPendingReview,
-			TokenHash:     "e3b0c44298fc1c149afbf4c8996fb924",
+			Token:         "8f14e45fceea167a5a36dedd4bea2543",
 			ExpiresAt:     expires,
 			ProvidedName:  "Provided Name",
 			ProvidedPhone: "+49 999",
@@ -91,7 +91,6 @@ func TestMapperRoundtrip(t *testing.T) {
 			CoCAcceptedAt: &cocAt,
 			InvitedByID:   uuid.New(),
 			ReviewedByID:  &reviewer,
-			Teams:         []domain.Team{{ID: uuid.New(), Name: "Network"}},
 		}
 
 		out := toDomainInvite(fromDomainInvite(in))
@@ -99,7 +98,7 @@ func TestMapperRoundtrip(t *testing.T) {
 		require.Equal(t, in.ID, out.ID)
 		require.Equal(t, in.Email, out.Email)
 		require.Equal(t, in.Status, out.Status)
-		require.Equal(t, in.TokenHash, out.TokenHash)
+		require.Equal(t, in.Token, out.Token)
 		require.True(t, in.ExpiresAt.Equal(out.ExpiresAt))
 		require.Equal(t, in.ProvidedName, out.ProvidedName)
 		require.Equal(t, in.ProvidedPhone, out.ProvidedPhone)
@@ -110,7 +109,6 @@ func TestMapperRoundtrip(t *testing.T) {
 		require.Equal(t, in.InvitedByID, out.InvitedByID)
 		require.NotNil(t, out.ReviewedByID)
 		require.Equal(t, reviewer, *out.ReviewedByID)
-		require.Equal(t, in.Teams, out.Teams)
 	})
 
 	t.Run("Team", func(t *testing.T) {
@@ -124,8 +122,8 @@ func TestMapperRoundtrip(t *testing.T) {
 	})
 }
 
-// infrastructureFields kommen aus TimestampModel und AuditModel. Sie stehen
-// absichtlich nur im db-Modell und nicht im Domain-Typ.
+// infrastructureFields come from TimestampModel and AuditModel. They exist
+// only in the db model, deliberately not in the domain type.
 var infrastructureFields = map[string]bool{
 	"CreatedAt":  true,
 	"UpdatedAt":  true,
@@ -135,10 +133,10 @@ var infrastructureFields = map[string]bool{
 	"DeletedBy":  true,
 }
 
-// TestFeldNamenParitaet vergleicht die Feldnamen von Domain- und db-Struct.
-// Jedes Domain-Feld muss eine Entsprechung im db-Modell haben; umgekehrt darf
-// das db-Modell nur die Infrastruktur-Felder mehr haben. So schleicht sich kein
-// Tippfehler in der Spaltenzuordnung ein und kein Feld bleibt unberücksichtigt.
+// TestFeldNamenParitaet compares the field names of domain and db struct.
+// Every domain field needs a counterpart in the db model; conversely the db
+// model may only add the infrastructure fields. That way no typo slips into the
+// column mapping and no field stays unaccounted for.
 func TestFeldNamenParitaet(t *testing.T) {
 	cases := []struct {
 		name      string
@@ -159,7 +157,7 @@ func TestFeldNamenParitaet(t *testing.T) {
 
 			for _, field := range domainFields {
 				require.Containsf(t, dbFields, field,
-					"Domain-Feld %q fehlt im db-Modell %s", field, tc.dbTyp)
+					"domain field %q is missing in db model %s", field, tc.dbTyp)
 			}
 
 			for _, field := range dbFields {
@@ -168,14 +166,14 @@ func TestFeldNamenParitaet(t *testing.T) {
 				}
 
 				require.Containsf(t, domainFields, field,
-					"db-Feld %q fehlt im Domain-Typ %s", field, tc.domainTyp)
+					"db field %q is missing in domain type %s", field, tc.domainTyp)
 			}
 		})
 	}
 }
 
-// fieldNames löst eingebettete Structs (TimestampModel, AuditModel) auf, damit
-// nur die fachlichen Felder verglichen werden.
+// fieldNames resolves embedded structs (TimestampModel, AuditModel) so that
+// only domain fields are compared.
 func fieldNames(typ reflect.Type) []string {
 	names := make([]string, 0, typ.NumField())
 

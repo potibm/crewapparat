@@ -8,8 +8,8 @@ import (
 	"github.com/potibm/crewapparat/internal/app/domain"
 )
 
-// ListParams und ListFilters bilden das React-Admin-Protokoll ab: die
-// Endpunkte lesen `?_start&_end&_sort&_order` und `?q=`.
+// ListParams and ListFilters mirror the React Admin protocol: endpoints read
+// `?_start&_end&_sort&_order` and `?q=`.
 type ListParams struct {
 	Offset int
 	Limit  int
@@ -34,9 +34,9 @@ type OrganizerRepository interface {
 		filters OrganizerListFilters,
 	) ([]domain.Organizer, int64, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.Organizer, error)
-	// GetByOidcSub findet den Organizer über den OIDC-`sub`. Liefert
-	// gorm.ErrRecordNotFound, solange das Konto noch nicht verknüpft ist.
+	// GetByOidcSub finds the organizer by OIDC `sub`. Returns
+	// gorm.ErrRecordNotFound while the account is not linked yet.
 	GetByOidcSub(ctx context.Context, oidcSub string) (*domain.Organizer, error)
-	// GetByEmail findet einen Organizer über die E-Mail-Adresse.
+	// GetByEmail finds an organizer by email address.
 	GetByEmail(ctx context.Context, email string) (*domain.Organizer, error)
 }

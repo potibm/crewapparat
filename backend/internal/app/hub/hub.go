@@ -30,8 +30,8 @@ type Config struct {
 	StaticFiles embed.FS
 	Cfg         config.Config
 
-	// RegisterAdminRoutes hängt fachliche Endpoints an die geschützte
-	// /api/admin-Gruppe. nil heißt: nur die Basisinfrastruktur, keine Fachlogik.
+	// RegisterAdminRoutes attaches domain endpoints to the protected
+	// /api/admin group. nil means: platform infrastructure only, no domain logic.
 	RegisterAdminRoutes func(*gin.RouterGroup)
 }
 
@@ -69,7 +69,7 @@ func (s *Server) Run(ctx context.Context) error {
 
 	serverErr := make(chan error, 1)
 
-	// Start server in Goroutine
+	// Start the server in a goroutine
 	go func() {
 		s.logger.Info("Starting server...", "port", s.port)
 
@@ -125,8 +125,8 @@ func (s *Server) setupRouter() (*gin.Engine, error) {
 	api := r.Group("/api")
 	api.GET("/config", s.handleGetPublicConfig)
 
-	// Admin-Gruppe: geschützt durch die Auth-Middleware, sobald `auth.type: oidc`
-	// gesetzt ist. fachliche Routen hängen sich über RegisterAdminRoutes ein.
+	// Admin group: protected by the auth middleware as soon as `auth.type: oidc`
+	// is set. Domain routes hook in via RegisterAdminRoutes.
 	admin := r.Group("/api/admin")
 
 	if s.cfg.Auth != nil && s.cfg.Auth.Type == "oidc" {

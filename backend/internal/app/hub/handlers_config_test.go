@@ -31,7 +31,7 @@ func TestMapToPublicConfig(t *testing.T) {
 	assert.Equal(t, "Hello World", public.EnvironmentMessage)
 	assert.Equal(t, "https://secret@sentry.io/123", public.Sentry.DSN)
 
-	// Secrets dürfen die öffentliche Config nie verlassen.
+	// Secrets must never leave through the public config.
 	payload, err := json.Marshal(public)
 	assert.NoError(t, err)
 	assert.NotContains(t, string(payload), "supersecret")

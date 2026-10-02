@@ -2,9 +2,9 @@ package domain
 
 import "github.com/google/uuid"
 
-// Organizer ist der Stammdatensatz eines Crew-Mitglieds und gilt über alle
-// Jahre hinweg. Jährliche Angaben wie T-Shirt-Größe oder Schichtzeiten stehen
-// in der Participation des jeweiligen Jahres.
+// Organizer is the master record of a crew member and spans all years.
+// Per-year details such as t-shirt size or shift times live in the
+// Participation of that year.
 type Organizer struct {
 	ID              uuid.UUID `json:"id"`
 	OidcSub         *string   `json:"oidc_sub,omitempty"` // wird beim ersten Login gegen Rauthy gesetzt
@@ -18,7 +18,7 @@ type Organizer struct {
 	DemozooID       *uint     `json:"demozoo_id,omitempty"`
 	Pronouns        string    `json:"pronouns,omitempty"`
 
-	// Languages wird als JSON-Array in SQLite gespeichert. API: ["de", "en"]
+	// Languages is stored as a JSON array in SQLite. API: ["de", "en"]
 	Languages []string `json:"languages"`
 
 	Participations []Participation `json:"participations,omitempty"`

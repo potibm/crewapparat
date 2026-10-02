@@ -23,8 +23,8 @@ type EventYearRepository interface {
 	) ([]domain.EventYear, int64, error)
 	GetByYear(ctx context.Context, year string) (*domain.EventYear, error)
 	GetActive(ctx context.Context) (*domain.EventYear, error)
-	// ActivateYear setzt genau ein Jahr aktiv und deaktiviert alle anderen.
-	// SQLite unterstützt keine partiellen Unique-Indizes, deshalb wird die
-	// Eindeutigkeit hier in einer Transaktion sichergestellt.
+	// ActivateYear activates exactly one year and deactivates the others.
+	// SQLite has no partial unique indexes, so uniqueness is guaranteed here
+	// inside a transaction.
 	ActivateYear(ctx context.Context, year string) error
 }

@@ -15,12 +15,11 @@ type Store struct {
 	db *gorm.DB
 }
 
-// allModels wird per AutoMigrate in die Datenbank übertragen und von PurgeAll
-// wieder entfernt. Hier gehören die GORM-Modelle der Fachlogik rein.
+// allModels is migrated into the database by AutoMigrate and removed again by
+// PurgeAll. The GORM models of the domain logic belong here.
 //
-// joinTables sind die many2many-Verknüpfungen. GORM legt sie beim
-// AutoMigrate automatisch an, sie stehen hier aber explizit, damit PurgeAll sie
-// zuverlässig wieder entfernt.
+// joinTables are the many2many join tables. GORM creates them during
+// AutoMigrate, but they are listed explicitly so PurgeAll removes them reliably.
 var allModels = []interface{}{
 	&dbEventYear{},
 	&dbTeam{},
@@ -31,12 +30,11 @@ var allModels = []interface{}{
 
 var joinTables = []interface{}{
 	&participationTeams{},
-	&inviteTeams{},
 }
 
-// participationTeams bildet participation_teams ab. Die Spalten heißen
-// bewusst nicht participation_id/team_id aus GORM-Generierung, sondern werden
-// hier fest vergeben, weil die Repositorys die Namen direkt ansprechen.
+// participationTeams maps participation_teams. The column names are assigned
+// here rather than left to GORM's generator because the repositories address
+// them directly.
 type participationTeams struct {
 	ParticipationID uuid.UUID `gorm:"primaryKey;column:participation_id;type:text"`
 	TeamID          uuid.UUID `gorm:"primaryKey;column:team_id;type:text"`
@@ -44,15 +42,8 @@ type participationTeams struct {
 
 func (participationTeams) TableName() string { return "participation_teams" }
 
-type inviteTeams struct {
-	InviteID uuid.UUID `gorm:"primaryKey;column:invite_id;type:text"`
-	TeamID   uuid.UUID `gorm:"primaryKey;column:team_id;type:text"`
-}
-
-func (inviteTeams) TableName() string { return "invite_teams" }
-
-// dropOrder ist die umgekehrte Abhängigkeitsreihenfolge: erst die Tabellen, die
-// auf andere verweisen, damit DropTable nicht an Fremdschlüsseln scheitert.
+// dropOrder is the reverse dependency order: tables referencing others go first
+// so DropTable does not fail on foreign keys.
 func dropOrder() []interface{} {
 	all := append(append([]interface{}{}, allModels...), joinTables...)
 

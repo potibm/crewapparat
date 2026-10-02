@@ -15,7 +15,7 @@ type dbParticipation struct {
 	EventYearID string    `gorm:"uniqueIndex:idx_participation_organizer_year;column:event_year_id"`
 	Status      string    `gorm:"column:status"`
 
-	// Merch & öffentliche Info
+	// Merch and public info
 	TShirtSize           string `gorm:"column:t_shirt_size"`
 	AdditionalPaidShirt  bool   `gorm:"default:false;column:additional_paid_shirt"`
 	PublicWebsiteConsent bool   `gorm:"default:false;column:public_website_consent"`

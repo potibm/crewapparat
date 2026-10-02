@@ -49,7 +49,7 @@ func (r *organizerRepository) Update(ctx context.Context, organizer *domain.Orga
 	}
 
 	updated := fromDomainOrganizer(organizer)
-	// Zeitstempel und Audit-Spalten nicht überschreiben.
+	// Do not overwrite timestamp and audit columns.
 	updated.CreatedAt = existing.CreatedAt
 	updated.DeletedAt = existing.DeletedAt
 
@@ -157,8 +157,8 @@ func (r *organizerRepository) applyFilters(
 ) *gorm.DB {
 	if filters.Query != nil {
 		like := "%" + strings.TrimSpace(*filters.Query) + "%"
-		// Klammern sind Pflicht: ohne sie bindet das spätere AND stärker als das
-		// OR und der Filter liefert stillschweigend falsche Treffer.
+		// The parentheses are required: without them a later AND binds
+		// tighter than the OR and the filter silently returns wrong rows.
 		query = query.Where("(handle LIKE ? OR realname LIKE ? OR email LIKE ?)", like, like, like)
 	}
 
@@ -169,7 +169,7 @@ func (r *organizerRepository) applyFilters(
 	return query
 }
 
-// IsNotFound meldet, ob ein Fehler auf einen fehlenden Datensatz zurückgeht.
+// IsNotFound reports whether an error means the record does not exist.
 func IsNotFound(err error) bool {
 	return errors.Is(err, gorm.ErrRecordNotFound)
 }

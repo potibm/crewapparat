@@ -4,8 +4,8 @@ import (
 	"github.com/potibm/crewapparat/internal/app/domain"
 )
 
-// dbEventYear hat bewusst kein ID-Feld: der Primärschlüssel ist die Jahrzahl
-// als String.
+// dbEventYear deliberately has no ID field: its primary key is the year
+// as a string.
 type dbEventYear struct {
 	TimestampModel
 	AuditModel

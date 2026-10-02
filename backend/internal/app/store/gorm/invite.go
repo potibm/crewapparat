@@ -16,11 +16,11 @@ type dbInvite struct {
 	Email  string    `gorm:"uniqueIndex;column:email"`
 	Status string    `gorm:"index;column:status"`
 
-	// Nur der SHA-256-Hash des Magic-Link-Tokens, nie der Klartext.
-	TokenHash string    `gorm:"uniqueIndex;column:token_hash"`
+	// Magic-link credential, validated when the link is opened.
+	Token     string    `gorm:"uniqueIndex;column:token"`
 	ExpiresAt time.Time `gorm:"column:expires_at"`
 
-	// Vom Eingeladenen im öffentlichen Formular angegeben.
+	// Submitted through the public form by the invitee.
 	ProvidedName  string     `gorm:"column:provided_name"`
 	ProvidedPhone string     `gorm:"column:provided_phone"`
 	Notes         string     `gorm:"column:notes"`
@@ -29,8 +29,6 @@ type dbInvite struct {
 
 	InvitedByID  uuid.UUID  `gorm:"index;column:invited_by_id"`
 	ReviewedByID *uuid.UUID `gorm:"column:reviewed_by_id"`
-
-	Teams []dbTeam `gorm:"many2many:invite_teams;joinForeignKey:invite_id;joinReferences:team_id"`
 }
 
 func (dbInvite) TableName() string { return "invites" }
@@ -40,11 +38,11 @@ func (i dbInvite) PrimaryKey() uuid.UUID { return i.ID }
 func (i *dbInvite) SetID(id uuid.UUID) { i.ID = id }
 
 func fromDomainInvite(inv *domain.Invite) *dbInvite {
-	dbObj := &dbInvite{
+	return &dbInvite{
 		ID:            inv.ID,
 		Email:         inv.Email,
 		Status:        string(inv.Status),
-		TokenHash:     inv.TokenHash,
+		Token:         inv.Token,
 		ExpiresAt:     inv.ExpiresAt,
 		ProvidedName:  inv.ProvidedName,
 		ProvidedPhone: inv.ProvidedPhone,
@@ -54,20 +52,14 @@ func fromDomainInvite(inv *domain.Invite) *dbInvite {
 		InvitedByID:   inv.InvitedByID,
 		ReviewedByID:  inv.ReviewedByID,
 	}
-
-	for idx := range inv.Teams {
-		dbObj.Teams = append(dbObj.Teams, *fromDomainTeam(&inv.Teams[idx]))
-	}
-
-	return dbObj
 }
 
 func toDomainInvite(db *dbInvite) *domain.Invite {
-	domainObj := &domain.Invite{
+	return &domain.Invite{
 		ID:            db.ID,
 		Email:         db.Email,
 		Status:        domain.InviteStatus(db.Status),
-		TokenHash:     db.TokenHash,
+		Token:         db.Token,
 		ExpiresAt:     db.ExpiresAt,
 		ProvidedName:  db.ProvidedName,
 		ProvidedPhone: db.ProvidedPhone,
@@ -77,10 +69,4 @@ func toDomainInvite(db *dbInvite) *domain.Invite {
 		InvitedByID:   db.InvitedByID,
 		ReviewedByID:  db.ReviewedByID,
 	}
-
-	for idx := range db.Teams {
-		domainObj.Teams = append(domainObj.Teams, *toDomainTeam(&db.Teams[idx]))
-	}
-
-	return domainObj
 }

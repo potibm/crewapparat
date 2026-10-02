@@ -10,23 +10,23 @@ const (
 	ParticipationStatusDeclined  ParticipationStatus = "declined"
 )
 
-// Participation bündelt alle jahresbezogenen Angaben eines Organizers.
+// Participation bundles everything an organizer stated for one event year.
 type Participation struct {
 	ID          uuid.UUID           `json:"id"`
 	OrganizerID uuid.UUID           `json:"organizer_id"`
 	EventYearID string              `json:"event_year_id"`
 	Status      ParticipationStatus `json:"status"`
 
-	// Merch & öffentliche Info
+	// Merch and public info
 	TShirtSize           string `json:"t_shirt_size,omitempty"`
 	AdditionalPaidShirt  bool   `json:"additional_paid_shirt"`
 	PublicWebsiteConsent bool   `json:"public_website_consent"`
 
-	// Schichtplanung: Indizes von Halbstundenblöcken.
+	// Shift planning: indices of half-hour blocks.
 	ShiftAvailableTimes   []int    `json:"shift_available_times"`
 	ShiftUnavailableTimes []int    `json:"shift_unavailable_times"`
 	ShiftPreferredPartner []string `json:"shift_preferred_partner"` // UUIDs der Wunschpartner
 
-	// Teams, denen der Organizer in diesem Jahr beigetreten ist.
+	// Teams the organizer joined in this year.
 	Teams []Team `json:"teams,omitempty"`
 }

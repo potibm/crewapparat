@@ -52,7 +52,7 @@ func TestOrganizerRepository_CreateVergibtUUID(t *testing.T) {
 	o.ID = uuid.Nil
 
 	require.NoError(t, repo.Create(ctx, o))
-	require.NotEqual(t, uuid.Nil, o.ID, "Create muss eine UUID vergeben")
+	require.NotEqual(t, uuid.Nil, o.ID, "create must assign a UUID")
 }
 
 func TestOrganizerRepository_RoundtripErhaeltAlleFelder(t *testing.T) {
@@ -95,7 +95,7 @@ func TestOrganizerRepository_GetByOidcSub(t *testing.T) {
 	require.NoError(t, repo.Create(ctx, o))
 
 	found, err := repo.GetByOidcSub(ctx, sub)
-	require.NoError(t, err, "Spaltenname muss oidc_sub sein, nicht oidcSub")
+	require.NoError(t, err, "column name must be oidc_sub, not oidcSub")
 	require.Equal(t, o.ID, found.ID)
 }
 
@@ -104,7 +104,7 @@ func TestOrganizerRepository_GetByOidcSubNichtGefunden(t *testing.T) {
 	repo := store.NewOrganizerRepository()
 
 	_, err := repo.GetByOidcSub(context.Background(), "unbekannt")
-	require.True(t, IsNotFound(err), "erwartet ErrRecordNotFound, bekam %v", err)
+	require.True(t, IsNotFound(err), "expected ErrRecordNotFound, got %v", err)
 }
 
 func TestOrganizerRepository_GetByEmail(t *testing.T) {
@@ -146,7 +146,7 @@ func TestOrganizerRepository_Update(t *testing.T) {
 	require.NoError(t, store.db.Raw(
 		"SELECT created_at FROM organizers WHERE id = ?", o.ID,
 	).Scan(&createdAtAfter).Error)
-	require.Equal(t, createdAt, createdAtAfter, "Update darf created_at nicht überschreiben")
+	require.Equal(t, createdAt, createdAtAfter, "update must not overwrite created_at")
 }
 
 func TestOrganizerRepository_UpdateUnbekannt(t *testing.T) {
@@ -157,7 +157,7 @@ func TestOrganizerRepository_UpdateUnbekannt(t *testing.T) {
 	o.ID = uuid.New()
 
 	err := repo.Update(context.Background(), o)
-	require.True(t, IsNotFound(err), "Update darf keinen Datensatz erzeugen, bekam %v", err)
+	require.True(t, IsNotFound(err), "update must not create a record, got %v", err)
 }
 
 func TestOrganizerRepository_Delete(t *testing.T) {
@@ -179,7 +179,7 @@ func TestOrganizerRepository_DeleteUnbekannt(t *testing.T) {
 	repo := store.NewOrganizerRepository()
 
 	err := repo.Delete(context.Background(), uuid.New())
-	require.True(t, IsNotFound(err), "erwartet ErrRecordNotFound, bekam %v", err)
+	require.True(t, IsNotFound(err), "expected ErrRecordNotFound, got %v", err)
 }
 
 func TestOrganizerRepository_ListMitFilterUndPaginierung(t *testing.T) {
@@ -198,7 +198,7 @@ func TestOrganizerRepository_ListMitFilterUndPaginierung(t *testing.T) {
 		repository.OrganizerListParams{Offset: 0, Limit: 2, Sort: "handle", Order: "ASC"},
 		repository.OrganizerListFilters{})
 	require.NoError(t, err)
-	require.Equal(t, int64(3), total, "total muss alle Treffer zählen, nicht die Seite")
+	require.Equal(t, int64(3), total, "total must count all matches, not the page")
 	require.Len(t, list, 2)
 
 	list, _, err = repo.List(ctx,
@@ -209,9 +209,9 @@ func TestOrganizerRepository_ListMitFilterUndPaginierung(t *testing.T) {
 	require.Equal(t, "alpha", list[0].Handle)
 }
 
-// TestOrganizerRepository_FilterKlammernRegression fällt nur mit zwei
-// Filtern gleichzeitig: ohne Klammern um das OR bindet das zweite AND stärker
-// und der Filter liefert stillschweigend falsche Treffer.
+// TestOrganizerRepository_FilterKlammernRegression only fails with two filters
+// at once: without parentheses around the OR the second AND binds tighter and
+// the filter silently returns wrong rows.
 func TestOrganizerRepository_FilterKlammernRegression(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewOrganizerRepository()
@@ -237,7 +237,7 @@ func TestOrganizerRepository_FilterKlammernRegression(t *testing.T) {
 			ID:    &hit.ID,
 		})
 	require.NoError(t, err)
-	require.Len(t, list, 1, "erwartet genau den Treffer mit Handle=needle")
+	require.Len(t, list, 1, "expected exactly the row with Handle=needle")
 	require.Equal(t, hit.ID, list[0].ID)
 }
 
@@ -261,7 +261,7 @@ func TestOrganizerRepository_SortWhitelistLehntInjektionAb(t *testing.T) {
 	repo := store.NewOrganizerRepository()
 	ctx := context.Background()
 
-	// Ungeprüft landet der Wert im ORDER BY, wo SQLite Unterabfragen erlaubt.
+	// Unchecked, the value lands in ORDER BY, where SQLite accepts subqueries.
 	for _, evil := range []string{
 		"handle; DROP TABLE organizers--",
 		"(SELECT password FROM organizers)",
@@ -270,10 +270,10 @@ func TestOrganizerRepository_SortWhitelistLehntInjektionAb(t *testing.T) {
 		_, _, err := repo.List(ctx,
 			repository.OrganizerListParams{Limit: 10, Sort: evil, Order: "ASC"},
 			repository.OrganizerListFilters{})
-		require.Errorf(t, err, "Spalte %q muss abgelehnt werden", evil)
+		require.Errorf(t, err, "column %q must be rejected", evil)
 	}
 
-	require.True(t, store.db.Migrator().HasTable("organizers"), "Tabelle muss unversehrt sein")
+	require.True(t, store.db.Migrator().HasTable("organizers"), "table must be intact")
 }
 
 func TestOrganizerRepository_UniqueEmail(t *testing.T) {
@@ -285,7 +285,7 @@ func TestOrganizerRepository_UniqueEmail(t *testing.T) {
 	require.NoError(t, repo.Create(ctx, first))
 
 	second := newOrganizerFixture(t, func(o *domain.Organizer) { o.Email = first.Email })
-	require.Error(t, repo.Create(ctx, second), "doppelte E-Mail muss scheitern")
+	require.Error(t, repo.Create(ctx, second), "duplicate email must fail")
 }
 
 func TestOrganizerRepository_UniqueOidcSub(t *testing.T) {
@@ -298,5 +298,5 @@ func TestOrganizerRepository_UniqueOidcSub(t *testing.T) {
 	require.NoError(t, repo.Create(ctx, first))
 
 	second := newOrganizerFixture(t, func(o *domain.Organizer) { o.OidcSub = &sub })
-	require.Error(t, repo.Create(ctx, second), "doppelter oidc_sub muss scheitern")
+	require.Error(t, repo.Create(ctx, second), "duplicate oidc_sub must fail")
 }

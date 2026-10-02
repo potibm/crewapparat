@@ -187,6 +187,8 @@ To run several apparat projects side by side, connect to the shared Traefik via 
 ## Style notes
 
 - Go: `slog` only (depguard blocks `logrus`). Use snake_case for slog keys.
+- Go: write comments in English, including slog messages and error strings. German is
+  reserved for user-facing UI copy.
 - Go: avoid `math/rand` (use `math/rand/v2`).
 - Go: config secrets go into `config.local.yaml`, never into `config.yaml`.
 - TS: `no-console` and `no-alert` are errors. `_` prefix ignores unused vars.

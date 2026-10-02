@@ -9,10 +9,9 @@ import (
 	"github.com/potibm/crewapparat/internal/app/repository"
 )
 
-// sortColumns erlaubt ausschließlich die hier gelisteten Spalten als Sortierung.
-// Der Wert stammt aus der Query (`?_sort=`) und landet sonst ungeprüft im
-// ORDER BY - dort akzeptiert SQLite Unterabfragen, was aus einem
-// Sortierparameter ein Datenleck machen würde.
+// applySort allows only the columns listed in allowed. The value comes from the
+// query string (`?_sort=`) and would otherwise reach ORDER BY unchecked, where
+// SQLite accepts subqueries - turning a sort parameter into a data leak.
 func applySort(
 	query *gorm.DB,
 	allowed map[string]string,
@@ -38,8 +37,8 @@ func applySort(
 
 const defaultSortColumn = "id"
 
-// applyPagination setzt Offset und Limit. Limit 0 bedeutet "kein Limit",
-// damit zum Beispiel kleine Referenztabellen komplett geladen werden können.
+// applyPagination sets offset and limit. A limit of 0 means "no limit", so small
+// reference tables can be loaded in full.
 func applyPagination(query *gorm.DB, params repository.ListParams) *gorm.DB {
 	if params.Limit > 0 {
 		query = query.Limit(params.Limit)

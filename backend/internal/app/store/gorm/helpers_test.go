@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// newTestStore erzeugt einen Store mit frischer In-Memory-Datenbank.
-// Jeder Test bekommt eine eigene, damit Tests sich nicht gegenseitig
-// beeinflussen - der gemeinsame Cache-Store würde Daten lecken.
+// newTestStore opens a store on a fresh in-memory database. Every test gets
+// its own so they cannot influence each other - a shared cache store would leak
+// data between them.
 func newTestStore(t *testing.T) *Store {
 	t.Helper()
 

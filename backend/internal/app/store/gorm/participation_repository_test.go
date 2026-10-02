@@ -73,7 +73,7 @@ func TestParticipationRepository_EindeutigProOrganizerUndJahr(t *testing.T) {
 		Status:      domain.ParticipationStatusConfirmed,
 	}
 	require.Error(t, repo.Create(ctx, duplicate),
-		"zwei Participationen für dasselbe Organizer-Jahr müssen scheitern")
+		"two participations for the same organizer-year must fail")
 
 	otherYear := &domain.Participation{
 		OrganizerID: organizer.ID,
@@ -123,7 +123,7 @@ func TestParticipationRepository_SetTeams(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, loaded.Teams, 2)
 
-	// Ersetzen statt anhängen: die alten Join-Zeilen müssen verschwinden.
+	// Replace rather than append: the old join rows must disappear.
 	require.NoError(t, repo.SetTeams(ctx, p.ID, []domain.Team{*network}))
 
 	loaded, err = repo.GetByID(ctx, p.ID)
@@ -133,11 +133,11 @@ func TestParticipationRepository_SetTeams(t *testing.T) {
 
 	var joinRows int64
 	require.NoError(t, store.db.Table("participation_teams").Count(&joinRows).Error)
-	require.Equal(t, int64(1), joinRows, "Join-Tabelle muss exakt eine Zeile haben")
+	require.Equal(t, int64(1), joinRows, "join table must have exactly one row")
 }
 
-// TestParticipationRepository_SetTeamsLeavesNoOrphans deckt den Fall ab, dass ein
-// Team soft-gelöscht wurde: die Join-Zeile bleibt dann als Waise zurück.
+// TestParticipationRepository_SetTeamsLeavesNoOrphans covers the case of a
+// soft-deleted team, where the join row survives as an orphan.
 func TestParticipationRepository_SetTeamsLeavesNoOrphans(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewParticipationRepository()
@@ -156,7 +156,7 @@ func TestParticipationRepository_SetTeamsLeavesNoOrphans(t *testing.T) {
 
 	loaded, err := repo.GetByID(ctx, p.ID)
 	require.NoError(t, err)
-	require.Empty(t, loaded.Teams, "soft-gelöschtes Team darf nicht geladen werden")
+	require.Empty(t, loaded.Teams, "soft-deleted team must not be loaded")
 
 	var orphans int64
 	require.NoError(t, store.db.Table("participation_teams").Count(&orphans).Error)
@@ -197,7 +197,7 @@ func TestParticipationRepository_SortWhitelist(t *testing.T) {
 	_, _, err := repo.List(context.Background(),
 		repository.ParticipationListParams{Limit: 10, Sort: "organizer_id"},
 		repository.ParticipationListFilters{})
-	require.Error(t, err, "organizer_id ist nicht in der Whitelist")
+	require.Error(t, err, "organizer_id is not in the whitelist")
 }
 
 func TestParticipationRepository_DeleteRaeumtJoinTabelle(t *testing.T) {
@@ -218,5 +218,5 @@ func TestParticipationRepository_DeleteRaeumtJoinTabelle(t *testing.T) {
 
 	var orphans int64
 	require.NoError(t, store.db.Table("participation_teams").Count(&orphans).Error)
-	require.Equal(t, int64(0), orphans, "Delete muss die Join-Zeilen mitnehmen")
+	require.Equal(t, int64(0), orphans, "delete must clean up the join rows")
 }

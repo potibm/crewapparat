@@ -16,12 +16,11 @@ func newInviteFixture(t *testing.T, store *Store, mutate func(i *domain.Invite))
 	t.Helper()
 
 	organizer := newOrganizerForParticipation(t, store)
-	raw, hash := domain.NewInviteToken()
 
 	invite := &domain.Invite{
 		Email:       fmtUnique("invitee") + "@example.com",
 		Status:      domain.InviteStatusSent,
-		TokenHash:   hash,
+		Token:       domain.NewInviteToken(),
 		ExpiresAt:   time.Now().UTC().Add(14 * 24 * time.Hour),
 		InvitedByID: organizer.ID,
 	}
@@ -30,48 +29,45 @@ func newInviteFixture(t *testing.T, store *Store, mutate func(i *domain.Invite))
 		mutate(invite)
 	}
 
-	_ = raw
-
 	return invite
 }
 
-func TestInviteRepository_StelltKeinenKlartextTokenSpeichern(t *testing.T) {
+// TestInviteRepository_GetByToken covers the magic link: the token is sent as
+// part of the URL and resolved again when the link is opened.
+func TestInviteRepository_GetByToken(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewInviteRepository()
-	tokenRepo := store.NewInviteTokenRepository()
 	ctx := context.Background()
 
-	raw, hash := domain.NewInviteToken()
-	require.Equal(t, hash, domain.HashInviteToken(raw))
+	token := domain.NewInviteToken()
+	require.Len(t, token, 36, "expected a UUIDv4")
 
 	invite := &domain.Invite{
 		Email:       fmtUnique("invitee") + "@example.com",
 		Status:      domain.InviteStatusSent,
-		TokenHash:   hash,
+		Token:       token,
 		ExpiresAt:   time.Now().UTC().Add(time.Hour),
 		InvitedByID: uuid.New(),
 	}
 	require.NoError(t, repo.Create(ctx, invite))
 
-	// Der Klartext darf nirgends in der Zeile stehen.
 	var stored string
 	require.NoError(t, store.db.Raw(
-		"SELECT token_hash FROM invites WHERE id = ?", invite.ID,
+		"SELECT token FROM invites WHERE id = ?", invite.ID,
 	).Scan(&stored).Error)
-	require.Equal(t, hash, stored)
-	require.NotContains(t, stored, raw)
-	require.Len(t, stored, domain.InviteTokenHashLength)
+	require.Equal(t, token, stored)
 
-	found, err := tokenRepo.GetByTokenHash(ctx, hash)
+	found, err := repo.GetByToken(ctx, token)
 	require.NoError(t, err)
 	require.Equal(t, invite.ID, found.ID)
+	require.Equal(t, token, found.Token)
 }
 
-func TestInviteRepository_GetByTokenHashFalscherHash(t *testing.T) {
+func TestInviteRepository_GetByTokenUnbekannt(t *testing.T) {
 	store := newTestStore(t)
-	tokenRepo := store.NewInviteTokenRepository()
+	repo := store.NewInviteRepository()
 
-	_, err := tokenRepo.GetByTokenHash(context.Background(), domain.HashInviteToken("falsch"))
+	_, err := repo.GetByToken(context.Background(), domain.NewInviteToken())
 	require.True(t, IsNotFound(err))
 }
 
@@ -129,51 +125,18 @@ func TestInviteRepository_EmailExists(t *testing.T) {
 
 	exists, err := workflowRepo.EmailExists(ctx, organizer.Email)
 	require.NoError(t, err)
-	require.True(t, exists, "E-mail aus dem Crew-Verzeichnis muss belegt gelten")
+	require.True(t, exists, "email from the crew directory must count as taken")
 
 	invite := newInviteFixture(t, store, nil)
 	require.NoError(t, repo.Create(ctx, invite))
 
 	exists, err = workflowRepo.EmailExists(ctx, invite.Email)
 	require.NoError(t, err)
-	require.True(t, exists, "E-mail aus einer offenen Einladung muss belegt gelten")
+	require.True(t, exists, "email from an open invitation must count as taken")
 
 	exists, err = workflowRepo.EmailExists(ctx, "niemand@example.com")
 	require.NoError(t, err)
 	require.False(t, exists)
-}
-
-func TestInviteRepository_SetTeams(t *testing.T) {
-	store := newTestStore(t)
-	repo := store.NewInviteRepository()
-	inviteTeams := store.NewInviteTeamRepository()
-	teams := store.NewTeamRepository()
-	ctx := context.Background()
-
-	invite := newInviteFixture(t, store, nil)
-	require.NoError(t, repo.Create(ctx, invite))
-
-	infodesk := &domain.Team{Name: "Infodesk"}
-	network := &domain.Team{Name: "Network"}
-
-	require.NoError(t, teams.Create(ctx, infodesk))
-	require.NoError(t, teams.Create(ctx, network))
-
-	require.NoError(t, inviteTeams.SetTeams(ctx, invite.ID, []domain.Team{*infodesk, *network}))
-
-	loaded, err := repo.GetByID(ctx, invite.ID)
-	require.NoError(t, err)
-	require.Len(t, loaded.Teams, 2)
-
-	require.NoError(t, inviteTeams.SetTeams(ctx, invite.ID, []domain.Team{*infodesk}))
-
-	loaded, err = repo.GetByID(ctx, invite.ID)
-	require.NoError(t, err)
-	require.Len(t, loaded.Teams, 1)
-
-	var orphans int64
-	require.NoError(t, store.db.Table("invite_teams").Count(&orphans).Error)
-	require.Equal(t, int64(1), orphans)
 }
 
 func TestInviteRepository_PurgeExpired(t *testing.T) {
@@ -238,7 +201,7 @@ func TestInviteRepository_UniqueEmail(t *testing.T) {
 	require.NoError(t, repo.Create(ctx, first))
 
 	second := newInviteFixture(t, store, func(i *domain.Invite) { i.Email = first.Email })
-	require.Error(t, repo.Create(ctx, second), "doppelte E-Mail muss scheitern")
+	require.Error(t, repo.Create(ctx, second), "duplicate email must fail")
 }
 
 func TestInviteRepository_SortWhitelist(t *testing.T) {
@@ -248,5 +211,5 @@ func TestInviteRepository_SortWhitelist(t *testing.T) {
 	_, _, err := repo.List(context.Background(),
 		repository.InviteListParams{Limit: 10, Sort: "token_hash"},
 		repository.InviteListFilters{})
-	require.Error(t, err, "token_hash ist nicht in der Whitelist")
+	require.Error(t, err, "token_hash is not in the whitelist")
 }

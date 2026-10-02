@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,23 +15,21 @@ const (
 	InviteStatusRejected      InviteStatus = "rejected"
 )
 
-// InviteTokenHashLength ist die Hex-Länge von SHA-256.
-const InviteTokenHashLength = 64
-
-// Invite ist eine Einladung an eine Person, die es im aktiven Crew-Verzeichnis
-// noch nicht gibt.
+// Invite is an invitation for someone who is not in the crew directory yet.
+//
+// Team assignment does not happen here: the reviewing organizer picks the teams
+// on approval, and returning crew selects theirs in the annual check-in.
 type Invite struct {
 	ID     uuid.UUID    `json:"id"`
 	Email  string       `json:"email"`
 	Status InviteStatus `json:"status"`
 
-	// TokenHash ist der SHA-256-Hash des Magic-Link-Tokens. Der Klartext wird
-	// ausschließlich per E-Mail verschickt und nie gespeichert, sonst ergeben
-	// Datenbank-Dumps oder Backups gültige Einladungslinks.
-	TokenHash string    `json:"-"`
+	// Token is the magic-link credential. It travels in the invitation URL and
+	// is validated when the link is opened.
+	Token     string    `json:"-"`
 	ExpiresAt time.Time `json:"expires_at"`
 
-	// Vom Eingeladenen im öffentlichen Formular angegeben.
+	// Submitted through the public form by the invitee.
 	ProvidedName  string     `json:"provided_name,omitempty"`
 	ProvidedPhone string     `json:"provided_phone,omitempty"`
 	Notes         string     `json:"notes,omitempty"`
@@ -42,28 +38,14 @@ type Invite struct {
 
 	InvitedByID  uuid.UUID  `json:"invited_by_id"`
 	ReviewedByID *uuid.UUID `json:"reviewed_by_id,omitempty"`
-
-	// Vom Eingeladenen gewünschte Teams. Beim Approve werden sie in die
-	// Participation des aktiven Jahres übernommen.
-	Teams []Team `json:"teams,omitempty"`
 }
 
-// HashInviteToken bildet den Magic-Link-Token auf seine Speicherform ab.
-func HashInviteToken(raw string) string {
-	sum := sha256.Sum256([]byte(raw))
-
-	return hex.EncodeToString(sum[:])
+// NewInviteToken returns a fresh magic-link token.
+func NewInviteToken() string {
+	return uuid.NewString()
 }
 
-// NewInviteToken erzeugt einen frischen Token und den Hash, der gespeichert
-// wird. Nur `raw` gehört in die E-Mail, `hash` in die Datenbank.
-func NewInviteToken() (raw, hash string) {
-	raw = uuid.NewString()
-
-	return raw, HashInviteToken(raw)
-}
-
-// IsExpired meldet, ob der Einladungslink abgelaufen ist.
+// IsExpired reports whether the invitation link has expired.
 func (i Invite) IsExpired(now time.Time) bool {
 	return !i.ExpiresAt.IsZero() && i.ExpiresAt.Before(now)
 }

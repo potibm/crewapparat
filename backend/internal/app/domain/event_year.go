@@ -1,9 +1,9 @@
 package domain
 
-// EventYear ist ein Editionsjahr, z. B. "2026". Genau ein Jahr ist aktiv; die
-// Eindeutigkeit wird in der Anwendung sichergestellt (siehe
-// EventYearRepository.ActivateYear), weil SQLite keine partiellen
-// Unique-Indizes unterstützt.
+// EventYear is one edition year, e.g. "2026". Exactly one year is active;
+// uniqueness is enforced in the application (see
+// EventYearRepository.ActivateYear) because SQLite has no partial unique
+// indexes.
 type EventYear struct {
 	Year     string `json:"year"`
 	IsActive bool   `json:"is_active"`

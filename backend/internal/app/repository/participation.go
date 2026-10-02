@@ -33,8 +33,8 @@ type ParticipationRepository interface {
 		organizerID uuid.UUID,
 		eventYearID string,
 	) (*domain.Participation, error)
-	// SetTeams ersetzt die Team-Zuordnung einer Participation. Die Join-Zeilen
-	// werden dabei explizit gelöscht, weil ein Soft-Delete der beteiligten
-	// Teams sonst verwaiste Zeilen in der Join-Tabelle hinterlässt.
+	// SetTeams replaces the team assignment of a participation. Join rows are
+	// deleted explicitly, because a soft delete of the involved teams would
+	// otherwise leave orphaned rows behind.
 	SetTeams(ctx context.Context, participationID uuid.UUID, teams []domain.Team) error
 }

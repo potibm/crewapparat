@@ -7,22 +7,22 @@ import (
 	"gorm.io/gorm"
 )
 
-// joinBatchSize ist die Chunk-Größe für die many2many-Join-Tabellen.
+// joinBatchSize is the chunk size for the many2many join tables.
 const joinBatchSize = 100
 
-// idGenerator wird von db-Modellen mit UUID-Primärschlüssel implementiert.
+// idGenerator is implemented by db models with a UUID primary key.
 type idGenerator interface {
 	PrimaryKey() uuid.UUID
 	SetID(id uuid.UUID)
 }
 
-// RegisterUUIDCallbacks installiert den BeforeCreate-Callback, der fehlende
-// UUIDs vergibt.
+// RegisterUUIDCallbacks installs the BeforeCreate callback that assigns missing
+// UUIDs.
 //
-// Das ersetzt ein `DEFAULT uuid_generate_v4()` in der Spaltendefinition:
-// diese Funktion existiert nur in Postgres, SQLite kennt sie nicht und
-// bricht die Migration mit einem Syntaxfehler ab. Stattdessen wird die ID
-// beim Anlegen einer Zeile in Go gesetzt, was zudem Datenbank-unabhängig bleibt.
+// This replaces a `DEFAULT uuid_generate_v4()` in the column definition: that
+// function only exists in Postgres, SQLite does not know it and aborts the
+// migration with a syntax error. Assigning the ID in Go instead keeps it
+// database independent.
 func RegisterUUIDCallbacks(db *gorm.DB) error {
 	err := db.Callback().Create().Before("gorm:create").Register("crewapparat:uuid", assignUUID)
 	if err != nil {

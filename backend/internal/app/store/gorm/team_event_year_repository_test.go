@@ -35,7 +35,7 @@ func TestTeamRepository_UniqueName(t *testing.T) {
 
 	require.NoError(t, repo.Create(ctx, &domain.Team{Name: "Infodesk"}))
 	require.Error(t, repo.Create(ctx, &domain.Team{Name: "Infodesk"}),
-		"doppelter Teamname muss scheitern")
+		"duplicate team name must fail")
 }
 
 func TestTeamRepository_UpdateUndDelete(t *testing.T) {
@@ -69,7 +69,7 @@ func TestEventYearRepository_AnlegenUndAktivieren(t *testing.T) {
 	}
 
 	active, err := repo.GetActive(ctx)
-	require.True(t, IsNotFound(err), "vor ActivateYear darf kein Jahr aktiv sein")
+	require.True(t, IsNotFound(err), "no year may be active before ActivateYear")
 	require.Nil(t, active)
 
 	require.NoError(t, repo.ActivateYear(ctx, "2026"))
@@ -79,8 +79,8 @@ func TestEventYearRepository_AnlegenUndAktivieren(t *testing.T) {
 	require.Equal(t, "2026", active.Year)
 }
 
-// TestEventYearRepository_NurEinAktivesJahr sichert die Eindeutigkeit ab, weil
-// SQLite keine partiellen Unique-Indizes unterstützt.
+// TestEventYearRepository_NurEinAktivesJahr guarantees uniqueness, because
+// SQLite has no partial unique indexes.
 func TestEventYearRepository_NurEinAktivesJahr(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewEventYearRepository()
@@ -107,7 +107,7 @@ func TestEventYearRepository_NurEinAktivesJahr(t *testing.T) {
 		}
 	}
 
-	require.Equal(t, 1, activeCount, "genau ein Jahr muss aktiv sein")
+	require.Equal(t, 1, activeCount, "exactly one year must be active")
 }
 
 func TestEventYearRepository_ActivateYearUnbekannt(t *testing.T) {
@@ -115,7 +115,7 @@ func TestEventYearRepository_ActivateYearUnbekannt(t *testing.T) {
 	repo := store.NewEventYearRepository()
 
 	err := repo.ActivateYear(context.Background(), "2099")
-	require.True(t, IsNotFound(err), "unbekanntes Jahr darf nicht aktiviert werden")
+	require.True(t, IsNotFound(err), "unknown year must not be activatable")
 }
 
 func TestEventYearRepository_Delete(t *testing.T) {

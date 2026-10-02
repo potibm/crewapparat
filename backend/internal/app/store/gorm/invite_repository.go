@@ -29,36 +29,26 @@ func (s *Store) NewInviteRepository() repository.InviteRepository {
 	return NewInviteRepository(s.db)
 }
 
-func (s *Store) NewInviteTokenRepository() repository.InviteTokenRepository {
-	return NewInviteTokenRepository(s.db)
+func NewInviteRepository(db *gorm.DB) repository.InviteRepository {
+	return &inviteRepository{db: db}
 }
 
 func (s *Store) NewInviteWorkflowRepository() repository.InviteWorkflowRepository {
 	return NewInviteWorkflowRepository(s.db)
 }
 
-func (s *Store) NewInviteTeamRepository() repository.InviteTeamRepository {
-	return NewInviteTeamRepository(s.db)
+func NewInviteWorkflowRepository(db *gorm.DB) repository.InviteWorkflowRepository {
+	return &inviteRepository{db: db}
 }
 
 func (r *inviteRepository) Create(ctx context.Context, invite *domain.Invite) error {
-	teams := invite.Teams
-	invite.Teams = nil
-
 	dbObj := fromDomainInvite(invite)
 
-	if err := r.db.WithContext(ctx).Omit("Teams").Create(dbObj).Error; err != nil {
+	if err := r.db.WithContext(ctx).Create(dbObj).Error; err != nil {
 		return fmt.Errorf("failed to create invite: %w", err)
 	}
 
 	invite.ID = dbObj.ID
-	invite.Teams = teams
-
-	if len(teams) > 0 {
-		if err := r.replaceTeams(ctx, dbObj.ID, teams); err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
@@ -69,23 +59,12 @@ func (r *inviteRepository) Update(ctx context.Context, invite *domain.Invite) er
 		return fmt.Errorf("failed to load invite %s: %w", invite.ID, err)
 	}
 
-	teams := invite.Teams
-
 	updated := fromDomainInvite(invite)
-	updated.Teams = nil
 	updated.CreatedAt = existing.CreatedAt
 	updated.DeletedAt = existing.DeletedAt
 
-	if err := r.db.WithContext(ctx).Omit("Teams").Save(updated).Error; err != nil {
+	if err := r.db.WithContext(ctx).Save(updated).Error; err != nil {
 		return fmt.Errorf("failed to update invite %s: %w", invite.ID, err)
-	}
-
-	invite.Teams = teams
-
-	if len(teams) > 0 {
-		if err := r.replaceTeams(ctx, invite.ID, teams); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -99,10 +78,6 @@ func (r *inviteRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("delete invite %s: %w", id, gorm.ErrRecordNotFound)
-	}
-
-	if err := r.clearTeams(ctx, id); err != nil {
-		return err
 	}
 
 	return nil
@@ -122,6 +97,8 @@ func (r *inviteRepository) List(
 
 	if filters.Query != nil {
 		like := "%" + strings.TrimSpace(*filters.Query) + "%"
+		// The parentheses are required: without them a second filter added via
+		// .Where() binds tighter than the OR and silently returns wrong rows.
 		query = query.Where("(email LIKE ? OR provided_name LIKE ?)", like, like)
 	}
 
@@ -146,7 +123,7 @@ func (r *inviteRepository) List(
 		return nil, 0, err
 	}
 
-	if err := applyPagination(sorted, params).Preload("Teams").Find(&dbRows).Error; err != nil {
+	if err := applyPagination(sorted, params).Find(&dbRows).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to list invites: %w", err)
 	}
 
@@ -161,25 +138,7 @@ func (r *inviteRepository) List(
 func (r *inviteRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Invite, error) {
 	var dbRow dbInvite
 
-	err := r.db.WithContext(ctx).Preload("Teams").First(&dbRow, "id = ?", id).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return toDomainInvite(&dbRow), nil
-}
-
-func (r *inviteRepository) GetByTokenHash(
-	ctx context.Context,
-	tokenHash string,
-) (*domain.Invite, error) {
-	var dbRow dbInvite
-
-	err := r.db.WithContext(ctx).
-		Preload("Teams").
-		Where("token_hash = ?", tokenHash).
-		First(&dbRow).Error
-	if err != nil {
+	if err := r.db.WithContext(ctx).First(&dbRow, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 
@@ -189,19 +148,25 @@ func (r *inviteRepository) GetByTokenHash(
 func (r *inviteRepository) GetByEmail(ctx context.Context, email string) (*domain.Invite, error) {
 	var dbRow dbInvite
 
-	err := r.db.WithContext(ctx).
-		Preload("Teams").
-		Where("email = ?", email).
-		First(&dbRow).Error
-	if err != nil {
+	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&dbRow).Error; err != nil {
 		return nil, err
 	}
 
 	return toDomainInvite(&dbRow), nil
 }
 
-// EmailExists prüft, ob die Adresse schon belegt ist - entweder im
-// Crew-Verzeichnis oder in einer offenen Einladung.
+func (r *inviteRepository) GetByToken(ctx context.Context, token string) (*domain.Invite, error) {
+	var dbRow dbInvite
+
+	if err := r.db.WithContext(ctx).Where("token = ?", token).First(&dbRow).Error; err != nil {
+		return nil, err
+	}
+
+	return toDomainInvite(&dbRow), nil
+}
+
+// EmailExists reports whether the address is already taken, either in the crew
+// directory or in an open invitation.
 func (r *inviteRepository) EmailExists(ctx context.Context, email string) (bool, error) {
 	var count int64
 
@@ -285,19 +250,8 @@ func (r *inviteRepository) Review(
 	return nil
 }
 
-func (r *inviteRepository) SetTeams(
-	ctx context.Context,
-	inviteID uuid.UUID,
-	teams []domain.Team,
-) error {
-	var existing dbInvite
-	if err := r.db.WithContext(ctx).First(&existing, "id = ?", inviteID).Error; err != nil {
-		return fmt.Errorf("failed to load invite %s: %w", inviteID, err)
-	}
-
-	return r.replaceTeams(ctx, inviteID, teams)
-}
-
+// PurgeExpired removes invitations that expired without ever being submitted.
+// Submitted ones are kept for the audit trail.
 func (r *inviteRepository) PurgeExpired(ctx context.Context, before time.Time) (int64, error) {
 	result := r.db.WithContext(ctx).
 		Where("expires_at < ? AND status = ?", before, string(domain.InviteStatusSent)).
@@ -308,67 +262,3 @@ func (r *inviteRepository) PurgeExpired(ctx context.Context, before time.Time) (
 
 	return result.RowsAffected, nil
 }
-
-func NewInviteRepository(db *gorm.DB) repository.InviteRepository {
-	return &inviteRepository{db: db}
-}
-
-func NewInviteTokenRepository(db *gorm.DB) repository.InviteTokenRepository {
-	return &inviteRepository{db: db}
-}
-
-func NewInviteWorkflowRepository(db *gorm.DB) repository.InviteWorkflowRepository {
-	return &inviteRepository{db: db}
-}
-
-func NewInviteTeamRepository(db *gorm.DB) repository.InviteTeamRepository {
-	return &inviteRepository{db: db}
-}
-
-func (r *inviteRepository) replaceTeams(
-	ctx context.Context,
-	inviteID uuid.UUID,
-	teams []domain.Team,
-) error {
-	rows := make([]inviteTeams, 0, len(teams))
-	for i := range teams {
-		rows = append(rows, inviteTeams{
-			InviteID: inviteID,
-			TeamID:   teams[i].ID,
-		})
-	}
-
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Exec(
-			"DELETE FROM invite_teams WHERE invite_id = ?",
-			inviteID,
-		).Error; err != nil {
-			return fmt.Errorf("failed to clear invite teams: %w", err)
-		}
-
-		if len(rows) == 0 {
-			return nil
-		}
-
-		if err := tx.CreateInBatches(&rows, joinBatchSize).Error; err != nil {
-			return fmt.Errorf("failed to insert invite teams: %w", err)
-		}
-
-		return nil
-	})
-}
-
-func (r *inviteRepository) clearTeams(ctx context.Context, inviteID uuid.UUID) error {
-	err := r.db.WithContext(ctx).Exec(
-		"DELETE FROM invite_teams WHERE invite_id = ?",
-		inviteID,
-	).Error
-	if err != nil {
-		return fmt.Errorf("failed to clear invite teams: %w", err)
-	}
-
-	return nil
-}
-
-// PurgeExpired entfernt Einladungen, die abgelaufen sind und noch nicht
-// eingereicht wurden. Eingereichte bleiben zur Nachvollziehbarkeit erhalten.

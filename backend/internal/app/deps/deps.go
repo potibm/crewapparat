@@ -1,15 +1,15 @@
-// Package deps hält Abhängigkeiten fest, die das Grundgerüst vorlädt, aber
-// noch kein Produktivcode benutzt.
+// Package deps pins dependencies that the platform pre-fetches but no
+// product code uses yet.
 //
-// Grund: das Projekt muss auch ohne Netzwerk baubar sein (Zugfahrt, CI-Cache
-// ohne Warm-up). `go mod tidy` berücksichtigt alle Build-Tags, trägt diese
-// Imports aber nur, solange die Datei existiert. Sobald die Fachlogik die
-// Pakete direkt importiert, kann dieses Paket hier gelöscht werden.
+// Reason: the project has to build without network access (train ride, cold CI
+// cache). `go mod tidy` considers all build tags, so it keeps these imports
+// for as long as this file exists. Once the domain logic imports the packages
+// directly, this package can be deleted.
 //
-// Bauen mit: go build -tags deps ./...
+// Build with: go build -tags deps ./...
 package deps
 
 import (
-	// AWS SES v2 für die Magic-Link-Einladungen (CONCEPT.md 4.1).
+	// AWS SES v2 for the magic-link invitations (CONCEPT.md 4.1).
 	_ "github.com/aws/aws-sdk-go-v2/service/sesv2"
 )

@@ -192,9 +192,9 @@ func (r *participationRepository) SetTeams(
 	return r.replaceTeams(ctx, participationID, teams)
 }
 
-// replaceTeams schreibt die Zuordnung neu. Die alten Join-Zeilen werden vorher
-// hart gelöscht: Ein Soft-Delete der Teams würde sie sonst als Waisen
-// zurücklassen, weil die Join-Tabelle keine DeletedAt-Spalte hat.
+// replaceTeams rewrites the assignment. Old join rows are hard deleted
+// first: a soft delete of a team would otherwise leave them orphaned, because
+// the join table has no DeletedAt column.
 
 func NewParticipationRepository(db *gorm.DB) repository.ParticipationRepository {
 	return &participationRepository{db: db}

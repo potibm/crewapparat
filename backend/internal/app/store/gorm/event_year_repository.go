@@ -130,9 +130,9 @@ func (r *eventYearRepository) GetActive(ctx context.Context) (*domain.EventYear,
 	return toDomainEventYear(&dbRow), nil
 }
 
-// ActivateYear deaktiviert alle Jahre und aktiviert genau das angegebene. Das
-// läuft in einer Transaktion, damit nie zwei Jahre aktiv sind - SQLite kann
-// keinen partiellen Unique-Index darauf erzwingen.
+// ActivateYear deactivates all years and activates exactly the given one. It
+// runs in a transaction so two years can never be active at once - SQLite
+// cannot enforce that with a partial unique index.
 func (r *eventYearRepository) ActivateYear(ctx context.Context, year string) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var existing dbEventYear
