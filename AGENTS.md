@@ -156,6 +156,33 @@ The server serves `/media` and `/style` as static routes from those directories.
 
 ---
 
+## Seeding
+
+`crewapparat database seed` fills the database with a plausible crew. Run
+`crewapparat database reset --force` first if you want to start from scratch.
+
+| Flag             | Default | Meaning                                                |
+| ---------------- | ------- | ------------------------------------------------------ |
+| `--organizers N` | 25      | Target size of the generated crew, not a growth factor |
+| `--rng-seed N`   | 1       | Fixes the generated data so two runs are identical     |
+
+**The command is idempotent.** Organizers are updated by email, teams and event
+years are only created when missing, participations only where none exists. A
+second run with the same seed creates nothing; with a different seed it refreshes
+the same organizers rather than appending new ones.
+
+Two organizers are always seeded with the local Dex accounts from
+`infra/dex-config.yaml`, complete with their `oidc_sub`. Dex hands the `userID`
+of a `staticPasswords` entry out as the OIDC `sub` claim, so the seeder stores
+exactly that value and the login resolves the organizer on the first attempt.
+`TestDexUsersMatchDexConfig` reads the Dex config and fails when a `userID` is
+rotated — **if you change one, update `seeder/dex_users.go` in the same commit.**
+
+Placeholders in `seeder/seeder.go` that still need real values: `teamNames`,
+`shirtSizes`, `pronounsOptions`, `languagePool`, `previousYears`.
+
+---
+
 ## Releasing
 
 - Semantic Release with Angular commit preset (`.releaserc`).

@@ -116,6 +116,7 @@ func Execute() error {
 	databaseCmd := NewDatabaseCmd()
 	databaseCmd.AddCommand(
 		NewDatabaseResetCmd(),
+		NewDatabaseSeedCmd(),
 	)
 	rootCmd.AddCommand(databaseCmd)
 

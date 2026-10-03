@@ -2,14 +2,21 @@ package gorm
 
 import (
 	"fmt"
+	"log/slog"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/glebarez/sqlite"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/potibm/crewapparat/internal/app/config"
 )
+
+// slowQueryThreshold is when GORM starts logging a query as slow.
+const slowQueryThreshold = 200 * time.Millisecond
 
 type Store struct {
 	db *gorm.DB
@@ -95,8 +102,32 @@ func (s *Store) PurgeAll() error {
 	return nil
 }
 
+// slogWriter routes GORM log output through slog, so database messages end up in
+// the same stream and format as everything else.
+type slogWriter struct{}
+
+func (slogWriter) Printf(format string, args ...any) {
+	slog.Warn(strings.TrimSpace(fmt.Sprintf(format, args...)))
+}
+
+// newLogger configures GORM's own logger.
+//
+// IgnoreRecordNotFoundError keeps "record not found" out of the log: a lookup
+// that finds nothing is a normal outcome, and callers check for it explicitly
+// via IsNotFound. ParameterizedQueries keeps actual values - emails, tokens -
+// out of the log entirely.
+func newLogger() logger.Interface {
+	return logger.New(slogWriter{}, logger.Config{
+		SlowThreshold:             slowQueryThreshold,
+		LogLevel:                  logger.Warn,
+		IgnoreRecordNotFoundError: true,
+		ParameterizedQueries:      true,
+		Colorful:                  false,
+	})
+}
+
 func newStore(dsn string) (*Store, error) {
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{Logger: newLogger()})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
