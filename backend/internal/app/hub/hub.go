@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/potibm/crewapparat/internal/app/config"
 	"github.com/potibm/crewapparat/internal/app/middleware"
+	"github.com/potibm/crewapparat/internal/app/repository"
 	sloggin "github.com/samber/slog-gin"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
@@ -30,17 +31,32 @@ type Config struct {
 	StaticFiles embed.FS
 	Cfg         config.Config
 
+	OrganizerRepo     repository.OrganizerRepository
+	EventYearRepo     repository.EventYearRepository
+	TeamRepo          repository.TeamRepository
+	ParticipationRepo repository.ParticipationRepository
+	InviteRepo        repository.InviteRepository
+
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
 	RegisterAdminRoutes func(*gin.RouterGroup)
 }
 
 type Server struct {
-	port                int
-	staticFiles         embed.FS
-	cfg                 config.Config
-	registerAdminRoutes func(*gin.RouterGroup)
-	logger              *slog.Logger
+	port        int
+	staticFiles embed.FS
+	cfg         config.Config
+	logger      *slog.Logger
+
+	organizerRepo     repository.OrganizerRepository
+	eventYearRepo     repository.EventYearRepository
+	teamRepo          repository.TeamRepository
+	participationRepo repository.ParticipationRepository
+	inviteRepo        repository.InviteRepository
+
+	// RegisterAdminRoutes attaches domain endpoints to the protected
+	// /api/admin group. nil means: platform infrastructure only, no domain logic.
+	RegisterAdminRoutes func(*gin.RouterGroup)
 }
 
 func NewServer(cfg Config) (*Server, error) {
@@ -50,8 +66,13 @@ func NewServer(cfg Config) (*Server, error) {
 		port:                cfg.Port,
 		staticFiles:         cfg.StaticFiles,
 		cfg:                 cfg.Cfg,
-		registerAdminRoutes: cfg.RegisterAdminRoutes,
 		logger:              logger.With("component", "HubServer"),
+		organizerRepo:       cfg.OrganizerRepo,
+		eventYearRepo:       cfg.EventYearRepo,
+		teamRepo:            cfg.TeamRepo,
+		participationRepo:   cfg.ParticipationRepo,
+		inviteRepo:          cfg.InviteRepo,
+		RegisterAdminRoutes: cfg.RegisterAdminRoutes,
 	}, nil
 }
 
@@ -151,8 +172,8 @@ func (s *Server) setupRouter() (*gin.Engine, error) {
 		admin.Use(authMW)
 	}
 
-	if s.registerAdminRoutes != nil {
-		s.registerAdminRoutes(admin)
+	if s.RegisterAdminRoutes != nil {
+		s.RegisterAdminRoutes(admin)
 	}
 
 	r.NoRoute(func(c *gin.Context) {

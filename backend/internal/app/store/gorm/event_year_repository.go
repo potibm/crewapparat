@@ -16,6 +16,7 @@ type eventYearRepository struct {
 }
 
 var eventYearSortColumns = map[string]string{
+	"id":       "year",
 	"year":     "year",
 	"isactive": "is_active",
 }

@@ -1,4 +1,4 @@
-import { Admin } from "react-admin";
+import { Admin, Resource } from "react-admin";
 import { BrowserRouter } from "react-router";
 import { MyTheme, MyDarkTheme } from "./theme/MyTheme";
 import { MyLayout } from "./theme/MyLayout";
@@ -6,6 +6,11 @@ import { dataProvider } from "./providers/dataProvider";
 import { authProvider } from "./providers/authProvider";
 import { OidcLogin } from "./components/auth/OidcLogin";
 import { useAppConfig } from "@core/config/useConfig";
+import organizers from "./resources/organizer";
+import eventYears from "./resources/event-year";
+import teams from "./resources/team";
+import participations from "./resources/participation";
+import invites from "./resources/invite";
 
 export const AdminApp = () => (
   <BrowserRouter>
@@ -26,6 +31,12 @@ export const AppBootstrapper = () => {
       darkTheme={MyDarkTheme}
       layout={MyLayout}
       title="Crewapparat Admin"
-    />
+    >
+      <Resource {...organizers} />
+      <Resource {...eventYears} />
+      <Resource {...teams} />
+      <Resource {...participations} />
+      <Resource {...invites} />
+    </Admin>
   );
 };

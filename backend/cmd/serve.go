@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -73,12 +74,54 @@ func NewServeCmd() *cobra.Command {
 			// =========================================================================
 
 			server, err := hub.NewServer(hub.Config{
-				Port:        Cfg.App.Port,
-				StaticFiles: staticFiles,
-				Cfg:         Cfg,
+				Port:              Cfg.App.Port,
+				StaticFiles:       staticFiles,
+				Cfg:               Cfg,
+				OrganizerRepo:     dbStore.NewOrganizerRepository(),
+				EventYearRepo:     dbStore.NewEventYearRepository(),
+				TeamRepo:          dbStore.NewTeamRepository(),
+				ParticipationRepo: dbStore.NewParticipationRepository(),
+				InviteRepo:        dbStore.NewInviteRepository(),
 			})
 			if err != nil {
 				return fmt.Errorf("failed to initialize server: %w", err)
+			}
+
+			server.RegisterAdminRoutes = func(admin *gin.RouterGroup) {
+				// Organizers
+				admin.GET("/organizers", server.ListOrganizers)
+				admin.POST("/organizers", server.CreateOrganizer)
+				admin.GET("/organizers/:id", server.GetOrganizer)
+				admin.PUT("/organizers/:id", server.UpdateOrganizer)
+				admin.DELETE("/organizers/:id", server.DeleteOrganizer)
+
+				// Event Years
+				admin.GET("/event-years", server.ListEventYears)
+				admin.POST("/event-years", server.CreateEventYear)
+				admin.GET("/event-years/:year", server.GetEventYear)
+				admin.PUT("/event-years/:year", server.UpdateEventYear)
+				admin.DELETE("/event-years/:year", server.DeleteEventYear)
+
+				// Teams
+				admin.GET("/teams", server.ListTeams)
+				admin.POST("/teams", server.CreateTeam)
+				admin.GET("/teams/:id", server.GetTeam)
+				admin.PUT("/teams/:id", server.UpdateTeam)
+				admin.DELETE("/teams/:id", server.DeleteTeam)
+
+				// Participations
+				admin.GET("/participations", server.ListParticipations)
+				admin.POST("/participations", server.CreateParticipation)
+				admin.GET("/participations/:id", server.GetParticipation)
+				admin.PUT("/participations/:id", server.UpdateParticipation)
+				admin.DELETE("/participations/:id", server.DeleteParticipation)
+
+				// Invites
+				admin.GET("/invites", server.ListInvites)
+				admin.POST("/invites", server.CreateInvite)
+				admin.GET("/invites/:id", server.GetInvite)
+				admin.PUT("/invites/:id", server.UpdateInvite)
+				admin.DELETE("/invites/:id", server.DeleteInvite)
 			}
 
 			return server.Run(ctx)
