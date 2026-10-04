@@ -88,6 +88,9 @@ func NewServeCmd() *cobra.Command {
 			}
 
 			server.RegisterAdminRoutes = func(admin *gin.RouterGroup) {
+				// Me
+				admin.GET("/me", server.GetMe)
+
 				// Organizers
 				admin.GET("/organizers", server.ListOrganizers)
 				admin.POST("/organizers", server.CreateOrganizer)

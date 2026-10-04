@@ -72,14 +72,14 @@ describe("AppBootstrapper", () => {
     expect(screen.getByTestId("admin-mock")).toBeInTheDocument();
   });
 
-  it("passes loginPage=false and no authProvider when OIDC is disabled", () => {
+  it("passes loginPage=false and authProvider when OIDC is disabled", () => {
     renderWithConfig(baseConfig);
 
     const calls = vi.mocked(Admin).mock.calls;
     expect(calls.length).toBeGreaterThan(0);
     expect(calls[0][0]).toMatchObject({
       loginPage: false,
-      authProvider: undefined,
+      authProvider: expect.any(Object),
     });
   });
 

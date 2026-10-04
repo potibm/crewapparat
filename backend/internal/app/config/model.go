@@ -42,12 +42,17 @@ type FormatConfig struct {
 	Date DateFormatConfig `json:"date" mapstructure:"date"`
 }
 
+//nolint:lll // struct tags can get long and it's more readable to keep them in one line
 type AuthConfig struct {
-	Type          string `json:"type"      mapstructure:"type"            validate:"required,oneof=oidc"`
-	Name          string `json:"name"      mapstructure:"name"            validate:"required"`
-	AuthorityURL  string `json:"authority" mapstructure:"authority"       validate:"required,url"`
-	ClientID      string `json:"client_id" mapstructure:"client_id"       validate:"required"`
-	SkipTLSVerify bool   `json:"-"         mapstructure:"skip_tls_verify"`
+	Type             string   `json:"type"      mapstructure:"type"               validate:"required,oneof=oidc"`
+	Name             string   `json:"name"      mapstructure:"name"               validate:"required"`
+	AuthorityURL     string   `json:"authority" mapstructure:"authority"          validate:"required,url"`
+	ClientID         string   `json:"client_id" mapstructure:"client_id"          validate:"required"`
+	SkipTLSVerify    bool     `json:"-"         mapstructure:"skip_tls_verify"`
+	OidcAdminGroup   string   `json:"-"         mapstructure:"oidc_admin_group"`
+	ProxyAdmins      []string `json:"-"         mapstructure:"proxy_admins"`
+	HeaderUserSub    string   `json:"-"         mapstructure:"header_user_sub"`
+	HeaderUserGroups string   `json:"-"         mapstructure:"header_user_groups"`
 }
 
 type Config struct {

@@ -58,9 +58,13 @@ func AuthMiddleware(ctx context.Context, issuerURL, clientID string, skipTLSVeri
 			return
 		}
 
-		userID, err := validateTokenAndGetUserID(tokenString, jwks, expectedIssuer)
+		userID, groups, err := validateTokenAndGetUserID(tokenString, jwks, expectedIssuer)
 		if err != nil {
-			reqLogger.Warn("Token verification failed", "error", err)
+			reqLogger.Warn("Token verification failed",
+				"error", err,
+				"token_prefix", safeTokenPrefix(tokenString),
+				"expected_issuer", expectedIssuer,
+			)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 
 			return
@@ -68,6 +72,7 @@ func AuthMiddleware(ctx context.Context, issuerURL, clientID string, skipTLSVeri
 
 		// Add user ID to context and logging
 		c.Set("userID", userID)
+		c.Set("userGroups", groups)
 		sloggin.AddCustomAttributes(c, slog.String("user_id", userID))
 
 		ctxWithUser := context.WithValue(c.Request.Context(), domain.UserIDKey, userID)
@@ -140,6 +145,17 @@ func initJWKS(ctx context.Context, client *http.Client, issuerURL string) (*keyf
 	return jwks, discovery.Issuer, nil
 }
 
+const tokenLogPrefixLength = 20
+
+// safeTokenPrefix returns a truncated token prefix for safe logging.
+func safeTokenPrefix(token string) string {
+	if len(token) > tokenLogPrefixLength {
+		return token[:tokenLogPrefixLength] + "..."
+	}
+
+	return token
+}
+
 // extractBearerToken parses the Authorization header and returns the token string.
 func extractBearerToken(authHeader string) (string, error) {
 	if authHeader == "" {
@@ -154,27 +170,39 @@ func extractBearerToken(authHeader string) (string, error) {
 	return parts[1], nil
 }
 
-// validateTokenAndGetUserID validates the JWT signature, checks claims, and extracts the subject.
-func validateTokenAndGetUserID(tokenString string, jwks *keyfunc.JWKS, expectedIssuer string) (string, error) {
+// validateTokenAndGetUserID validates the JWT signature, checks claims, and extracts the subject and groups.
+func validateTokenAndGetUserID(
+	tokenString string,
+	jwks *keyfunc.JWKS,
+	expectedIssuer string,
+) (userID string, groups []string, err error) {
 	token, err := jwt.Parse(tokenString, jwks.Keyfunc)
 	if err != nil || !token.Valid {
-		return "", fmt.Errorf("invalid token: %w", err)
+		return "", nil, fmt.Errorf("invalid token: %w", err)
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", errors.New("invalid token claims structure")
+		return "", nil, errors.New("invalid token claims structure")
 	}
 
 	iss, ok := claims["iss"].(string)
 	if !ok || iss != expectedIssuer {
-		return "", errors.New("invalid issuer")
+		return "", nil, errors.New("invalid issuer")
 	}
 
-	userID, ok := claims["sub"].(string)
+	userID, ok = claims["sub"].(string)
 	if !ok || userID == "" {
-		return "", errors.New("missing subject in token")
+		return "", nil, errors.New("missing subject in token")
 	}
 
-	return userID, nil
+	if groupsClaim, ok := claims["groups"].([]any); ok {
+		for _, g := range groupsClaim {
+			if s, ok := g.(string); ok {
+				groups = append(groups, s)
+			}
+		}
+	}
+
+	return userID, groups, nil
 }

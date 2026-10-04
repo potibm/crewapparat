@@ -6,13 +6,21 @@ import {
   LayoutProps,
   MenuProps,
   Menu,
+  UserMenu,
+  Logout,
 } from "react-admin";
 import { Typography, Box } from "@mui/material";
 import { Logo } from "@core/logo/Logo";
 import { useAppConfig } from "@core/config/useConfig";
 
+const MyUserMenu = () => (
+  <UserMenu>
+    <Logout />
+  </UserMenu>
+);
+
 export const MyAppBar = (props: AppBarProps) => (
-  <AppBar {...props} color="secondary">
+  <AppBar {...props} userMenu={<MyUserMenu />} color="secondary">
     <Box flex="1" display="flex" alignItems="center">
       <Logo
         style={{

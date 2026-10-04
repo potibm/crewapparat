@@ -28,10 +28,14 @@ func NewConfigCreateCmd() *cobra.Command {
 			viper.SetDefault("app.cors_allow_origins", []string{defaultFrontendURL})
 
 			viper.SetDefault("auth", config.AuthConfig{
-				Type:         "oidc",
-				Name:         "Dex",
-				AuthorityURL: "https://dex.crewapparat.test/dex",
-				ClientID:     "react-admin-client",
+				Type:             "oidc",
+				Name:             "Dex",
+				AuthorityURL:     "https://dex.crewapparat.test/dex",
+				ClientID:         "react-admin-client",
+				OidcAdminGroup:   "crewapparat-admins",
+				ProxyAdmins:      []string{},
+				HeaderUserSub:    "X-User-Sub",
+				HeaderUserGroups: "X-User-Groups",
 			})
 
 			filename := configCreateFilename

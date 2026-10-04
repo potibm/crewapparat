@@ -26,7 +26,7 @@ export const AppBootstrapper = () => {
     <Admin
       loginPage={isOidcActive ? OidcLogin : false}
       dataProvider={dataProvider}
-      authProvider={isOidcActive ? authProvider : undefined}
+      authProvider={authProvider}
       theme={MyTheme}
       darkTheme={MyDarkTheme}
       layout={MyLayout}

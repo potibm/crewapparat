@@ -150,6 +150,10 @@ func (s *Server) setupRouter() (*gin.Engine, error) {
 	// is set. Domain routes hook in via RegisterAdminRoutes.
 	admin := r.Group("/api/admin")
 
+	if s.cfg.Auth != nil && s.cfg.Auth.HeaderUserSub != "" {
+		admin.Use(middleware.HeaderMiddleware(*s.cfg.Auth))
+	}
+
 	if s.cfg.Auth != nil && s.cfg.Auth.Type == "oidc" {
 		if s.cfg.Auth.SkipTLSVerify {
 			if s.cfg.App.Environment == "production" {
