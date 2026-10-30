@@ -7,6 +7,12 @@ const log = createLogger("Auth");
 let userManager: UserManager | null = null;
 let activeCallbackPromise: Promise<void> | null = null;
 
+interface CanAccessParams {
+    action: string;
+    resource: string;
+    record?: any;
+}
+
 export const configureOidc = (authority: string, clientId: string) => {
   userManager = new UserManager({
     authority,
@@ -17,7 +23,7 @@ export const configureOidc = (authority: string, clientId: string) => {
     redirect_uri: globalThis.location.origin + "/auth-callback",
     post_logout_redirect_uri: `${globalThis.location.origin}/`,
     response_type: "code",
-    scope: "openid profile email groups",
+    scope: "openid profile email groups federated:id",
   });
 };
 
@@ -138,6 +144,48 @@ export const authProvider: AuthProvider = {
     const user = await userManager.getUser();
     return user ? user.profile.roles : [];
   },
+/*
+  canAccess: async ({ action, resource, record }: CanAccessParams): Promise<boolean> => {
+        const userString = localStorage.getItem('user');
+        const user = userString ? JSON.parse(userString) : null;
+
+        if (!user) return false;
+
+        const role = user.role; // z.B. 'admin' oder 'user'
+        const currentUserId = user.id; // Die ID, die den Nutzer als Organizer identifiziert
+
+        // 2. Admin darf alles
+        if (role === 'admin') {
+            return true;
+        }
+
+        // 3. Regeln für die Ressource "organizer"
+        if (resource === 'organizer') {
+            // Ansehen (Listen- und Detailansicht) geht für alle
+            if (action === 'list' || action === 'show') {
+                return true;
+            }
+
+            // Editieren: Nur, wenn der bearbeitete Record die eigene ID hat
+            if (action === 'edit') {
+                // Wir prüfen, ob ein record übergeben wurde und ob dessen ID dem Nutzer gehört.
+                // (Je nach Datenmodell musst du hier record.id oder z.B. record.userId prüfen)
+                if (record && record.id === currentUserId) {
+                    return true;
+                }
+                return false; // Fremde Datensätze dürfen nicht editiert werden
+            }
+
+            // Löschen explizit verbieten
+            if (action === 'delete') {
+                return false;
+            }
+        }
+
+        // 4. Standard-Fallback (false = Zugriff verweigert für alles, was nicht oben definiert ist)
+        return false; 
+    }
+        */
 };
 
 export const getAccessToken = async (): Promise<string | null> => {

@@ -1,5 +1,5 @@
 import { Login, useLogin } from "react-admin";
-import { Button, Card, CardContent, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Typography } from "@mui/material";
 import Logo from "@core/logo/Logo";
 import { useAppConfig } from "@core/config/useConfig";
 
@@ -22,7 +22,9 @@ export const OidcLogin = () => {
         }}
       >
         <CardContent>
-          <Logo width={64} height={64} />
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+            <Logo width={64} height={64} />
+          </Box>
 
           <Typography variant="h5" component="h1" gutterBottom>
             Crewapparat

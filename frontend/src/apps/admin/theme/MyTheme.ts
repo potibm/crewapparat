@@ -7,15 +7,15 @@ export const MyTheme: ThemeOptions = {
     ...defaultTheme.palette,
     mode: "light",
     primary: {
-      main: "#1E293B",
+      main: "#FF6600",
       contrastText: "#FFFFFF",
     },
     secondary: {
-      main: "#3B82F6",
+      main: "#1E293B",
       contrastText: "#FFFFFF",
     },
     background: {
-      default: "#F8FAFC",
+      default: "#FFF7F2",
       paper: "#FFFFFF",
     },
     error: { main: "#FF3366" },
@@ -28,8 +28,8 @@ export const MyTheme: ThemeOptions = {
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: "#CCFF00",
-          color: "#000000",
+          backgroundColor: "#FF6600",
+          color: "#FFFFFF",
         },
       },
     },
@@ -51,23 +51,23 @@ export const MyDarkTheme: ThemeOptions = {
     ...defaultTheme.palette,
     mode: "dark",
     primary: {
-      main: "#CCFF00",
-      light: "#D9FF33",
-      dark: "#99CC00",
-      contrastText: "#000000",
+      main: "#FF6600",
+      light: "#FF8533",
+      dark: "#CC5200",
+      contrastText: "#FFFFFF",
     },
     secondary: {
-      main: "#00E5FF",
-      contrastText: "#000000",
+      main: "#3B82F6",
+      contrastText: "#FFFFFF",
     },
     background: {
-      default: "#0F172A",
-      paper: "#1E293B",
+      default: "#1A1A1A",
+      paper: "#2D2D2D",
     },
     error: { main: "#FF3366" },
     warning: { main: "#FFB300" },
-    info: { main: "#00E5FF" },
-    success: { main: "#00E676" },
+    info: { main: "#00BCD4" },
+    success: { main: "#10B981" },
   },
   components: {
     ...defaultTheme.components,
@@ -83,22 +83,24 @@ export const MyDarkTheme: ThemeOptions = {
     MuiTableCell: {
       styleOverrides: {
         head: {
-          backgroundColor: "#0F172A",
+          backgroundColor: "#1A1A1A",
         },
       },
     },
     MuiChip: {
       styleOverrides: {
-        filledPrimary: {
-          backgroundColor: "#CCFF00",
-          color: "#000000",
+        colorPrimary: {
+          "&.MuiChip-filled": {
+            backgroundColor: "#FF6600",
+            color: "#FFFFFF",
+          },
         },
         root: {
-          backgroundColor: "rgba(15, 23, 42, 0.6)",
-          border: "1px solid rgba(204, 255, 0, 0.3)",
+          backgroundColor: "rgba(26, 26, 26, 0.6)",
+          border: "1px solid rgba(255, 102, 0, 0.3)",
         },
         label: {
-          color: "#CCFF00",
+          color: "#FF6600",
         },
       },
     },
