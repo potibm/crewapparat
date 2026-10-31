@@ -7,9 +7,9 @@ import "github.com/google/uuid"
 // Participation of that year.
 type Organizer struct {
 	ID              uuid.UUID `json:"id"`
-	OidcSub         *string   `json:"oidc_sub,omitempty"` // wird beim ersten Login gegen Rauthy gesetzt
+	OidcSub         *string   `json:"oidc_sub,omitempty"` // set on first login against the IdP
 	Handle          string    `json:"handle"`             // Demoscene-Handle
-	Realname        string    `json:"realname"`           // bürgerlicher Name
+	Realname        string    `json:"realname"`           // legal name
 	Email           string    `json:"email"`
 	Phone           string    `json:"phone"`
 	SlackHandle     string    `json:"slack_handle,omitempty"`

@@ -59,7 +59,7 @@ func TestTeamRepository_UpdateUndDelete(t *testing.T) {
 	require.True(t, IsNotFound(err))
 }
 
-func TestEventYearRepository_AnlegenUndAktivieren(t *testing.T) {
+func TestEventYearRepository_CreateAndActivate(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewEventYearRepository()
 	ctx := context.Background()
@@ -79,9 +79,9 @@ func TestEventYearRepository_AnlegenUndAktivieren(t *testing.T) {
 	require.Equal(t, "2026", active.Year)
 }
 
-// TestEventYearRepository_NurEinAktivesJahr guarantees uniqueness, because
+// TestEventYearRepository_OnlyOneActiveYear guarantees uniqueness, because
 // SQLite has no partial unique indexes.
-func TestEventYearRepository_NurEinAktivesJahr(t *testing.T) {
+func TestEventYearRepository_OnlyOneActiveYear(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewEventYearRepository()
 	ctx := context.Background()
@@ -110,7 +110,7 @@ func TestEventYearRepository_NurEinAktivesJahr(t *testing.T) {
 	require.Equal(t, 1, activeCount, "exactly one year must be active")
 }
 
-func TestEventYearRepository_ActivateYearUnbekannt(t *testing.T) {
+func TestEventYearRepository_ActivateUnknownYear(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewEventYearRepository()
 

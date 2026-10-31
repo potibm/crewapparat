@@ -43,7 +43,7 @@ func fmtUnique(prefix string) string {
 	return prefix + "-" + uuid.NewString()[:8]
 }
 
-func TestOrganizerRepository_CreateVergibtUUID(t *testing.T) {
+func TestOrganizerRepository_CreateAssignsUUID(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewOrganizerRepository()
 	ctx := context.Background()
@@ -149,7 +149,7 @@ func TestOrganizerRepository_Update(t *testing.T) {
 	require.Equal(t, createdAt, createdAtAfter, "update must not overwrite created_at")
 }
 
-func TestOrganizerRepository_UpdateUnbekannt(t *testing.T) {
+func TestOrganizerRepository_UpdateNotFound(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewOrganizerRepository()
 
@@ -174,7 +174,7 @@ func TestOrganizerRepository_Delete(t *testing.T) {
 	require.True(t, IsNotFound(err))
 }
 
-func TestOrganizerRepository_DeleteUnbekannt(t *testing.T) {
+func TestOrganizerRepository_DeleteNotFound(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewOrganizerRepository()
 
@@ -182,7 +182,7 @@ func TestOrganizerRepository_DeleteUnbekannt(t *testing.T) {
 	require.True(t, IsNotFound(err), "expected ErrRecordNotFound, got %v", err)
 }
 
-func TestOrganizerRepository_ListMitFilterUndPaginierung(t *testing.T) {
+func TestOrganizerRepository_ListWithFilterAndPagination(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewOrganizerRepository()
 	ctx := context.Background()
@@ -256,7 +256,7 @@ func TestOrganizerRepository_SortWhitelist(t *testing.T) {
 	}
 }
 
-func TestOrganizerRepository_SortWhitelistLehntInjektionAb(t *testing.T) {
+func TestOrganizerRepository_SortWhitelistRejectsInjection(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewOrganizerRepository()
 	ctx := context.Background()

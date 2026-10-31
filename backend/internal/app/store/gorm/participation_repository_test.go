@@ -54,7 +54,7 @@ func TestParticipationRepository_Roundtrip(t *testing.T) {
 	require.Equal(t, []string{"uuid-a", "uuid-b"}, loaded.ShiftPreferredPartner)
 }
 
-func TestParticipationRepository_EindeutigProOrganizerUndJahr(t *testing.T) {
+func TestParticipationRepository_UniquePerOrganizerAndYear(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewParticipationRepository()
 	ctx := context.Background()
@@ -161,7 +161,7 @@ func TestParticipationRepository_SetTeamsLeavesNoOrphans(t *testing.T) {
 	var orphans int64
 	require.NoError(t, store.db.Table("participation_teams").Count(&orphans).Error)
 	require.Equal(t, int64(1), orphans,
-		"Join-Zeile bleibt bestehen - deshalb räumt SetTeams sie explizit ab")
+		"join row stays in place - SetTeams clears it explicitly")
 }
 
 func TestParticipationRepository_ListFilter(t *testing.T) {
@@ -200,7 +200,7 @@ func TestParticipationRepository_SortWhitelist(t *testing.T) {
 	require.Error(t, err, "organizer_id is not in the whitelist")
 }
 
-func TestParticipationRepository_DeleteRaeumtJoinTabelle(t *testing.T) {
+func TestParticipationRepository_DeleteClearsJoinTable(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewParticipationRepository()
 	teamRepo := store.NewTeamRepository()

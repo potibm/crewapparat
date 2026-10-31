@@ -8,7 +8,7 @@ Compact cheat-sheet for OpenCode. Omit anything an agent could guess from filena
 
 - **Go backend**: `backend/` (module `github.com/potibm/crewapparat`)
 - **React frontend**: `frontend/` (Vite + React Admin + Tailwind v4 + Flowbite React)
-- **Infra**: `docker-compose.yaml` (Traefik, Dex, OpenObserve, OTel collector, Redis, MinIO)
+- **Infra**: `docker-compose.yaml` (Traefik, Dex, OpenObserve, OTel collector, Redis)
 - **Root `go.work`**: points only to `./backend`. Run Go commands from `backend/`.
 
 **Status: data model done, no business logic yet.** The persistence layer implements the
@@ -201,7 +201,6 @@ Placeholders in `seeder/seeder.go` that still need real values: `teamNames`,
 - OpenObserve UI: https://observe.crewapparat.test (admin@example.com / password123)
 - OTel gRPC: localhost:3417, OTel HTTP: localhost:3418
 - Redis: localhost:3451, RedisInsight: https://redis.crewapparat.test
-- MinIO S3 API: localhost:3450, Console: https://minio.crewapparat.test (local-admin / local-super-secret)
 - Dex OIDC: https://dex.crewapparat.test
 
 Backend dev (`air`) defaults to `--otel-endpoint=localhost:3417`.
@@ -214,11 +213,13 @@ To run several apparat projects side by side, connect to the shared Traefik via 
 ## Style notes
 
 - Go: `slog` only (depguard blocks `logrus`). Use snake_case for slog keys.
-- Go: write comments in English, including slog messages and error strings. German is
-  reserved for user-facing UI copy.
+- Go: **English only, everywhere.** All code, comments, slog messages, error strings,
+  identifiers (functions, types, variables **and test names**), and UI copy are in English.
+  No German anywhere in the codebase.
 - Go: avoid `math/rand` (use `math/rand/v2`).
 - Go: config secrets go into `config.local.yaml`, never into `config.yaml`.
 - TS: `no-console` and `no-alert` are errors. `_` prefix ignores unused vars.
+- TS: **English only, everywhere** (code, comments, identifiers, UI copy). No German.
 - TS: new `.js` files are forbidden by ESLint (use `.ts`/`.tsx`).
 - TS: `@mui/material` and `@mui/icons-material` are not direct dependencies; they resolve as
   transitive deps of react-admin. Adding an import of them works but is undeclared.

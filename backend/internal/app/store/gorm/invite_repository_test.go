@@ -63,7 +63,7 @@ func TestInviteRepository_GetByToken(t *testing.T) {
 	require.Equal(t, token, found.Token)
 }
 
-func TestInviteRepository_GetByTokenUnbekannt(t *testing.T) {
+func TestInviteRepository_GetByTokenNotFound(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewInviteRepository()
 

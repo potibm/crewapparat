@@ -60,7 +60,7 @@ func TestDexUsersMatchDexConfig(t *testing.T) {
 	}
 }
 
-func TestDexUsers_HabenEindeutigeEmailsUndSubs(t *testing.T) {
+func TestDexUsers_HaveUniqueEmailsAndSubs(t *testing.T) {
 	emails := map[string]bool{}
 	subs := map[string]bool{}
 
@@ -73,7 +73,7 @@ func TestDexUsers_HabenEindeutigeEmailsUndSubs(t *testing.T) {
 	}
 }
 
-func TestDexUser_ToOrganizerSetztSubUndEmail(t *testing.T) {
+func TestDexUser_ToOrganizerSetsSubAndEmail(t *testing.T) {
 	for _, def := range DexUsers() {
 		organizer := def.ToOrganizer()
 
@@ -85,7 +85,7 @@ func TestDexUser_ToOrganizerSetztSubUndEmail(t *testing.T) {
 	}
 }
 
-func TestSeeder_RunLegtAllesAn(t *testing.T) {
+func TestSeeder_RunCreatesEverything(t *testing.T) {
 	repos := newTestStore(t)
 	ctx := context.Background()
 
@@ -125,9 +125,9 @@ func TestSeeder_RunLegtAllesAn(t *testing.T) {
 	}
 }
 
-// TestSeeder_RunIstIdempotent is why `database seed` is a command of its own: a
+// TestSeeder_RunIsIdempotent is why `database seed` is a command of its own: a
 // second run must not fail on a unique constraint.
-func TestSeeder_RunIstIdempotent(t *testing.T) {
+func TestSeeder_RunIsIdempotent(t *testing.T) {
 	repos := newTestStore(t)
 	ctx := context.Background()
 
@@ -158,9 +158,9 @@ func TestSeeder_RunIstIdempotent(t *testing.T) {
 		"the second run must not duplicate participations")
 }
 
-// TestSeeder_BewaahrtGebundenenOidcSub protects the linking path: a real login
+// TestSeeder_PreservesLinkedOidcSub protects the linking path: a real login
 // already produced a sub, and the seeder must not overwrite it.
-func TestSeeder_BewaahrtGebundenenOidcSub(t *testing.T) {
+func TestSeeder_PreservesLinkedOidcSub(t *testing.T) {
 	repos := newTestStore(t)
 	ctx := context.Background()
 
@@ -182,9 +182,9 @@ func TestSeeder_BewaahrtGebundenenOidcSub(t *testing.T) {
 		"a sub set by a real login must not be overwritten by the seed")
 }
 
-// TestSeeder_VergibtTeamsAnDexUser checks the fixed team assignment, which is
+// TestSeeder_AssignsTeamsToDexUser checks the fixed team assignment, which is
 // how the two Dex organizers end up in the "Infodesk" and "Netzwerk" teams.
-func TestSeeder_VergibtTeamsAnDexUser(t *testing.T) {
+func TestSeeder_AssignsTeamsToDexUser(t *testing.T) {
 	repos := newTestStore(t)
 	ctx := context.Background()
 
@@ -205,9 +205,9 @@ func TestSeeder_VergibtTeamsAnDexUser(t *testing.T) {
 	assert.ElementsMatch(t, []string{"Infodesk", "Kasse"}, names)
 }
 
-// TestSeeder_BlocknummernBleibenImFenster guards the shift grid against values
+// TestSeeder_BlockNumbersStayInWindow guards the shift grid against values
 // the frontend could not map back to a time.
-func TestSeeder_BlocknummernBleibenImFenster(t *testing.T) {
+func TestSeeder_BlockNumbersStayInWindow(t *testing.T) {
 	repos := newTestStore(t)
 	ctx := context.Background()
 
@@ -237,7 +237,7 @@ func TestSeeder_BlocknummernBleibenImFenster(t *testing.T) {
 	}
 }
 
-func TestBuildShiftTimes_LiefertEindeutigeBloecke(t *testing.T) {
+func TestBuildShiftTimes_ReturnsUniqueBlocks(t *testing.T) {
 	for range 100 {
 		blocks := buildShiftTimes()
 		require.NotEmpty(t, blocks)
@@ -250,7 +250,7 @@ func TestBuildShiftTimes_LiefertEindeutigeBloecke(t *testing.T) {
 	}
 }
 
-func TestPickTeams_BenannteUndZufaelligeAuswahl(t *testing.T) {
+func TestPickTeams_NamedAndRandomSelection(t *testing.T) {
 	teams := []domain.Team{{Name: "Infodesk"}, {Name: "Kasse"}, {Name: "Netzwerk"}}
 
 	named := pickTeams(teams, []string{"Infodesk", "Kasse"}, false)
@@ -270,7 +270,7 @@ func TestPickTeams_BenannteUndZufaelligeAuswahl(t *testing.T) {
 	}
 }
 
-func TestDexTeamsFor_KenntNurDieDexUser(t *testing.T) {
+func TestDexTeamsFor_OnlyDexUsers(t *testing.T) {
 	names, ok := dexTeamsFor(AdminEmail)
 	assert.True(t, ok)
 	assert.NotEmpty(t, names)

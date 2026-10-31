@@ -302,8 +302,9 @@ func (s *Seeder) missingOrganizerCount(ctx context.Context, dexCount int) (int, 
 // upsertOrganizer updates the record when the email already exists and creates it
 // otherwise. Keying on email is what makes repeated runs safe.
 //
-// The existing oidc_sub wins over the candidate: it is the value a real login
-// produced, and overwriting it would break the link between user and organizer.
+// A sub that a real login produced wins over the candidate, so the link between
+// user and organizer is never broken. Records that still carry a NULL sub (e.g.
+// from an older seed) are repaired with the candidate's sub instead.
 func (s *Seeder) upsertOrganizer(ctx context.Context, candidate *domain.Organizer) (*domain.Organizer, error) {
 	existing, err := s.repos.Organizers.GetByEmail(ctx, candidate.Email)
 	if err != nil && !gorm.IsNotFound(err) {
@@ -312,7 +313,12 @@ func (s *Seeder) upsertOrganizer(ctx context.Context, candidate *domain.Organize
 
 	if err == nil {
 		candidate.ID = existing.ID
-		candidate.OidcSub = existing.OidcSub
+		// Preserve a sub that a real login produced, but repair records that
+		// were seeded/created before a sub was available (e.g. NULL oidc_sub).
+		if existing.OidcSub != nil {
+			candidate.OidcSub = existing.OidcSub
+		}
+
 		candidate.Participations = nil
 
 		if updateErr := s.repos.Organizers.Update(ctx, candidate); updateErr != nil {
