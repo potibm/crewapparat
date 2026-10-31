@@ -24,4 +24,10 @@ staticPasswords:
   hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
   username: "User"
   userID: "b0c35c31-a681-4298-81ea-c7878c5d0e7e"
-  groups: ["crew"]  
+  groups: ["crew"]
+- email: "unassigned@example.com"
+  # bcrypt hash for the password "password"
+  hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+  username: "Unassigned"
+  userID: "c0ffee00-0000-4000-8000-000000000099"
+  groups: ["crew"] 

@@ -41,6 +41,20 @@ let meCache: { data: MeData; expires: number } | null = null;
 let mePromise: Promise<MeData | null> | null = null;
 const ME_TTL_MS = 60_000;
 
+export const linkMe = async (): Promise<boolean> => {
+  try {
+    const token = await getAccessToken();
+    const res = await fetch("/api/admin/me/link", {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    return res.ok;
+  } catch (error) {
+    log.warn("Failed to link /me", error);
+    return false;
+  }
+};
+
 const fetchMe = async (): Promise<MeData | null> => {
   const now = Date.now();
   if (meCache && meCache.expires > now) return meCache.data;
@@ -52,10 +66,28 @@ const fetchMe = async (): Promise<MeData | null> => {
       const res = await fetch("/api/admin/me", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) return null;
-      const data = (await res.json()) as MeData;
-      meCache = { data, expires: Date.now() + ME_TTL_MS };
-      return data;
+      if (res.ok) {
+        const data = (await res.json()) as MeData;
+        meCache = { data, expires: Date.now() + ME_TTL_MS };
+        return data;
+      }
+
+      // First-login linking per concept §4.1.5: try to link once, then retry.
+      if (res.status === 404) {
+        const linked = await linkMe();
+        if (linked) {
+          const retry = await fetch("/api/admin/me", {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+          if (retry.ok) {
+            const data = (await retry.json()) as MeData;
+            meCache = { data, expires: Date.now() + ME_TTL_MS };
+            return data;
+          }
+        }
+      }
+
+      return null;
     } catch (error) {
       log.warn("Failed to fetch /me", error);
       return null;
@@ -178,6 +210,10 @@ export const authProvider: AuthProvider = {
     resource,
     record,
   }: CanAccessParams): Promise<boolean> => {
+    // An unlinked (not provisioned) user must see nothing.
+    const me = await fetchMe();
+    if (!me) return false;
+
     const permissions = (await authProvider.getPermissions?.({})) ?? [];
     const isAdmin = Array.isArray(permissions) && permissions.includes("admin");
 

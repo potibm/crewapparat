@@ -2,6 +2,7 @@ package hub
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -44,7 +45,82 @@ func (s *Server) GetMe(c *gin.Context) {
 	c.JSON(http.StatusOK, toMeResponse(organizer, s.isAdmin(c, userID.(string))))
 }
 
+// LinkMe implements the account-linking step from concept §4.1.5: a user whose
+// organizer record exists (created via invite approval) but has no oidc_sub yet
+// is linked to their IdP identity on first login. GET /me stays read-only;
+// this POST is the only mutating entry point.
+//
+// Idempotent: an already-linked organizer with the same sub returns 200.
+func (s *Server) LinkMe(c *gin.Context) {
+	userIDVal, exists := c.Get("userID")
+	if !exists {
+		respondWithUnauthorizedProblem(c, "User ID not found in context")
+
+		return
+	}
+
+	userID := userIDVal.(string)
+
+	emailVal, _ := c.Get("userEmail")
+
+	email, _ := emailVal.(string)
+	if email == "" {
+		respondWithBadRequestProblem(c, "Email claim missing in token")
+
+		return
+	}
+
+	if verifiedVal, ok := c.Get("userEmailVerified"); ok {
+		if verified, ok := verifiedVal.(*bool); ok && verified != nil && !*verified {
+			respondWithForbiddenProblem(c, "Email is not verified")
+
+			return
+		}
+	}
+
+	organizer, err := s.organizerRepo.GetByEmail(c.Request.Context(), email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			respondWithNotFoundProblem(c, "Organizer not found")
+
+			return
+		}
+
+		respondWithInternalServerProblem(c, "Failed to get organizer: "+err.Error())
+
+		return
+	}
+
+	if organizer.OidcSub != nil {
+		if *organizer.OidcSub == userID {
+			c.JSON(http.StatusOK, toMeResponse(organizer, s.isAdmin(c, userID)))
+
+			return
+		}
+
+		respondWithConflictProblem(c, "Organizer is already linked to a different account")
+
+		return
+	}
+
+	sub := userID
+	organizer.OidcSub = &sub
+
+	if err := s.organizerRepo.Update(c.Request.Context(), organizer); err != nil {
+		respondWithInternalServerProblem(c, "Failed to link organizer: "+err.Error())
+
+		return
+	}
+
+	slog.Info("LinkMe: linked organizer to user", "organizer_id", organizer.ID, "user_id", userID)
+	c.JSON(http.StatusOK, toMeResponse(organizer, s.isAdmin(c, userID)))
+}
+
 func (s *Server) isAdmin(c *gin.Context, userID string) bool {
+	if s.cfg.Auth == nil {
+		return false
+	}
+
 	if groups, exists := c.Get("userGroups"); exists {
 		for _, g := range groups.([]string) {
 			if g == s.cfg.Auth.OidcAdminGroup {

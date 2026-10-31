@@ -53,3 +53,7 @@ func respondWithUnauthorizedProblem(c *gin.Context, detail string) {
 func respondWithForbiddenProblem(c *gin.Context, detail string) {
 	respondWithProblem(c, http.StatusForbidden, "Forbidden", detail)
 }
+
+func respondWithConflictProblem(c *gin.Context, detail string) {
+	respondWithProblem(c, http.StatusConflict, "Conflict", detail)
+}

@@ -58,7 +58,7 @@ func AuthMiddleware(ctx context.Context, issuerURL, clientID string, skipTLSVeri
 			return
 		}
 
-		userID, groups, err := validateTokenAndGetUserID(tokenString, jwks, expectedIssuer)
+		userID, email, emailVerified, groups, err := validateTokenAndGetUserID(tokenString, jwks, expectedIssuer)
 		if err != nil {
 			reqLogger.Warn("Token verification failed",
 				"error", err,
@@ -72,10 +72,14 @@ func AuthMiddleware(ctx context.Context, issuerURL, clientID string, skipTLSVeri
 
 		// Add user ID to context and logging
 		c.Set("userID", userID)
+		c.Set("userEmail", email)
+		c.Set("userEmailVerified", emailVerified)
 		c.Set("userGroups", groups)
 		sloggin.AddCustomAttributes(c, slog.String("user_id", userID))
 
 		ctxWithUser := context.WithValue(c.Request.Context(), domain.UserIDKey, userID)
+		ctxWithUser = context.WithValue(ctxWithUser, domain.UserEmailKey, email)
+		ctxWithUser = context.WithValue(ctxWithUser, domain.UserEmailVerifiedKey, emailVerified)
 		c.Request = c.Request.WithContext(ctxWithUser)
 
 		c.Next()
@@ -175,30 +179,39 @@ func validateTokenAndGetUserID(
 	tokenString string,
 	jwks *keyfunc.JWKS,
 	expectedIssuer string,
-) (userID string, groups []string, err error) {
+) (userID, email string, emailVerified *bool, groups []string, err error) {
 	token, err := jwt.Parse(tokenString, jwks.Keyfunc)
 	if err != nil || !token.Valid {
-		return "", nil, fmt.Errorf("invalid token: %w", err)
+		return "", "", nil, nil, fmt.Errorf("invalid token: %w", err)
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", nil, errors.New("invalid token claims structure")
+		return "", "", nil, nil, errors.New("invalid token claims structure")
 	}
 
 	iss, ok := claims["iss"].(string)
 	if !ok || iss != expectedIssuer {
-		return "", nil, errors.New("invalid issuer")
+		return "", "", nil, nil, errors.New("invalid issuer")
 	}
 
 	userID, ok = claims["sub"].(string)
 	if !ok || userID == "" {
-		return "", nil, errors.New("missing subject in token")
+		return "", "", nil, nil, errors.New("missing subject in token")
 	}
 
 	// Dex wraps the configured userID in a protobuf-encoded subject; unwrap it
 	// so the rest of the application can key off the plain user ID.
 	userID = DecodeDexSub(userID)
+
+	if e, ok := claims["email"].(string); ok {
+		email = e
+	}
+
+	if v, ok := claims["email_verified"].(bool); ok {
+		b := v
+		emailVerified = &b
+	}
 
 	if groupsClaim, ok := claims["groups"].([]any); ok {
 		for _, g := range groupsClaim {
@@ -208,5 +221,5 @@ func validateTokenAndGetUserID(
 		}
 	}
 
-	return userID, groups, nil
+	return userID, email, emailVerified, groups, nil
 }
