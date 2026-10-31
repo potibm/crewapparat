@@ -5,6 +5,8 @@ app:
   log_format: json
   log_level: debug
   version: dev
+auth:
+  oidc_admin_group: crewapparat-admins
 sentry:
   dsn: ""
   environment: development

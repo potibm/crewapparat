@@ -54,6 +54,15 @@ func (s *Server) GetOrganizer(c *gin.Context) {
 }
 
 func (s *Server) CreateOrganizer(c *gin.Context) {
+	userID, _ := c.Get("userID")
+
+	uid, _ := userID.(string)
+	if !s.isAdmin(c, uid) {
+		respondWithForbiddenProblem(c, "Only admins can create organizers")
+
+		return
+	}
+
 	var organizer domain.Organizer
 	if err := c.ShouldBindJSON(&organizer); err != nil {
 		respondWithFailedToParsePayloadProblem(c, err)
@@ -77,6 +86,30 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 		respondWithInvalidIDFormatProblem(c)
 
 		return
+	}
+
+	userID, _ := c.Get("userID")
+
+	uid, _ := userID.(string)
+	if !s.isAdmin(c, uid) {
+		existing, err := s.organizerRepo.GetByID(c.Request.Context(), id)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				respondWithNotFoundProblem(c, "Organizer not found")
+
+				return
+			}
+
+			respondWithInternalServerProblem(c, "Failed to get organizer: "+err.Error())
+
+			return
+		}
+
+		if existing.OidcSub == nil || *existing.OidcSub != uid {
+			respondWithForbiddenProblem(c, "You can only update your own organizer profile")
+
+			return
+		}
 	}
 
 	var organizer domain.Organizer
@@ -108,6 +141,15 @@ func (s *Server) DeleteOrganizer(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		respondWithInvalidIDFormatProblem(c)
+
+		return
+	}
+
+	userID, _ := c.Get("userID")
+
+	uid, _ := userID.(string)
+	if !s.isAdmin(c, uid) {
+		respondWithForbiddenProblem(c, "Only admins can delete organizers")
 
 		return
 	}

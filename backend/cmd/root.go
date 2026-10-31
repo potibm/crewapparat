@@ -126,6 +126,8 @@ func Execute() error {
 func loadConfig() error {
 	_ = godotenv.Load()
 
+	config.InitViper()
+
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("config")
 	viper.AddConfigPath(".")
@@ -145,8 +147,6 @@ func loadConfig() error {
 			return fmt.Errorf("error merging local config: %w", err)
 		}
 	}
-
-	config.InitViper()
 
 	return nil
 }

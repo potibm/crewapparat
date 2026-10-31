@@ -7,24 +7,69 @@ const log = createLogger("Auth");
 let userManager: UserManager | null = null;
 let activeCallbackPromise: Promise<void> | null = null;
 
-interface CanAccessParams {
-    action: string;
-    resource: string;
-    record?: any;
+export interface CanAccessParams {
+  action: string;
+  resource: string;
+  record?: unknown;
 }
 
 export const configureOidc = (authority: string, clientId: string) => {
   userManager = new UserManager({
     authority,
     client_id: clientId,
-    // Kein eigener Callback-Pfad: React Admin hängt am Root und verarbeitet den
-    // `?code=`-Parameter auf der Login-Seite selbst. Ein `/auth-callback` würde
-    // ins Leere routen, weil es keine Route dafür gibt.
+    // No dedicated callback path: React Admin lives at the root and processes the
+    // `?code=` parameter on the login page itself. A `/auth-callback` route
+    // would lead nowhere, because no such route exists.
     redirect_uri: globalThis.location.origin + "/auth-callback",
     post_logout_redirect_uri: `${globalThis.location.origin}/`,
     response_type: "code",
     scope: "openid profile email groups federated:id",
   });
+};
+
+interface MeData {
+  id: string;
+  handle: string;
+  realname: string;
+  email: string;
+  pronouns?: string;
+  avatar_url?: string;
+  is_admin: boolean;
+}
+
+let meCache: { data: MeData; expires: number } | null = null;
+let mePromise: Promise<MeData | null> | null = null;
+const ME_TTL_MS = 60_000;
+
+const fetchMe = async (): Promise<MeData | null> => {
+  const now = Date.now();
+  if (meCache && meCache.expires > now) return meCache.data;
+  if (mePromise) return mePromise;
+
+  mePromise = (async () => {
+    try {
+      const token = await getAccessToken();
+      const res = await fetch("/api/admin/me", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as MeData;
+      meCache = { data, expires: Date.now() + ME_TTL_MS };
+      return data;
+    } catch (error) {
+      log.warn("Failed to fetch /me", error);
+      return null;
+    } finally {
+      mePromise = null;
+    }
+  })();
+
+  return mePromise;
+};
+
+export const invalidateMe = (): void => {
+  meCache = null;
+  mePromise = null;
 };
 
 export const authProvider: AuthProvider = {
@@ -70,6 +115,7 @@ export const authProvider: AuthProvider = {
   },
 
   logout: async () => {
+    invalidateMe();
     if (!userManager) return;
 
     try {
@@ -95,21 +141,13 @@ export const authProvider: AuthProvider = {
   },
 
   getIdentity: async () => {
-    try {
-      const token = await getAccessToken();
-      const res = await fetch("/api/admin/me", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return {
-          id: data.id,
-          fullName: data.realname || data.handle,
-          avatar: data.avatar_url,
-        };
-      }
-    } catch (error) {
-      log.warn("Failed to fetch /me", error);
+    const data = await fetchMe();
+    if (data) {
+      return {
+        id: data.id,
+        fullName: data.realname || data.handle,
+        avatar: data.avatar_url,
+      };
     }
 
     if (!userManager) throw new Error("OIDC not configured");
@@ -126,66 +164,47 @@ export const authProvider: AuthProvider = {
   },
 
   getPermissions: async () => {
-    try {
-      const token = await getAccessToken();
-      const res = await fetch("/api/admin/me", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.is_admin ? ["admin"] : [];
-      }
-    } catch (error) {
-      log.warn("Failed to fetch /me for permissions", error);
-    }
+    const data = await fetchMe();
+    if (data) return data.is_admin ? ["admin"] : [];
 
     if (!userManager) return [];
 
     const user = await userManager.getUser();
     return user ? user.profile.roles : [];
   },
-/*
-  canAccess: async ({ action, resource, record }: CanAccessParams): Promise<boolean> => {
-        const userString = localStorage.getItem('user');
-        const user = userString ? JSON.parse(userString) : null;
 
-        if (!user) return false;
+  canAccess: async ({
+    action,
+    resource,
+    record,
+  }: CanAccessParams): Promise<boolean> => {
+    const permissions = (await authProvider.getPermissions?.({})) ?? [];
+    const isAdmin = Array.isArray(permissions) && permissions.includes("admin");
 
-        const role = user.role; // z.B. 'admin' oder 'user'
-        const currentUserId = user.id; // Die ID, die den Nutzer als Organizer identifiziert
+    if (isAdmin) return true;
 
-        // 2. Admin darf alles
-        if (role === 'admin') {
-            return true;
-        }
-
-        // 3. Regeln für die Ressource "organizer"
-        if (resource === 'organizer') {
-            // Ansehen (Listen- und Detailansicht) geht für alle
-            if (action === 'list' || action === 'show') {
-                return true;
-            }
-
-            // Editieren: Nur, wenn der bearbeitete Record die eigene ID hat
-            if (action === 'edit') {
-                // Wir prüfen, ob ein record übergeben wurde und ob dessen ID dem Nutzer gehört.
-                // (Je nach Datenmodell musst du hier record.id oder z.B. record.userId prüfen)
-                if (record && record.id === currentUserId) {
-                    return true;
-                }
-                return false; // Fremde Datensätze dürfen nicht editiert werden
-            }
-
-            // Löschen explizit verbieten
-            if (action === 'delete') {
-                return false;
-            }
-        }
-
-        // 4. Standard-Fallback (false = Zugriff verweigert für alles, was nicht oben definiert ist)
-        return false; 
+    if (action === "list") {
+      return true;
     }
-        */
+
+    if (resource === "organizers" && action === "edit") {
+      // useEditController calls canAccess without a record -> allow load,
+      // OrganizerEdit enforces ownership afterwards.
+      if (!record) return true;
+      const permissions = (await authProvider.getPermissions?.({})) ?? [];
+      const isAdmin =
+        Array.isArray(permissions) && permissions.includes("admin");
+      if (isAdmin) return true;
+      const identity = await authProvider.getIdentity?.();
+      const recordId = (record as { id?: string } | null | undefined)?.id;
+      return recordId === identity?.id;
+    }
+    if (resource === "organizers" && (action === "show" || action === "view")) {
+      return true;
+    }
+
+    return false;
+  },
 };
 
 export const getAccessToken = async (): Promise<string | null> => {

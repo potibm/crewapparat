@@ -48,6 +48,8 @@ func InitViper() {
 
 	viper.SetDefault("sentry.dsn", "")
 	viper.SetDefault("sentry.trace_sample_rate", DefaultTraceSampleRate)
+
+	viper.SetDefault("auth.oidc_admin_group", "crewapparat-admins")
 	viper.SetDefault("sentry.replay_session_sample_rate", DefaultReplaySessionSampleRate)
 	viper.SetDefault("sentry.replay_error_sample_rate", DefaultReplayErrorSampleRate)
 

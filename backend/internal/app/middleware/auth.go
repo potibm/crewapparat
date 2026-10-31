@@ -196,6 +196,10 @@ func validateTokenAndGetUserID(
 		return "", nil, errors.New("missing subject in token")
 	}
 
+	// Dex wraps the configured userID in a protobuf-encoded subject; unwrap it
+	// so the rest of the application can key off the plain user ID.
+	userID = DecodeDexSub(userID)
+
 	if groupsClaim, ok := claims["groups"].([]any); ok {
 		for _, g := range groupsClaim {
 			if s, ok := g.(string); ok {

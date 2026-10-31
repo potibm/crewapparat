@@ -49,3 +49,7 @@ func respondWithBadRequestProblem(c *gin.Context, detail string) {
 func respondWithUnauthorizedProblem(c *gin.Context, detail string) {
 	respondWithProblem(c, http.StatusUnauthorized, "Unauthorized", detail)
 }
+
+func respondWithForbiddenProblem(c *gin.Context, detail string) {
+	respondWithProblem(c, http.StatusForbidden, "Forbidden", detail)
+}

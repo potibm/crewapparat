@@ -6,8 +6,10 @@ import (
 
 // The two Dex users below are the organizers a developer logs in as during
 // local work. Their oidc_sub values are the `userID` entries of the matching
-// accounts in infra/dex-config.yaml: Dex' local connector hands that field on
-// as the OIDC `sub` claim.
+// accounts in infra/dex-config.yaml. Dex' local connector does NOT hand that
+// field on verbatim: it wraps it in a protobuf message and base64-encodes it
+// into the JWT `sub` claim. The backend's middleware.DecodeDexSub unwraps that
+// at request time, so storing the plain userID here is correct.
 //
 // Seeding the sub explicitly means the organizer records are already linked on
 // first login. TestDexUsersMatchDexConfig fails as soon as one of the userIDs in

@@ -12,7 +12,7 @@ import (
 
 func HeaderMiddleware(cfg config.AuthConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		sub := c.GetHeader(cfg.HeaderUserSub)
+		sub := DecodeDexSub(c.GetHeader(cfg.HeaderUserSub))
 		if sub != "" {
 			c.Set("userID", sub)
 
