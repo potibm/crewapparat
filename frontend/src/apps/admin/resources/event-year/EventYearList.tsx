@@ -1,4 +1,4 @@
-import { List, Datagrid, TextField, TextInput } from "react-admin";
+import { List, DataTable, TextInput } from "react-admin";
 
 const eventYearFilters = [
   <TextInput key="q" source="q" label="Search" alwaysOn />,
@@ -6,10 +6,10 @@ const eventYearFilters = [
 
 const EventYearList = () => (
   <List filters={eventYearFilters}>
-    <Datagrid rowClick="edit" bulkActionButtons={false}>
-      <TextField source="year" />
-      <TextField source="is_active" />
-    </Datagrid>
+    <DataTable rowClick="edit" bulkActionButtons={false}>
+      <DataTable.Col source="year" />
+      <DataTable.Col source="is_active" />
+    </DataTable>
   </List>
 );
 

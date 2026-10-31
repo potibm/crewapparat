@@ -1,4 +1,4 @@
-import EventIcon from "@mui/icons-material/Event";
+import PersonIcon from "@mui/icons-material/Person";
 import OrganizerList from "./OrganizerList";
 import OrganizerCreate from "./OrganizerCreate";
 import OrganizerEdit from "./OrganizerEdit";
@@ -11,5 +11,6 @@ export default {
   create: OrganizerCreate,
   edit: OrganizerEdit,
   show: OrganizerShow,
-  icon: EventIcon,
+  icon: PersonIcon,
+  recordRepresentation: "handle",
 };

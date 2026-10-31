@@ -8,4 +8,5 @@ export interface ParticipationRecord extends RaRecord {
   t_shirt_size?: string;
   additional_paid_shirt: boolean;
   public_website_consent: boolean;
+  teams?: { id: string; name: string }[];
 }

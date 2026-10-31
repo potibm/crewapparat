@@ -1,7 +1,6 @@
 import {
   List,
-  Datagrid,
-  TextField,
+  DataTable,
   TextInput,
   EditButton,
   DeleteButton,
@@ -13,17 +12,20 @@ const organizerFilters = [
 
 const OrganizerList = () => (
   <List filters={organizerFilters}>
-    <Datagrid rowClick="edit" bulkActionButtons={false}>
-      <TextField source="handle" />
-      <TextField source="realname" />
-      <TextField source="email" />
-      <TextField source="phone" />
-      <EditButton />
+    <DataTable bulkActionButtons={false} rowClick="show">
+       <DataTable.Col source="handle" />
+       <DataTable.Col source="realname" />
+
+       <DataTable.Col source="email" />
+       <DataTable.Col source="phone" />
+          <DataTable.Col>
+                <EditButton />
       <DeleteButton
         confirmTitle="Delete organizer"
         confirmContent="Are you sure you want to delete this organizer?"
       />
-    </Datagrid>
+            </DataTable.Col>
+    </DataTable>
   </List>
 );
 

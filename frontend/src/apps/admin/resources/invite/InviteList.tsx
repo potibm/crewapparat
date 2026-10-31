@@ -1,4 +1,4 @@
-import { List, Datagrid, TextField, TextInput } from "react-admin";
+import { List, DataTable, TextInput } from "react-admin";
 
 const inviteFilters = [
   <TextInput key="q" source="q" label="Search" alwaysOn />,
@@ -6,11 +6,11 @@ const inviteFilters = [
 
 const InviteList = () => (
   <List filters={inviteFilters}>
-    <Datagrid rowClick="edit" bulkActionButtons={false}>
-      <TextField source="email" />
-      <TextField source="status" />
-      <TextField source="expires_at" />
-    </Datagrid>
+    <DataTable rowClick="edit" bulkActionButtons={false}>
+      <DataTable.Col source="email" />
+      <DataTable.Col source="status" />
+      <DataTable.Col source="expires_at" />
+    </DataTable>
   </List>
 );
 
