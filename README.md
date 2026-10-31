@@ -33,7 +33,7 @@ during the event. Identity and access is delegated to an external OIDC provider.
   - [Dex](https://dexidp.io/) (OIDC provider for local development; production uses Rauthy)
   - [Traefik](https://traefik.io/) (local edge router)
   - [mkcert](https://github.com/FiloSottile/mkcert) & dnsmasq (local TLS & `.test` routing)
-  - [Redis](https://redis.io) (event sync) and [MinIO](https://min.io) (S3-compatible object storage)
+  - [Redis](https://redis.io) (event sync)
 - **Observability**
   - [Sentry](https://sentry.io)
   - [OpenTelemetry](https://opentelemetry.io) + [OpenObserve](https://openobserve.ai/)
@@ -57,7 +57,7 @@ mise run deps:install
 # Generates local certificates, configures dnsmasq/resolver, and updates /etc/hosts (Linux)
 mise run infra:prepare
 
-# 4. Start local services (Traefik, Dex, OpenObserve, Redis, MinIO)
+# 4. Start local services (Traefik, Dex, OpenObserve, Redis)
 mise run infra:up
 
 # 5. Start the development server (hot-reload for backend & frontend)
@@ -76,11 +76,10 @@ Once the stack is running, you can access the applications via:
 | Crewapparat Admin | https://crewapparat.test         | via Dex: `admin@example.com` / `password` |
 | OpenObserve       | https://observe.crewapparat.test | `admin@example.com` / `password123`       |
 | RedisInsight      | https://redis.crewapparat.test   | —                                         |
-| MinIO Console     | https://minio.crewapparat.test   | `local-admin` / `local-super-secret`      |
 | Dex               | https://dex.crewapparat.test     | —                                         |
 
 Development ports: frontend `3400`, backend `3401`, OTel gRPC `3417` / HTTP `3418`,
-MinIO `3450`, Redis `3451`.
+Redis `3451`.
 
 ## Everyday Commands
 

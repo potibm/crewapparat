@@ -141,13 +141,6 @@ services:
     labels:
       - "traefik.docker.network=traefik-global"
 
-  minio:
-    networks:
-      - default
-      - traefik-global
-    labels:
-      - "traefik.docker.network=traefik-global"
-
 # 3. Declares the global network for this project
 networks:
   default:
