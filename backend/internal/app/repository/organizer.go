@@ -22,6 +22,7 @@ type OrganizerListParams = ListParams
 type OrganizerListFilters struct {
 	Query *string
 	ID    *uuid.UUID
+	Slug  *string
 }
 
 type OrganizerRepository interface {
@@ -39,4 +40,6 @@ type OrganizerRepository interface {
 	GetByOidcSub(ctx context.Context, oidcSub string) (*domain.Organizer, error)
 	// GetByEmail finds an organizer by email address.
 	GetByEmail(ctx context.Context, email string) (*domain.Organizer, error)
+	// GetBySlug finds an organizer by its immutable slug.
+	GetBySlug(ctx context.Context, slug string) (*domain.Organizer, error)
 }

@@ -95,6 +95,7 @@ func NewServeCmd() *cobra.Command {
 				// Organizers
 				admin.GET("/organizers", server.ListOrganizers)
 				admin.POST("/organizers", server.CreateOrganizer)
+				admin.GET("/organizers/by-slug/:slug", server.GetOrganizerBySlug)
 				admin.GET("/organizers/:id", server.GetOrganizer)
 				admin.PUT("/organizers/:id", server.UpdateOrganizer)
 				admin.DELETE("/organizers/:id", server.DeleteOrganizer)

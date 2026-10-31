@@ -1,9 +1,20 @@
-import { Show, SimpleShowLayout, TextField } from "react-admin";
+import {
+  Show,
+  SimpleShowLayout,
+  TextField,
+  useRecordContext,
+} from "react-admin";
+
+const OrganizerTitle = () => {
+  const record = useRecordContext();
+  return <span>Organizer {record?.handle}</span>;
+};
 
 const OrganizerShow = () => (
-  <Show>
+  <Show title={<OrganizerTitle />}>
     <SimpleShowLayout>
       <TextField source="handle" />
+      <TextField source="slug" />
       <TextField source="realname" />
       <TextField source="email" />
       <TextField source="phone" />

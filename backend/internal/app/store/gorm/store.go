@@ -150,6 +150,13 @@ func newStore(dsn string) (*Store, error) {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
+	// Partial unique index: empty slugs (not yet backfilled) must not collide.
+	if err := db.Exec(
+		"CREATE UNIQUE INDEX IF NOT EXISTS idx_organizers_slug ON organizers(slug) WHERE slug <> ''",
+	).Error; err != nil {
+		return nil, fmt.Errorf("failed to create slug index: %w", err)
+	}
+
 	if err := RegisterUUIDCallbacks(db); err != nil {
 		return nil, fmt.Errorf("failed to register uuid callbacks: %w", err)
 	}
@@ -157,6 +164,11 @@ func newStore(dsn string) (*Store, error) {
 	err = RegisterAuditCallbacks(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to register audit callbacks: %w", err)
+	}
+
+	// Backfill immutable slugs for organizers that predate the column.
+	if err := backfillOrganizerSlugs(db); err != nil {
+		return nil, fmt.Errorf("failed to backfill organizer slugs: %w", err)
 	}
 
 	return &Store{db: db}, nil

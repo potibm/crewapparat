@@ -1,4 +1,7 @@
 import { Admin, Resource } from "react-admin";
+import { CustomRoutes } from "ra-core";
+import { Route } from "react-router";
+import SlugRedirect from "./components/SlugRedirect";
 import { BrowserRouter } from "react-router";
 import { MyTheme, MyDarkTheme } from "./theme/MyTheme";
 import { MyLayout } from "./theme/MyLayout";
@@ -37,6 +40,9 @@ export const AppBootstrapper = () => {
       <Resource {...teams} />
       <Resource {...participations} />
       <Resource {...invites} />
+      <CustomRoutes>
+        <Route path="/u/:slug" element={<SlugRedirect />} />
+      </CustomRoutes>
     </Admin>
   );
 };

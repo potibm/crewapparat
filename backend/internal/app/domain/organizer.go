@@ -9,6 +9,7 @@ type Organizer struct {
 	ID              uuid.UUID `json:"id"`
 	OidcSub         *string   `json:"oidc_sub,omitempty"` // set on first login against the IdP
 	Handle          string    `json:"handle"`             // Demoscene-Handle
+	Slug            string    `json:"slug"`               // immutable, slugified handle, unique
 	Realname        string    `json:"realname"`           // legal name
 	Email           string    `json:"email"`
 	Phone           string    `json:"phone"`

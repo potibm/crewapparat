@@ -29,6 +29,30 @@ func (s *Server) ListOrganizers(c *gin.Context) {
 	c.JSON(http.StatusOK, items)
 }
 
+func (s *Server) GetOrganizerBySlug(c *gin.Context) {
+	slug := c.Param("slug")
+	if slug == "" {
+		respondWithInvalidIDFormatProblem(c)
+
+		return
+	}
+
+	organizer, err := s.organizerRepo.GetBySlug(c.Request.Context(), slug)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			respondWithNotFoundProblem(c, "Organizer not found")
+
+			return
+		}
+
+		respondWithInternalServerProblem(c, "Failed to get organizer: "+err.Error())
+
+		return
+	}
+
+	c.JSON(http.StatusOK, organizer)
+}
+
 func (s *Server) GetOrganizer(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -68,6 +92,27 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 		respondWithFailedToParsePayloadProblem(c, err)
 
 		return
+	}
+
+	if organizer.Slug == "" {
+		base := domain.Slugify(organizer.Handle)
+
+		slug := base
+		for i := 2; ; i++ {
+			if _, err := s.organizerRepo.GetBySlug(c.Request.Context(), slug); err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					break
+				}
+
+				respondWithInternalServerProblem(c, "Failed to check slug: "+err.Error())
+
+				return
+			}
+
+			slug = base + "-" + strconv.Itoa(i)
+		}
+
+		organizer.Slug = slug
 	}
 
 	if err := s.organizerRepo.Create(c.Request.Context(), &organizer); err != nil {
@@ -120,6 +165,11 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 	}
 
 	organizer.ID = id
+
+	// Slug is immutable: preserve the stored value regardless of the payload.
+	if existing, err := s.organizerRepo.GetByID(c.Request.Context(), id); err == nil && existing.Slug != "" {
+		organizer.Slug = existing.Slug
+	}
 
 	if err := s.organizerRepo.Update(c.Request.Context(), &organizer); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -184,6 +234,10 @@ func parseOrganizerFilters(c *gin.Context) repository.OrganizerListFilters {
 
 	if q := c.Query("q"); q != "" {
 		filters.Query = &q
+	}
+
+	if slug := c.Query("slug"); slug != "" {
+		filters.Slug = &slug
 	}
 
 	return filters

@@ -13,6 +13,7 @@ type dbOrganizer struct {
 	ID              uuid.UUID `gorm:"primaryKey;type:text;column:id"`
 	OidcSub         *string   `gorm:"uniqueIndex;column:oidc_sub"`
 	Handle          string    `gorm:"index;column:handle"`
+	Slug            string    `gorm:"column:slug"`
 	Realname        string    `gorm:"column:realname"`
 	Email           string    `gorm:"uniqueIndex;column:email"`
 	Phone           string    `gorm:"column:phone"`
@@ -38,6 +39,7 @@ func fromDomainOrganizer(o *domain.Organizer) *dbOrganizer {
 		ID:              o.ID,
 		OidcSub:         o.OidcSub,
 		Handle:          o.Handle,
+		Slug:            o.Slug,
 		Realname:        o.Realname,
 		Email:           o.Email,
 		Phone:           o.Phone,
@@ -61,6 +63,7 @@ func toDomainOrganizer(db *dbOrganizer) *domain.Organizer {
 		ID:              db.ID,
 		OidcSub:         db.OidcSub,
 		Handle:          db.Handle,
+		Slug:            db.Slug,
 		Realname:        db.Realname,
 		Email:           db.Email,
 		Phone:           db.Phone,

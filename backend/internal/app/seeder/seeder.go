@@ -319,6 +319,13 @@ func (s *Seeder) upsertOrganizer(ctx context.Context, candidate *domain.Organize
 			candidate.OidcSub = existing.OidcSub
 		}
 
+		// Slug is immutable: keep the stored value, or repair an empty one.
+		if existing.Slug != "" {
+			candidate.Slug = existing.Slug
+		} else if candidate.Slug == "" {
+			candidate.Slug = domain.Slugify(candidate.Handle)
+		}
+
 		candidate.Participations = nil
 
 		if updateErr := s.repos.Organizers.Update(ctx, candidate); updateErr != nil {
@@ -432,6 +439,7 @@ func (s *Seeder) buildRandomOrganizer() *domain.Organizer {
 		Languages: pickLanguages(),
 		DemozooID: &demozooID,
 	}
+	organizer.Slug = domain.Slugify(organizer.Handle)
 
 	if gofakeit.Bool() {
 		organizer.SlackHandle = strings.ToLower(gofakeit.Username())

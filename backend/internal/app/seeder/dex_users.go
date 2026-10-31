@@ -70,6 +70,7 @@ func (u DexUser) ToOrganizer() *domain.Organizer {
 		OidcSub:     &sub,
 		Email:       u.Email,
 		Handle:      u.Handle,
+		Slug:        domain.Slugify(u.Handle),
 		Realname:    u.Realname,
 		Pronouns:    u.Pronouns,
 		Languages:   u.Languages,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -147,6 +148,19 @@ func (r *organizerRepository) GetByEmail(ctx context.Context, email string) (*do
 	return toDomainOrganizer(&dbRow), nil
 }
 
+func (r *organizerRepository) GetBySlug(ctx context.Context, slug string) (*domain.Organizer, error) {
+	var dbRow dbOrganizer
+
+	err := r.db.WithContext(ctx).
+		Where("slug = ?", slug).
+		First(&dbRow).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return toDomainOrganizer(&dbRow), nil
+}
+
 func NewOrganizerRepository(db *gorm.DB) repository.OrganizerRepository {
 	return &organizerRepository{db: db}
 }
@@ -166,7 +180,51 @@ func (r *organizerRepository) applyFilters(
 		query = query.Where("id = ?", *filters.ID)
 	}
 
+	if filters.Slug != nil {
+		query = query.Where("slug = ?", *filters.Slug)
+	}
+
 	return query
+}
+
+// backfillOrganizerSlugs populates the slug column for organizers that predate
+// it (or were created without one). Slugs are immutable once set.
+func backfillOrganizerSlugs(db *gorm.DB) error {
+	var rows []dbOrganizer
+	if err := db.Where("slug = '' OR slug IS NULL").Find(&rows).Error; err != nil {
+		return err
+	}
+
+	used := map[string]bool{}
+
+	var all []dbOrganizer
+	if err := db.Select("slug").Find(&all).Error; err != nil {
+		return err
+	}
+
+	for _, r := range all {
+		if r.Slug != "" {
+			used[r.Slug] = true
+		}
+	}
+
+	for i := range rows {
+		base := domain.Slugify(rows[i].Handle)
+
+		slug := base
+		for n := 2; used[slug]; n++ {
+			slug = base + "-" + strconv.Itoa(n)
+		}
+
+		used[slug] = true
+		rows[i].Slug = slug
+
+		if err := db.Model(&dbOrganizer{}).Where("id = ?", rows[i].ID).Update("slug", slug).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // IsNotFound reports whether an error means the record does not exist.
