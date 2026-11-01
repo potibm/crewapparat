@@ -11,5 +11,5 @@ export interface ParticipationRecord extends RaRecord {
   shift_preferred_times?: number[];
   shift_unavailable_times?: number[];
   shift_preferred_partner?: string[];
-  teams?: { id: string; name: string; has_shifts?: boolean }[];
+  teams?: { id: string; name: string; color?: string; has_shifts?: boolean }[];
 }

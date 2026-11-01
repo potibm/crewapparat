@@ -27,6 +27,7 @@ import { DemozooIcon, SlackIcon } from "./OrganizerIcons";
 import { OrganizerRecord } from "./organizer.types";
 import { AvatarLightbox } from "./AvatarLightbox";
 import { OrganizerAvatar } from "./OrganizerAvatar";
+import { TeamChips } from "./TeamChips";
 
 const OrganizerShowContent = () => {
   const record = useRecordContext<OrganizerRecord>();
@@ -50,6 +51,16 @@ const OrganizerShowContent = () => {
         (b.event_year_id ?? "").localeCompare(a.event_year_id ?? ""),
       )
     : [];
+
+  const activeParticipation = record.participations?.find(
+    (participation) => participation.event_year_id === activeYear,
+  );
+
+  const activeTeams =
+    record.current_participation_teams &&
+    record.current_participation_teams.length > 0
+      ? record.current_participation_teams
+      : (activeParticipation?.teams ?? []);
 
   const publicUrl = `${window.location.origin}/u/${record.slug}`;
   const handleCopy = async () => {
@@ -89,7 +100,7 @@ const OrganizerShowContent = () => {
             <Stack
               direction="row"
               spacing={1}
-              sx={{ mt: 1, flexWrap: "wrap", gap: 1 }}
+              sx={{ mt: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}
             >
               {record.pronouns && (
                 <Chip label={record.pronouns} size="small" color="secondary" />
@@ -97,6 +108,7 @@ const OrganizerShowContent = () => {
               {record.languages?.map((lang) => (
                 <Chip key={lang} label={lang} size="small" variant="outlined" />
               ))}
+              <TeamChips teams={activeTeams} />
             </Stack>
             <Box
               sx={{
@@ -287,21 +299,8 @@ const OrganizerShowContent = () => {
                     : {}
                 }
               >
-                {" "}
                 <DataTable.Col source="event_year_id" />
                 <DataTable.Col source="status" />
-                <DataTable.Col
-                  label="Teams"
-                  render={(participation) =>
-                    participation.teams && participation.teams.length > 0
-                      ? participation.teams
-                          .map(
-                            (team: { id: string; name: string }) => team.name,
-                          )
-                          .join(", ")
-                      : "—"
-                  }
-                />
               </DataTable>
             ) : (
               <Typography color="text.secondary">

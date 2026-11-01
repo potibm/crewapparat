@@ -17,5 +17,9 @@ export interface OrganizerRecord extends RaRecord {
   languages?: string[];
   participations?: ParticipationRecord[];
   current_participation_status?: string;
-  current_participation_teams?: { id: string; name: string }[];
+  current_participation_teams?: {
+    id: string;
+    name: string;
+    color?: string;
+  }[];
 }

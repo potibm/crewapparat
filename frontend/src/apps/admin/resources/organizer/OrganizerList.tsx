@@ -12,9 +12,10 @@ import { AvatarLightbox } from "./AvatarLightbox";
 import { OrganizerAvatar } from "./OrganizerAvatar";
 import { SlackIcon } from "./OrganizerIcons";
 import type { OrganizerRecord } from "./organizer.types";
-import { Box, Chip, IconButton, Stack, Typography } from "@mui/material";
+import { Box, Chip, IconButton, Typography } from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
+import { TeamChips } from "./TeamChips";
 
 const statusChoices = [
   { id: "confirmed", name: "Active" },
@@ -64,7 +65,8 @@ const OrganizerListContent = () => {
   return (
     <>
       <List
-        filter={{ event_year_id: activeYear, status: "confirmed" }}
+        filter={{ event_year_id: activeYear }}
+        filterDefaultValues={{ status: "confirmed" }}
         filters={organizerFilters}
       >
         <DataTable bulkActionButtons={false} rowClick="show">
@@ -77,7 +79,8 @@ const OrganizerListContent = () => {
                   handle={record.handle}
                   realname={record.realname}
                   size={40}
-                  onClick={() => {
+                  onClick={(event) => {
+                    event.stopPropagation();
                     if (record.avatar_url) setLightboxSrc(record.avatar_url);
                   }}
                 />
@@ -96,6 +99,7 @@ const OrganizerListContent = () => {
                   component="a"
                   href={record.email ? `mailto:${record.email}` : undefined}
                   disabled={!record.email}
+                  onClick={(event) => event.stopPropagation()}
                   sx={{ color: record.email ? "action" : "action.disabled" }}
                 >
                   <EmailIcon fontSize="small" />
@@ -105,6 +109,7 @@ const OrganizerListContent = () => {
                   component="a"
                   href={record.phone ? `tel:${record.phone}` : undefined}
                   disabled={!record.phone}
+                  onClick={(event) => event.stopPropagation()}
                   sx={{ color: record.phone ? "action" : "action.disabled" }}
                 >
                   <PhoneIcon fontSize="small" />
@@ -116,6 +121,7 @@ const OrganizerListContent = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   disabled={!record.slack_handle && !record.slack_profile_url}
+                  onClick={(event) => event.stopPropagation()}
                   sx={{
                     color:
                       record.slack_handle || record.slack_profile_url
@@ -161,28 +167,16 @@ const OrganizerListContent = () => {
           <DataTable.Col
             label="Teams"
             disableSort
-            render={(record: OrganizerRecord) => {
-              const teams = record.current_participation_teams;
-              if (!teams || teams.length === 0) {
-                return (
-                  <Typography variant="body2" color="text.secondary">
-                    —
-                  </Typography>
-                );
-              }
-              return (
-                <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap" }}>
-                  {teams.map((t: { id: string; name: string }) => (
-                    <Chip
-                      key={t.id}
-                      label={t.name}
-                      size="small"
-                      variant="outlined"
-                    />
-                  ))}
-                </Stack>
-              );
-            }}
+            render={(record: OrganizerRecord) =>
+              record.current_participation_teams &&
+              record.current_participation_teams.length > 0 ? (
+                <TeamChips teams={record.current_participation_teams} />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  —
+                </Typography>
+              )
+            }
           />
           <DataTable.Col>
             <EditButton />

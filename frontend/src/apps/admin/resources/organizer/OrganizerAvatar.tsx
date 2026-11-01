@@ -1,11 +1,12 @@
 import { Avatar } from "@mui/material";
+import type { MouseEvent } from "react";
 
 interface OrganizerAvatarProps {
   src?: string | null;
   handle?: string;
   realname?: string;
   size?: number;
-  onClick?: () => void;
+  onClick?: (event: MouseEvent<HTMLDivElement>) => void;
 }
 
 export const OrganizerAvatar = ({
