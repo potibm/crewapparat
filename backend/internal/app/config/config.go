@@ -20,6 +20,9 @@ const (
 
 	DefaultDBFilename = "crewapparat"
 
+	DefaultShiftStart      = "2026-08-07T16:00:00+02:00"
+	DefaultShiftBlockCount = 90
+
 	DataDirPerm = 0o755
 )
 
@@ -49,6 +52,9 @@ func InitViper() {
 
 	viper.SetDefault("format.date.locale", "da-DK")
 	viper.SetDefault("format.date.options", DefaultDateOptions)
+
+	viper.SetDefault("shift.start", DefaultShiftStart)
+	viper.SetDefault("shift.block_count", DefaultShiftBlockCount)
 
 	viper.SetDefault("sentry.dsn", "")
 	viper.SetDefault("sentry.trace_sample_rate", DefaultTraceSampleRate)

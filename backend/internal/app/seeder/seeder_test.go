@@ -225,7 +225,7 @@ func TestSeeder_BlockNumbersStayInWindow(t *testing.T) {
 		assert.NotEqual(t, domain.ParticipationStatus(""), participation.Status)
 		assert.Contains(t, shirtSizes, participation.TShirtSize)
 
-		for _, block := range participation.ShiftAvailableTimes {
+		for _, block := range participation.ShiftPreferredTimes {
 			assert.GreaterOrEqual(t, block, 0, "negative block number")
 			assert.Less(t, block, totalBlocks, "block outside the party window")
 		}

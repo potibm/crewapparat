@@ -144,5 +144,24 @@ func parseParticipationFilters(c *gin.Context) repository.ParticipationListFilte
 		filters.Query = &q
 	}
 
+	if v := c.Query("organizer_id"); v != "" {
+		if id, err := uuid.Parse(v); err == nil {
+			filters.OrganizerID = &id
+		}
+	}
+
+	if v := c.Query("event_year_id"); v != "" {
+		filters.EventYearID = &v
+	}
+
+	if v := c.Query("status"); v != "" {
+		status := domain.ParticipationStatus(v)
+		filters.Status = &status
+	}
+
+	if v := c.Query("team"); v != "" {
+		filters.TeamName = &v
+	}
+
 	return filters
 }

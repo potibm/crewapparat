@@ -33,7 +33,7 @@ func TestParticipationRepository_Roundtrip(t *testing.T) {
 		TShirtSize:            "XL",
 		AdditionalPaidShirt:   true,
 		PublicWebsiteConsent:  true,
-		ShiftAvailableTimes:   []int{0, 1, 2, 32, 33},
+		ShiftPreferredTimes:   []int{0, 1, 2, 32, 33},
 		ShiftUnavailableTimes: []int{5, 6},
 		ShiftPreferredPartner: []string{"uuid-a", "uuid-b"},
 	}
@@ -49,7 +49,7 @@ func TestParticipationRepository_Roundtrip(t *testing.T) {
 	require.Equal(t, "XL", loaded.TShirtSize)
 	require.True(t, loaded.AdditionalPaidShirt)
 	require.True(t, loaded.PublicWebsiteConsent)
-	require.Equal(t, []int{0, 1, 2, 32, 33}, loaded.ShiftAvailableTimes)
+	require.Equal(t, []int{0, 1, 2, 32, 33}, loaded.ShiftPreferredTimes)
 	require.Equal(t, []int{5, 6}, loaded.ShiftUnavailableTimes)
 	require.Equal(t, []string{"uuid-a", "uuid-b"}, loaded.ShiftPreferredPartner)
 }
@@ -188,6 +188,46 @@ func TestParticipationRepository_ListFilter(t *testing.T) {
 	require.Equal(t, int64(1), total)
 	require.Len(t, list, 1)
 	require.Equal(t, domain.ParticipationStatusConfirmed, list[0].Status)
+}
+
+func TestParticipationRepository_ListFilterByTeam(t *testing.T) {
+	store := newTestStore(t)
+	repo := store.NewParticipationRepository()
+	teamRepo := store.NewTeamRepository()
+	ctx := context.Background()
+
+	infodesk := &domain.Team{Name: "Infodesk", HasShifts: true}
+	require.NoError(t, teamRepo.Create(ctx, infodesk))
+
+	network := &domain.Team{Name: "Network"}
+	require.NoError(t, teamRepo.Create(ctx, network))
+
+	organizer := newOrganizerForParticipation(t, store)
+
+	inInfodesk := &domain.Participation{
+		OrganizerID: organizer.ID, EventYearID: "2026", Teams: []domain.Team{*infodesk},
+	}
+	require.NoError(t, repo.Create(ctx, inInfodesk))
+
+	otherOrganizer := newOrganizerForParticipation(t, store)
+
+	inNetwork := &domain.Participation{
+		OrganizerID: otherOrganizer.ID, EventYearID: "2026", Teams: []domain.Team{*network},
+	}
+	require.NoError(t, repo.Create(ctx, inNetwork))
+
+	teamName := "Infodesk"
+	year := "2026"
+
+	list, total, err := repo.List(ctx,
+		repository.ParticipationListParams{Limit: 10, Sort: "id", Order: "ASC"},
+		repository.ParticipationListFilters{TeamName: &teamName, EventYearID: &year})
+	require.NoError(t, err)
+	require.Equal(t, int64(1), total)
+	require.Len(t, list, 1)
+	require.Equal(t, organizer.ID, list[0].OrganizerID)
+	require.Len(t, list[0].Teams, 1)
+	require.True(t, list[0].Teams[0].HasShifts)
 }
 
 func TestParticipationRepository_SortWhitelist(t *testing.T) {

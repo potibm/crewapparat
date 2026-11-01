@@ -49,8 +49,9 @@ type EventYear struct {
 }
 
 type Team struct {
-    ID   uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
-    Name string    `gorm:"unique"` // e.g., "Infodesk", "Network"
+    ID        uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+    Name      string    `gorm:"unique"` // e.g., "Infodesk", "Network"
+    HasShifts bool      // members plan shifts (e.g. Infodesk)
 }
 
 type Participation struct {
@@ -66,7 +67,8 @@ type Participation struct {
 
     // Shift Planning (IDs representing half-hour blocks)
     // API Output: [0, 1, 2, 32, 33]
-    ShiftAvailableTimes   []int    `gorm:"serializer:json"`
+    // "available" is the default; only requested/blocked blocks are stored.
+    ShiftPreferredTimes   []int    `gorm:"serializer:json"`
     ShiftUnavailableTimes []int    `gorm:"serializer:json"`
 
     // UUIDs of preferred partners. API Output: ["uuid-1", "uuid-2"]

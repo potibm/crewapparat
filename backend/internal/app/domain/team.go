@@ -6,4 +6,6 @@ import "github.com/google/uuid"
 type Team struct {
 	ID   uuid.UUID `json:"id"`
 	Name string    `json:"name"`
+	// HasShifts marks teams whose members need shift planning (e.g. Infodesk).
+	HasShifts bool `json:"has_shifts"`
 }

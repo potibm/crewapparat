@@ -10,8 +10,9 @@ type dbTeam struct {
 	TimestampModel
 	AuditModel
 
-	ID   uuid.UUID `gorm:"primaryKey;type:text;column:id"`
-	Name string    `gorm:"uniqueIndex;column:name"`
+	ID        uuid.UUID `gorm:"primaryKey;type:text;column:id"`
+	Name      string    `gorm:"uniqueIndex;column:name"`
+	HasShifts bool      `gorm:"default:false;column:has_shifts"`
 }
 
 func (dbTeam) TableName() string { return "teams" }
@@ -22,14 +23,16 @@ func (t *dbTeam) SetID(id uuid.UUID) { t.ID = id }
 
 func fromDomainTeam(t *domain.Team) *dbTeam {
 	return &dbTeam{
-		ID:   t.ID,
-		Name: t.Name,
+		ID:        t.ID,
+		Name:      t.Name,
+		HasShifts: t.HasShifts,
 	}
 }
 
 func toDomainTeam(db *dbTeam) *domain.Team {
 	return &domain.Team{
-		ID:   db.ID,
-		Name: db.Name,
+		ID:        db.ID,
+		Name:      db.Name,
+		HasShifts: db.HasShifts,
 	}
 }

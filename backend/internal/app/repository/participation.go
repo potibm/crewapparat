@@ -14,6 +14,7 @@ type ParticipationListFilters struct {
 	OrganizerID *uuid.UUID
 	EventYearID *string
 	Status      *domain.ParticipationStatus
+	TeamName    *string
 }
 
 type ParticipationListParams = ListParams

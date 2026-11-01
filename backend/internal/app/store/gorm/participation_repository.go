@@ -127,6 +127,16 @@ func (r *participationRepository) List(
 		query = query.Where("status = ?", string(*filters.Status))
 	}
 
+	if filters.TeamName != nil {
+		sub := r.db.WithContext(ctx).
+			Table("participation_teams").
+			Joins("JOIN teams ON teams.id = participation_teams.team_id").
+			Where("teams.name = ? AND teams.deleted_at IS NULL", *filters.TeamName).
+			Select("participation_teams.participation_id")
+
+		query = query.Where("id IN (?)", sub)
+	}
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count participations: %w", err)
 	}

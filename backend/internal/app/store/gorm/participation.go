@@ -20,7 +20,7 @@ type dbParticipation struct {
 	AdditionalPaidShirt  bool   `gorm:"default:false;column:additional_paid_shirt"`
 	PublicWebsiteConsent bool   `gorm:"default:false;column:public_website_consent"`
 
-	ShiftAvailableTimes   []int    `gorm:"serializer:json;column:shift_available_times"`
+	ShiftPreferredTimes   []int    `gorm:"serializer:json;column:shift_preferred_times"`
 	ShiftUnavailableTimes []int    `gorm:"serializer:json;column:shift_unavailable_times"`
 	ShiftPreferredPartner []string `gorm:"serializer:json;column:shift_preferred_partner"`
 
@@ -42,7 +42,7 @@ func fromDomainParticipation(p *domain.Participation) *dbParticipation {
 		TShirtSize:            p.TShirtSize,
 		AdditionalPaidShirt:   p.AdditionalPaidShirt,
 		PublicWebsiteConsent:  p.PublicWebsiteConsent,
-		ShiftAvailableTimes:   p.ShiftAvailableTimes,
+		ShiftPreferredTimes:   p.ShiftPreferredTimes,
 		ShiftUnavailableTimes: p.ShiftUnavailableTimes,
 		ShiftPreferredPartner: p.ShiftPreferredPartner,
 	}
@@ -63,7 +63,7 @@ func toDomainParticipation(db *dbParticipation) *domain.Participation {
 		TShirtSize:            db.TShirtSize,
 		AdditionalPaidShirt:   db.AdditionalPaidShirt,
 		PublicWebsiteConsent:  db.PublicWebsiteConsent,
-		ShiftAvailableTimes:   db.ShiftAvailableTimes,
+		ShiftPreferredTimes:   db.ShiftPreferredTimes,
 		ShiftUnavailableTimes: db.ShiftUnavailableTimes,
 		ShiftPreferredPartner: db.ShiftPreferredPartner,
 	}

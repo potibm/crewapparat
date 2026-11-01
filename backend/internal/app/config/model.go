@@ -46,6 +46,13 @@ type FormatConfig struct {
 	Date DateFormatConfig `json:"date" mapstructure:"date"`
 }
 
+// ShiftConfig describes the shift grid. Start is the ISO 8601 timestamp of
+// block 0; BlockCount is the total number of half-hour blocks.
+type ShiftConfig struct {
+	Start      string `json:"start"       mapstructure:"start"       validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	BlockCount int    `json:"block_count" mapstructure:"block_count" validate:"omitempty,gte=0"`
+}
+
 //nolint:lll // struct tags can get long and it's more readable to keep them in one line
 type AuthConfig struct {
 	Type             string   `json:"type"      mapstructure:"type"               validate:"required,oneof=oidc"`
@@ -63,5 +70,6 @@ type Config struct {
 	App    AppConfig    `mapstructure:"app"`
 	Sentry SentryConfig `mapstructure:"sentry"`
 	Format FormatConfig `mapstructure:"format"`
+	Shift  ShiftConfig  `mapstructure:"shift"`
 	Auth   *AuthConfig  `mapstructure:"auth"   validate:"omitempty"`
 }

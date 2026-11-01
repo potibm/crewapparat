@@ -22,8 +22,9 @@ type Participation struct {
 	AdditionalPaidShirt  bool   `json:"additional_paid_shirt"`
 	PublicWebsiteConsent bool   `json:"public_website_consent"`
 
-	// Shift planning: indices of half-hour blocks.
-	ShiftAvailableTimes   []int    `json:"shift_available_times"`
+	// Shift planning: indices of half-hour blocks. "Available" is the default,
+	// so only explicitly requested or blocked blocks are stored.
+	ShiftPreferredTimes   []int    `json:"shift_preferred_times"`
 	ShiftUnavailableTimes []int    `json:"shift_unavailable_times"`
 	ShiftPreferredPartner []string `json:"shift_preferred_partner"` // UUIDs der Wunschpartner
 

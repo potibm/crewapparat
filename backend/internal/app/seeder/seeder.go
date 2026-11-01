@@ -186,8 +186,19 @@ func (s *Seeder) seedTeams(ctx context.Context) ([]domain.Team, error) {
 	teams := make([]domain.Team, 0, len(teamNames))
 
 	for _, name := range teamNames {
+		wantShifts := teamNeedsShifts(name)
+
 		existing, err := s.repos.Teams.GetByName(ctx, name)
 		if err == nil {
+			// Keep the flag in sync so databases seeded before it existed get it.
+			if existing.HasShifts != wantShifts {
+				existing.HasShifts = wantShifts
+
+				if updateErr := s.repos.Teams.Update(ctx, existing); updateErr != nil {
+					return nil, fmt.Errorf("failed to update team %s: %w", name, updateErr)
+				}
+			}
+
 			teams = append(teams, *existing)
 
 			continue
@@ -197,16 +208,21 @@ func (s *Seeder) seedTeams(ctx context.Context) ([]domain.Team, error) {
 			return nil, fmt.Errorf("failed to look up team %s: %w", name, err)
 		}
 
-		team := &domain.Team{Name: name}
+		team := &domain.Team{Name: name, HasShifts: wantShifts}
 		if err := s.repos.Teams.Create(ctx, team); err != nil {
 			return nil, fmt.Errorf("failed to create team %s: %w", name, err)
 		}
 
-		slog.Debug("Seeded team", "name", name, "id", team.ID)
+		slog.Debug("Seeded team", "name", name, "id", team.ID, "has_shifts", team.HasShifts)
 		teams = append(teams, *team)
 	}
 
 	return teams, nil
+}
+
+// teamNeedsShifts marks the seeded teams that require shift planning.
+func teamNeedsShifts(name string) bool {
+	return name == "Infodesk"
 }
 
 func (s *Seeder) seedEventYears(ctx context.Context) error {
@@ -473,7 +489,7 @@ func buildRandomParticipation(
 		TShirtSize:            pick(shirtSizes),
 		AdditionalPaidShirt:   gofakeit.Bool(),
 		PublicWebsiteConsent:  gofakeit.Bool(),
-		ShiftAvailableTimes:   buildShiftTimes(),
+		ShiftPreferredTimes:   buildShiftTimes(),
 		ShiftUnavailableTimes: buildShiftTimes(),
 		Teams:                 teams,
 	}

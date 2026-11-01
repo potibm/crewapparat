@@ -63,10 +63,10 @@ func TestMapperRoundtrip(t *testing.T) {
 			TShirtSize:            "XL",
 			AdditionalPaidShirt:   true,
 			PublicWebsiteConsent:  true,
-			ShiftAvailableTimes:   []int{0, 1, 2, 32, 33},
+			ShiftPreferredTimes:   []int{0, 1, 2, 32, 33},
 			ShiftUnavailableTimes: []int{5, 6},
 			ShiftPreferredPartner: []string{"uuid-a", "uuid-b"},
-			Teams:                 []domain.Team{{ID: uuid.New(), Name: "Infodesk"}},
+			Teams:                 []domain.Team{{ID: uuid.New(), Name: "Infodesk", HasShifts: true}},
 		}
 
 		out := toDomainParticipation(fromDomainParticipation(in))
@@ -112,7 +112,7 @@ func TestMapperRoundtrip(t *testing.T) {
 	})
 
 	t.Run("Team", func(t *testing.T) {
-		in := &domain.Team{ID: uuid.New(), Name: "Infodesk"}
+		in := &domain.Team{ID: uuid.New(), Name: "Infodesk", HasShifts: true}
 		require.Equal(t, *in, *toDomainTeam(fromDomainTeam(in)))
 	})
 

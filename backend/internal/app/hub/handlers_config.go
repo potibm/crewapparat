@@ -18,6 +18,7 @@ type AppConfigPublic struct {
 	PronounOptions     []string                       `json:"pronoun_options"`
 	LanguageOptions    []string                       `json:"language_options"`
 	TShirtSizeOptions  []string                       `json:"tshirt_size_options"`
+	Shift              config.ShiftConfig             `json:"shift"`
 }
 
 func (s *Server) handleGetPublicConfig(c *gin.Context) {
@@ -38,5 +39,6 @@ func mapToPublicConfig(cfg *config.Config) AppConfigPublic {
 		PronounOptions:     cfg.App.PronounOptions,
 		LanguageOptions:    cfg.App.LanguageOptions,
 		TShirtSizeOptions:  cfg.App.TShirtSizeOptions,
+		Shift:              cfg.Shift,
 	}
 }
