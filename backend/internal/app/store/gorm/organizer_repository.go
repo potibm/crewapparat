@@ -31,6 +31,10 @@ func (s *Store) NewOrganizerRepository() repository.OrganizerRepository {
 	return NewOrganizerRepository(s.db)
 }
 
+func NewOrganizerRepository(db *gorm.DB) repository.OrganizerRepository {
+	return &organizerRepository{db: db}
+}
+
 func (r *organizerRepository) Create(ctx context.Context, organizer *domain.Organizer) error {
 	dbObj := fromDomainOrganizer(organizer)
 
@@ -64,7 +68,7 @@ func (r *organizerRepository) Update(ctx context.Context, organizer *domain.Orga
 func (r *organizerRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&dbOrganizer{}, "id = ?", id)
 	if result.Error != nil {
-		return fmt.Errorf("failed to delete organizer %s: %w", id, result.Error)
+		return fmt.Errorf("delete organizer %s: %w", id, result.Error)
 	}
 
 	if result.RowsAffected == 0 {
@@ -103,7 +107,30 @@ func (r *organizerRepository) List(
 
 	organizers := make([]domain.Organizer, 0, len(dbRows))
 	for i := range dbRows {
-		organizers = append(organizers, *toDomainOrganizer(&dbRows[i]))
+		org := toDomainOrganizer(&dbRows[i])
+
+		// When filtered by event year, populate current participation data.
+		if filters.EventYearID != nil {
+			var participation dbParticipation
+
+			err := r.db.WithContext(ctx).
+				Preload("Teams").
+				Where("organizer_id = ? AND event_year_id = ?", org.ID, *filters.EventYearID).
+				First(&participation).Error
+			if err == nil {
+				org.CurrentParticipationStatus = participation.Status
+
+				org.CurrentParticipationTeams = make([]domain.Team, 0, len(participation.Teams))
+				for j := range participation.Teams {
+					org.CurrentParticipationTeams = append(
+						org.CurrentParticipationTeams,
+						*toDomainTeam(&participation.Teams[j]),
+					)
+				}
+			}
+		}
+
+		organizers = append(organizers, *org)
 	}
 
 	return organizers, total, nil
@@ -161,10 +188,6 @@ func (r *organizerRepository) GetBySlug(ctx context.Context, slug string) (*doma
 	return toDomainOrganizer(&dbRow), nil
 }
 
-func NewOrganizerRepository(db *gorm.DB) repository.OrganizerRepository {
-	return &organizerRepository{db: db}
-}
-
 func (r *organizerRepository) applyFilters(
 	query *gorm.DB,
 	filters repository.OrganizerListFilters,
@@ -182,6 +205,28 @@ func (r *organizerRepository) applyFilters(
 
 	if filters.Slug != nil {
 		query = query.Where("slug = ?", *filters.Slug)
+	}
+
+	// Filter by participation data when event year is specified.
+	if filters.EventYearID != nil {
+		// Filter by status.
+		if filters.Status != nil && *filters.Status != "all" {
+			sub := r.db.Model(&dbParticipation{}).
+				Select("organizer_id").
+				Where("event_year_id = ?", *filters.EventYearID).
+				Where("status = ?", *filters.Status)
+			query = query.Where("id IN (?)", sub)
+		}
+
+		// Filter by team.
+		if filters.TeamID != nil {
+			sub := r.db.Model(&dbParticipation{}).
+				Select("organizer_id").
+				Joins("JOIN participation_teams ON participation_teams.participation_id = participations.id").
+				Where("event_year_id = ?", *filters.EventYearID).
+				Where("participation_teams.team_id = ?", *filters.TeamID)
+			query = query.Where("id IN (?)", sub)
+		}
 	}
 
 	return query

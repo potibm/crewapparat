@@ -3,30 +3,74 @@ import {
   List,
   DataTable,
   TextInput,
+  SelectInput,
   EditButton,
   DeleteButton,
+  useGetList,
 } from "react-admin";
 import { AvatarLightbox } from "./AvatarLightbox";
 import { OrganizerAvatar } from "./OrganizerAvatar";
+import { SlackIcon } from "./OrganizerIcons";
+import type { OrganizerRecord } from "./organizer.types";
+import { Box, Chip, IconButton, Stack, Typography } from "@mui/material";
+import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
 
-const organizerFilters = [
-  <TextInput key="q" source="q" label="Search" alwaysOn />,
+const statusChoices = [
+  { id: "confirmed", name: "Active" },
+  { id: "all", name: "All" },
+  { id: "pending", name: "Pending" },
+  { id: "declined", name: "Declined" },
 ];
 
 const OrganizerListContent = () => {
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
+  const { data: eventYears } = useGetList("event-years", {
+    pagination: { page: 1, perPage: 100 },
+  });
+  const activeYear = eventYears?.find(
+    (y: { is_active?: boolean; year: string }) => y.is_active,
+  )?.year;
+
+  const { data: teams } = useGetList("teams", {
+    pagination: { page: 1, perPage: 100 },
+    sort: { field: "name", order: "ASC" },
+  });
+
+  const teamChoices = (teams ?? []).map((t: { id: string; name: string }) => ({
+    id: t.id,
+    name: t.name,
+  }));
+
+  const organizerFilters = [
+    <TextInput key="q" source="q" label="Search" alwaysOn />,
+    <SelectInput
+      key="status"
+      source="status"
+      label="Status"
+      choices={statusChoices}
+      alwaysOn
+    />,
+    <SelectInput
+      key="team"
+      source="team"
+      label="Team"
+      choices={teamChoices}
+      alwaysOn
+    />,
+  ];
+
   return (
     <>
-      <List filters={organizerFilters}>
+      <List
+        filter={{ event_year_id: activeYear, status: "confirmed" }}
+        filters={organizerFilters}
+      >
         <DataTable bulkActionButtons={false} rowClick="show">
           <DataTable.Col
             label="Avatar"
-            render={(record: {
-              handle?: string;
-              realname?: string;
-              avatar_url?: string;
-            }) => {
+            render={(record: OrganizerRecord) => {
               return (
                 <OrganizerAvatar
                   src={record.avatar_url}
@@ -42,8 +86,104 @@ const OrganizerListContent = () => {
           />
           <DataTable.Col source="handle" />
           <DataTable.Col source="realname" />
-          <DataTable.Col source="email" />
-          <DataTable.Col source="phone" />
+          <DataTable.Col
+            label="Contact"
+            disableSort
+            render={(record: OrganizerRecord) => (
+              <Box sx={{ display: "flex", gap: 0.5 }}>
+                <IconButton
+                  size="small"
+                  component="a"
+                  href={record.email ? `mailto:${record.email}` : undefined}
+                  disabled={!record.email}
+                  sx={{ color: record.email ? "action" : "action.disabled" }}
+                >
+                  <EmailIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  component="a"
+                  href={record.phone ? `tel:${record.phone}` : undefined}
+                  disabled={!record.phone}
+                  sx={{ color: record.phone ? "action" : "action.disabled" }}
+                >
+                  <PhoneIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  component="a"
+                  href={record.slack_profile_url || undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  disabled={!record.slack_handle && !record.slack_profile_url}
+                  sx={{
+                    color:
+                      record.slack_handle || record.slack_profile_url
+                        ? "action"
+                        : "action.disabled",
+                  }}
+                >
+                  <SlackIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            )}
+          />
+          <DataTable.Col
+            label="Status"
+            disableSort
+            render={(record: OrganizerRecord) => {
+              const status = record.current_participation_status;
+              const colorMap: Record<string, "success" | "default" | "error"> =
+                {
+                  confirmed: "success",
+                  pending: "default",
+                  declined: "error",
+                };
+              const labelMap: Record<string, string> = {
+                confirmed: "Active",
+                pending: "Pending",
+                declined: "Declined",
+              };
+              return status ? (
+                <Chip
+                  label={labelMap[status] || status}
+                  size="small"
+                  color={colorMap[status] || "default"}
+                  variant={status === "pending" ? "outlined" : "filled"}
+                />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  —
+                </Typography>
+              );
+            }}
+          />
+          <DataTable.Col
+            label="Teams"
+            disableSort
+            render={(record: OrganizerRecord) => {
+              const teams = record.current_participation_teams;
+              if (!teams || teams.length === 0) {
+                return (
+                  <Typography variant="body2" color="text.secondary">
+                    —
+                  </Typography>
+                );
+              }
+              return (
+                <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap" }}>
+                  {teams.map((t: { id: string; name: string }) => (
+                    <Chip
+                      key={t.id}
+                      label={t.name}
+                      size="small"
+                      variant="outlined"
+                    />
+                  ))}
+                </Stack>
+              );
+            }}
+          />
           <DataTable.Col>
             <EditButton />
             <DeleteButton
@@ -63,5 +203,4 @@ const OrganizerListContent = () => {
 };
 
 const OrganizerList = () => <OrganizerListContent />;
-
 export default OrganizerList;

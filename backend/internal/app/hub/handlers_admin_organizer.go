@@ -337,5 +337,19 @@ func parseOrganizerFilters(c *gin.Context) repository.OrganizerListFilters {
 		filters.Slug = &slug
 	}
 
+	if v := c.Query("event_year_id"); v != "" {
+		filters.EventYearID = &v
+	}
+
+	if v := c.Query("status"); v != "" {
+		filters.Status = &v
+	}
+
+	if v := c.Query("team"); v != "" {
+		if id, err := uuid.Parse(v); err == nil {
+			filters.TeamID = &id
+		}
+	}
+
 	return filters
 }

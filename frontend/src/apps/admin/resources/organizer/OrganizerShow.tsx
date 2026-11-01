@@ -290,7 +290,6 @@ const OrganizerShowContent = () => {
                 {" "}
                 <DataTable.Col source="event_year_id" />
                 <DataTable.Col source="status" />
-                <DataTable.Col source="t_shirt_size" />
                 <DataTable.Col
                   label="Teams"
                   render={(participation) =>

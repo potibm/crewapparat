@@ -23,4 +23,12 @@ type Organizer struct {
 	Languages []string `json:"languages"`
 
 	Participations []Participation `json:"participations,omitempty"`
+
+	// CurrentParticipationStatus is the status of the participation in the
+	// requested event year (only populated when filtered by event_year_id).
+	CurrentParticipationStatus string `json:"current_participation_status,omitempty"`
+
+	// CurrentParticipationTeams are the teams of the participation in the
+	// requested event year (only populated when filtered by event_year_id).
+	CurrentParticipationTeams []Team `json:"current_participation_teams,omitempty"`
 }

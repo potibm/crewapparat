@@ -122,6 +122,13 @@ func TestMapperRoundtrip(t *testing.T) {
 	})
 }
 
+// apiOnlyFields exist only in the domain type, not in the db model. They are
+// populated by the repository from joined data and never persisted.
+var apiOnlyFields = map[string]bool{
+	"CurrentParticipationStatus": true,
+	"CurrentParticipationTeams":  true,
+}
+
 // infrastructureFields come from TimestampModel and AuditModel. They exist
 // only in the db model, deliberately not in the domain type.
 var infrastructureFields = map[string]bool{
@@ -156,6 +163,10 @@ func TestFeldNamenParitaet(t *testing.T) {
 			dbFields := fieldNames(tc.dbTyp)
 
 			for _, field := range domainFields {
+				if apiOnlyFields[field] {
+					continue
+				}
+
 				require.Containsf(t, dbFields, field,
 					"domain field %q is missing in db model %s", field, tc.dbTyp)
 			}

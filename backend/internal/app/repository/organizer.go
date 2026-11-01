@@ -20,9 +20,12 @@ type ListParams struct {
 type OrganizerListParams = ListParams
 
 type OrganizerListFilters struct {
-	Query *string
-	ID    *uuid.UUID
-	Slug  *string
+	Query       *string
+	ID          *uuid.UUID
+	Slug        *string
+	EventYearID *string
+	Status      *string
+	TeamID      *uuid.UUID
 }
 
 type OrganizerRepository interface {
