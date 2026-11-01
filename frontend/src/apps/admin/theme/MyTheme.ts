@@ -71,6 +71,13 @@ export const MyDarkTheme: ThemeOptions = {
   },
   components: {
     ...defaultTheme.components,
+    RaToolbar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#424242",
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
