@@ -17,4 +17,4 @@ backend/exports/*
 backend/tmp
 *.log
 infra/.certs/
-docker-compose.override.yaml
+docker-compose.override.yamlnode_modules/

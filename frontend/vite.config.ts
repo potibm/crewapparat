@@ -20,7 +20,7 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: ["crewapparat.test", "localhost"],
     proxy: {
-      "/api": {
+      "^/(api|media|style)": {
         target: backendTarget,
         changeOrigin: true,
         ws: true,

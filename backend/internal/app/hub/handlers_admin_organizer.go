@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -77,6 +78,7 @@ func (s *Server) GetOrganizer(c *gin.Context) {
 	c.JSON(http.StatusOK, organizer)
 }
 
+//nolint:nestif // multipart/JSON branching
 func (s *Server) CreateOrganizer(c *gin.Context) {
 	userID, _ := c.Get("userID")
 
@@ -87,11 +89,45 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 		return
 	}
 
-	var organizer domain.Organizer
-	if err := c.ShouldBindJSON(&organizer); err != nil {
-		respondWithFailedToParsePayloadProblem(c, err)
+	fileHeader, _ := c.FormFile("media_upload")
+	isMultipart := fileHeader != nil || strings.Contains(c.GetHeader("Content-Type"), "multipart/form-data")
 
-		return
+	var organizer domain.Organizer
+
+	if isMultipart {
+		organizer.Handle = c.PostForm("handle")
+		organizer.Realname = c.PostForm("realname")
+		organizer.Email = c.PostForm("email")
+		organizer.Phone = c.PostForm("phone")
+		organizer.SlackHandle = c.PostForm("slack_handle")
+		organizer.SlackProfileURL = c.PostForm("slack_profile_url")
+		organizer.Pronouns = c.PostForm("pronouns")
+		organizer.Languages = c.PostFormArray("languages")
+
+		organizer.AvatarURL = c.PostForm("avatar_url")
+		if v := c.PostForm("demozoo_id"); v != "" {
+			if n, err := strconv.ParseUint(v, 10, 64); err == nil {
+				u := uint(n)
+				organizer.DemozooID = &u
+			}
+		}
+	} else {
+		if err := c.ShouldBindJSON(&organizer); err != nil {
+			respondWithFailedToParsePayloadProblem(c, err)
+
+			return
+		}
+	}
+
+	if fileHeader != nil {
+		url, err := saveAvatarFile(fileHeader)
+		if err != nil {
+			respondWithInternalServerProblem(c, "Failed to store avatar: "+err.Error())
+
+			return
+		}
+
+		organizer.AvatarURL = url
 	}
 
 	if organizer.Slug == "" {
@@ -125,6 +161,7 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 	c.JSON(http.StatusCreated, organizer)
 }
 
+//nolint:nestif,gocognit,cyclop // multipart/JSON branching
 func (s *Server) UpdateOrganizer(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -133,23 +170,23 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("userID")
-
-	uid, _ := userID.(string)
-	if !s.isAdmin(c, uid) {
-		existing, err := s.organizerRepo.GetByID(c.Request.Context(), id)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				respondWithNotFoundProblem(c, "Organizer not found")
-
-				return
-			}
-
-			respondWithInternalServerProblem(c, "Failed to get organizer: "+err.Error())
+	existing, err := s.organizerRepo.GetByID(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			respondWithNotFoundProblem(c, "Organizer not found")
 
 			return
 		}
 
+		respondWithInternalServerProblem(c, "Failed to get organizer: "+err.Error())
+
+		return
+	}
+
+	userID, _ := c.Get("userID")
+
+	uid, _ := userID.(string)
+	if !s.isAdmin(c, uid) {
 		if existing.OidcSub == nil || *existing.OidcSub != uid {
 			respondWithForbiddenProblem(c, "You can only update your own organizer profile")
 
@@ -157,18 +194,87 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 		}
 	}
 
-	var organizer domain.Organizer
-	if err := c.ShouldBindJSON(&organizer); err != nil {
-		respondWithFailedToParsePayloadProblem(c, err)
+	fileHeader, _ := c.FormFile("media_upload")
+	isMultipart := fileHeader != nil || strings.Contains(c.GetHeader("Content-Type"), "multipart/form-data")
 
-		return
+	removeAvatar := false
+
+	var organizer domain.Organizer
+
+	if isMultipart {
+		organizer.Handle = c.PostForm("handle")
+		organizer.Realname = c.PostForm("realname")
+		organizer.Email = c.PostForm("email")
+		organizer.Phone = c.PostForm("phone")
+		organizer.SlackHandle = c.PostForm("slack_handle")
+		organizer.SlackProfileURL = c.PostForm("slack_profile_url")
+		organizer.Pronouns = c.PostForm("pronouns")
+		organizer.Languages = c.PostFormArray("languages")
+
+		organizer.AvatarURL = c.PostForm("avatar_url")
+		if c.PostForm("remove_avatar") == "true" {
+			removeAvatar = true
+		}
+
+		if v := c.PostForm("demozoo_id"); v != "" {
+			if n, err := strconv.ParseUint(v, 10, 64); err == nil {
+				u := uint(n)
+				organizer.DemozooID = &u
+			}
+		}
+	} else {
+		var payload struct {
+			domain.Organizer
+
+			RemoveAvatar bool `json:"remove_avatar"`
+		}
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			respondWithFailedToParsePayloadProblem(c, err)
+
+			return
+		}
+
+		organizer = payload.Organizer
+		removeAvatar = payload.RemoveAvatar
 	}
 
 	organizer.ID = id
 
-	// Slug is immutable: preserve the stored value regardless of the payload.
-	if existing, err := s.organizerRepo.GetByID(c.Request.Context(), id); err == nil && existing.Slug != "" {
+	if fileHeader != nil {
+		url, err := saveAvatarFile(fileHeader)
+		if err != nil {
+			respondWithInternalServerProblem(c, "Failed to store avatar: "+err.Error())
+
+			return
+		}
+
+		organizer.AvatarURL = url
+	}
+
+	// Preserve immutable / system fields that are not part of the edit form.
+	if organizer.OidcSub == nil {
+		organizer.OidcSub = existing.OidcSub
+	}
+
+	if organizer.Slug == "" {
 		organizer.Slug = existing.Slug
+	}
+
+	if removeAvatar {
+		organizer.AvatarURL = ""
+	} else if organizer.AvatarURL == "" && fileHeader == nil {
+		organizer.AvatarURL = existing.AvatarURL
+	}
+
+	if fileHeader != nil {
+		url, err := saveAvatarFile(fileHeader)
+		if err != nil {
+			respondWithInternalServerProblem(c, "Failed to store avatar: "+err.Error())
+
+			return
+		}
+
+		organizer.AvatarURL = url
 	}
 
 	if err := s.organizerRepo.Update(c.Request.Context(), &organizer); err != nil {

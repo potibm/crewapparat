@@ -1,6 +1,12 @@
-import { Show, useRecordContext, useNotify, usePermissions, DataTable } from "react-admin";
+import { useState } from "react";
 import {
-  Avatar,
+  Show,
+  useRecordContext,
+  useNotify,
+  usePermissions,
+  DataTable,
+} from "react-admin";
+import {
   Box,
   Card,
   CardContent,
@@ -18,11 +24,14 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PhoneIcon from "@mui/icons-material/Phone";
 import { DemozooIcon, SlackIcon } from "./OrganizerIcons";
 import { OrganizerRecord } from "./organizer.types";
+import { AvatarLightbox } from "./AvatarLightbox";
+import { OrganizerAvatar } from "./OrganizerAvatar";
 
 const OrganizerShowContent = () => {
   const record = useRecordContext<OrganizerRecord>();
   const notify = useNotify();
   const { permissions } = usePermissions();
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   if (!record) return null;
 
@@ -38,22 +47,26 @@ const OrganizerShowContent = () => {
     }
   };
 
-  const initial = (record.handle || record.realname || "?")
-    .charAt(0)
-    .toUpperCase();
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <Card>
         <CardContent
-          sx={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "wrap" }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 3,
+            flexWrap: "wrap",
+          }}
         >
-          <Avatar
-            src={record.avatar_url || undefined}
-            sx={{ width: 96, height: 96, bgcolor: "primary.main", fontSize: 36 }}
-          >
-            {initial}
-          </Avatar>
+          <OrganizerAvatar
+            src={record.avatar_url}
+            handle={record.handle}
+            realname={record.realname}
+            size={96}
+            onClick={() => {
+              if (record.avatar_url) setLightboxSrc(record.avatar_url);
+            }}
+          />
           <Box sx={{ flex: 1, minWidth: 240 }}>
             <Typography variant="h4">{record.handle}</Typography>
             <Typography variant="subtitle1" color="text.secondary">
@@ -119,22 +132,35 @@ const OrganizerShowContent = () => {
                 <Typography variant="caption" color="text.secondary">
                   Real name
                 </Typography>
-                <Typography variant="body1">{record.realname || "—"}</Typography>
+                <Typography variant="body1">
+                  {record.realname || "—"}
+                </Typography>
               </Box>
               <Box>
                 <Typography variant="caption" color="text.secondary">
                   Pronouns
                 </Typography>
-                <Typography variant="body1">{record.pronouns || "—"}</Typography>
+                <Typography variant="body1">
+                  {record.pronouns || "—"}
+                </Typography>
               </Box>
               <Box>
                 <Typography variant="caption" color="text.secondary">
                   Languages
                 </Typography>
-                <Stack direction="row" spacing={1} sx={{ mt: 0.5, flexWrap: "wrap" }}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{ mt: 0.5, flexWrap: "wrap" }}
+                >
                   {record.languages && record.languages.length > 0 ? (
                     record.languages.map((lang) => (
-                      <Chip key={lang} label={lang} size="small" variant="outlined" />
+                      <Chip
+                        key={lang}
+                        label={lang}
+                        size="small"
+                        variant="outlined"
+                      />
                     ))
                   ) : (
                     <Typography variant="body1">—</Typography>
@@ -173,13 +199,19 @@ const OrganizerShowContent = () => {
                       href={record.slack_profile_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}
+                      sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                      }}
                     >
                       {record.slack_handle || "Slack profile"}
                       <OpenInNewIcon fontSize="inherit" />
                     </Link>
                   ) : (
-                    <Typography variant="body1">{record.slack_handle}</Typography>
+                    <Typography variant="body1">
+                      {record.slack_handle}
+                    </Typography>
                   )
                 ) : (
                   <Typography variant="body1">—</Typography>
@@ -200,7 +232,11 @@ const OrganizerShowContent = () => {
                     href={`https://demozoo.org/sceners/${record.demozoo_id}/`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                    }}
                   >
                     sceners/{record.demozoo_id}
                     <OpenInNewIcon fontSize="inherit" />
@@ -227,10 +263,7 @@ const OrganizerShowContent = () => {
           <CardHeader title="Participations" />
           <CardContent>
             {record.participations && record.participations.length > 0 ? (
-              <DataTable
-                data={record.participations}
-                bulkActionButtons={false}
-              >
+              <DataTable data={record.participations} bulkActionButtons={false}>
                 <DataTable.Col source="event_year_id" />
                 <DataTable.Col source="status" />
                 <DataTable.Col source="t_shirt_size" />
@@ -238,7 +271,11 @@ const OrganizerShowContent = () => {
                   label="Teams"
                   render={(participation) =>
                     participation.teams && participation.teams.length > 0
-                      ? participation.teams.map((team: { id: string; name: string }) => team.name).join(", ")
+                      ? participation.teams
+                          .map(
+                            (team: { id: string; name: string }) => team.name,
+                          )
+                          .join(", ")
                       : "—"
                   }
                 />
@@ -251,6 +288,11 @@ const OrganizerShowContent = () => {
           </CardContent>
         </Card>
       </Box>
+      <AvatarLightbox
+        src={lightboxSrc}
+        open={lightboxSrc !== null}
+        onClose={() => setLightboxSrc(null)}
+      />
     </Box>
   );
 };

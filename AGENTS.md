@@ -223,3 +223,6 @@ To run several apparat projects side by side, connect to the shared Traefik via 
 - TS: new `.js` files are forbidden by ESLint (use `.ts`/`.tsx`).
 - TS: `@mui/material` and `@mui/icons-material` are not direct dependencies; they resolve as
   transitive deps of react-admin. Adding an import of them works but is undeclared.
+- TS: Prefer React Admin's built-in inputs and components (e.g. `BooleanInput`, `FileInput`,
+  `TextInput`, `DataTable`) over hand-written fields. Custom field/input components should only
+  be created as an exception when no built-in option covers the use case.

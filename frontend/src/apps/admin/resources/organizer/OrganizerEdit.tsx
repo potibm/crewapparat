@@ -3,9 +3,11 @@ import {
   Edit,
   SimpleForm,
   TextInput,
-  SelectInput,
-  SelectArrayInput,
+  AutocompleteArrayInput,
   NumberInput,
+  FileInput,
+  ImageField,
+  BooleanInput,
   useEditContext,
   useGetIdentity,
   usePermissions,
@@ -13,21 +15,18 @@ import {
   useNotify,
 } from "react-admin";
 import { Card, CardContent, CardHeader, Stack } from "@mui/material";
-
-const pronounChoices = [
-  { id: "", name: "—" },
-  { id: "she/her", name: "she/her" },
-  { id: "he/him", name: "he/him" },
-  { id: "they/them", name: "they/them" },
-];
+import { PronounsInput } from "./PronounsInput";
+import { OrganizerAvatar } from "./OrganizerAvatar";
 
 const languageChoices = [
   { id: "de", name: "German (de)" },
   { id: "en", name: "English (en)" },
-  { id: "da", name: "Danish (da)" },
-  { id: "nl", name: "Dutch (nl)" },
   { id: "fr", name: "French (fr)" },
-  { id: "sv", name: "Swedish (sv)" },
+  { id: "hu", name: "Hungarian (hu)" },
+  { id: "no", name: "Norwegian (no)" },
+  { id: "nl", name: "Dutch (nl)" },
+  { id: "ru", name: "Russian (ru)" },
+  { id: "pl", name: "Polish (pl)" },
 ];
 
 const OrganizerEditForm = () => {
@@ -51,11 +50,18 @@ const OrganizerEditForm = () => {
       <Card sx={{ width: "100%", mb: 2 }}>
         <CardHeader title="Profile" />
         <CardContent>
-          <Stack spacing={1}>
+          <Stack spacing={2}>
             <TextInput source="handle" />
             <TextInput source="realname" />
-            <SelectInput source="pronouns" choices={pronounChoices} />
-            <SelectArrayInput source="languages" choices={languageChoices} />
+            <PronounsInput source="pronouns" />
+            <AutocompleteArrayInput
+              source="languages"
+              choices={languageChoices}
+              onCreate={(filter?: string) =>
+                filter ? { id: filter, name: filter } : undefined
+              }
+              translateChoice={false}
+            />
           </Stack>
         </CardContent>
       </Card>
@@ -63,21 +69,42 @@ const OrganizerEditForm = () => {
       <Card sx={{ width: "100%", mb: 2 }}>
         <CardHeader title="Contact" />
         <CardContent>
-          <Stack spacing={1}>
+          <Stack spacing={2}>
             <TextInput source="email" />
             <TextInput source="phone" />
             <TextInput source="slack_handle" />
-            <TextInput source="slack_profile_url" />
+            <TextInput
+              source="slack_profile_url"
+              helperText="Click on your profile, click the three dots button and choose 'copy profile link'."
+            />
+            <NumberInput source="demozoo_id" helperText="Demozoo scener ID" />
           </Stack>
         </CardContent>
       </Card>
 
       <Card sx={{ width: "100%", mb: 2 }}>
-        <CardHeader title="Links & Meta" />
+        <CardHeader title="Avatar" />
         <CardContent>
-          <Stack spacing={1}>
-            <TextInput source="avatar_url" />
-            <NumberInput source="demozoo_id" />
+          <Stack spacing={2}>
+            {record?.avatar_url && (
+              <OrganizerAvatar
+                src={record.avatar_url}
+                handle={record.handle}
+                realname={record.realname}
+                size={96}
+              />
+            )}
+            <FileInput
+              source="media_upload"
+              accept={{ "image/*": [".png", ".jpg", ".jpeg", ".webp"] }}
+              label="Avatar"
+              placeholder={<p>Drag image here or click to upload</p>}
+            >
+              <ImageField source="src" title="title" />
+            </FileInput>
+            {record?.avatar_url && (
+              <BooleanInput source="remove_avatar" label="Remove avatar" />
+            )}
           </Stack>
         </CardContent>
       </Card>

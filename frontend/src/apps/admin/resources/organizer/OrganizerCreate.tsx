@@ -1,4 +1,11 @@
-import { Create, SimpleForm, TextInput } from "react-admin";
+import {
+  Create,
+  SimpleForm,
+  TextInput,
+  FileInput,
+  ImageField,
+} from "react-admin";
+import { PronounsInput } from "./PronounsInput";
 
 const OrganizerCreate = () => (
   <Create>
@@ -8,7 +15,15 @@ const OrganizerCreate = () => (
       <TextInput source="email" />
       <TextInput source="phone" />
       <TextInput source="slack_handle" />
-      <TextInput source="pronouns" />
+      <PronounsInput source="pronouns" />
+      <FileInput
+        source="media_upload"
+        accept={{ "image/*": [".png", ".jpg", ".jpeg", ".webp"] }}
+        label="Avatar"
+        placeholder={<p>Drag image here or click to upload</p>}
+      >
+        <ImageField source="src" title="title" />
+      </FileInput>
     </SimpleForm>
   </Create>
 );
