@@ -12,6 +12,7 @@ type dbTeam struct {
 
 	ID        uuid.UUID `gorm:"primaryKey;type:text;column:id"`
 	Name      string    `gorm:"uniqueIndex;column:name"`
+	Color     string    `gorm:"column:color"`
 	HasShifts bool      `gorm:"default:false;column:has_shifts"`
 }
 
@@ -25,6 +26,7 @@ func fromDomainTeam(t *domain.Team) *dbTeam {
 	return &dbTeam{
 		ID:        t.ID,
 		Name:      t.Name,
+		Color:     t.Color,
 		HasShifts: t.HasShifts,
 	}
 }
@@ -33,6 +35,7 @@ func toDomainTeam(db *dbTeam) *domain.Team {
 	return &domain.Team{
 		ID:        db.ID,
 		Name:      db.Name,
+		Color:     db.Color,
 		HasShifts: db.HasShifts,
 	}
 }

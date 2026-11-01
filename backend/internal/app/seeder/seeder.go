@@ -66,6 +66,20 @@ var (
 		"Beamer",
 	}
 
+	// teamColors are pastel chip colors that stay readable in light and dark mode.
+	teamColors = map[string]string{
+		"Infodesk": "#FFD6A5",
+		"Compol":   "#CAFFBF",
+		"Halles":   "#9BF6FF",
+		"Kasse":    "#A0C4FF",
+		"Netzwerk": "#BDB2FF",
+		"Druck":    "#FFC6FF",
+		"Shuttle":  "#FDFFB6",
+		"Cleanup":  "#FFADAD",
+		"Social":   "#B9FBC0",
+		"Beamer":   "#FFDAC1",
+	}
+
 	shirtSizes = []string{"XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL"}
 
 	pronounsOptions = []string{"", "she/her", "he/him", "they/them"}
@@ -187,16 +201,12 @@ func (s *Seeder) seedTeams(ctx context.Context) ([]domain.Team, error) {
 
 	for _, name := range teamNames {
 		wantShifts := teamNeedsShifts(name)
+		wantColor := teamColorFor(name)
 
 		existing, err := s.repos.Teams.GetByName(ctx, name)
 		if err == nil {
-			// Keep the flag in sync so databases seeded before it existed get it.
-			if existing.HasShifts != wantShifts {
-				existing.HasShifts = wantShifts
-
-				if updateErr := s.repos.Teams.Update(ctx, existing); updateErr != nil {
-					return nil, fmt.Errorf("failed to update team %s: %w", name, updateErr)
-				}
+			if syncErr := s.syncTeam(ctx, existing, wantShifts, wantColor); syncErr != nil {
+				return nil, syncErr
 			}
 
 			teams = append(teams, *existing)
@@ -208,7 +218,7 @@ func (s *Seeder) seedTeams(ctx context.Context) ([]domain.Team, error) {
 			return nil, fmt.Errorf("failed to look up team %s: %w", name, err)
 		}
 
-		team := &domain.Team{Name: name, HasShifts: wantShifts}
+		team := &domain.Team{Name: name, Color: wantColor, HasShifts: wantShifts}
 		if err := s.repos.Teams.Create(ctx, team); err != nil {
 			return nil, fmt.Errorf("failed to create team %s: %w", name, err)
 		}
@@ -220,9 +230,44 @@ func (s *Seeder) seedTeams(ctx context.Context) ([]domain.Team, error) {
 	return teams, nil
 }
 
+// syncTeam keeps seeded flags in sync so databases seeded before they existed
+// get them without overwriting a manually chosen color.
+func (s *Seeder) syncTeam(ctx context.Context, team *domain.Team, wantShifts bool, wantColor string) error {
+	changed := false
+
+	if team.HasShifts != wantShifts {
+		team.HasShifts = wantShifts
+		changed = true
+	}
+
+	if team.Color == "" {
+		team.Color = wantColor
+		changed = true
+	}
+
+	if !changed {
+		return nil
+	}
+
+	if err := s.repos.Teams.Update(ctx, team); err != nil {
+		return fmt.Errorf("failed to update team %s: %w", team.Name, err)
+	}
+
+	return nil
+}
+
 // teamNeedsShifts marks the seeded teams that require shift planning.
 func teamNeedsShifts(name string) bool {
 	return name == "Infodesk"
+}
+
+// teamColorFor returns the seed color for a team, falling back to a neutral pastel.
+func teamColorFor(name string) string {
+	if color, ok := teamColors[name]; ok {
+		return color
+	}
+
+	return "#E5E7EB"
 }
 
 func (s *Seeder) seedEventYears(ctx context.Context) error {

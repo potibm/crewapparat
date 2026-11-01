@@ -85,6 +85,35 @@ func TestOrganizerRepository_RoundtripErhaeltAlleFelder(t *testing.T) {
 	require.Equal(t, original.Languages, loaded.Languages)
 }
 
+func TestOrganizerRepository_GetByIDPreloadsParticipationTeams(t *testing.T) {
+	store := newTestStore(t)
+	orgRepo := store.NewOrganizerRepository()
+	partRepo := store.NewParticipationRepository()
+	teamRepo := store.NewTeamRepository()
+	ctx := context.Background()
+
+	organizer := newOrganizerFixture(t, nil)
+	require.NoError(t, orgRepo.Create(ctx, organizer))
+
+	team := &domain.Team{Name: "Infodesk", Color: "#FFD6A5", HasShifts: true}
+	require.NoError(t, teamRepo.Create(ctx, team))
+
+	participation := &domain.Participation{
+		OrganizerID: organizer.ID,
+		EventYearID: "2026",
+		Status:      domain.ParticipationStatusConfirmed,
+		Teams:       []domain.Team{*team},
+	}
+	require.NoError(t, partRepo.Create(ctx, participation))
+
+	loaded, err := orgRepo.GetByID(ctx, organizer.ID)
+	require.NoError(t, err)
+	require.Len(t, loaded.Participations, 1)
+	require.Len(t, loaded.Participations[0].Teams, 1)
+	require.Equal(t, "Infodesk", loaded.Participations[0].Teams[0].Name)
+	require.Equal(t, "#FFD6A5", loaded.Participations[0].Teams[0].Color)
+}
+
 func TestOrganizerRepository_GetByOidcSub(t *testing.T) {
 	store := newTestStore(t)
 	repo := store.NewOrganizerRepository()

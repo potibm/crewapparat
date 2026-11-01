@@ -75,6 +75,25 @@ func (s *Server) GetOrganizer(c *gin.Context) {
 		return
 	}
 
+	// Populate the active year's participation so the show page can render the
+	// current status and teams without a second lookup.
+	if s.eventYearRepo != nil {
+		active, activeErr := s.eventYearRepo.GetActive(c.Request.Context())
+		if activeErr == nil && active != nil {
+			for i := range organizer.Participations {
+				if organizer.Participations[i].EventYearID != active.Year {
+					continue
+				}
+
+				participation := organizer.Participations[i]
+				organizer.CurrentParticipationStatus = string(participation.Status)
+				organizer.CurrentParticipationTeams = participation.Teams
+
+				break
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, organizer)
 }
 

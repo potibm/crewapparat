@@ -15,13 +15,14 @@ func TestTeamRepository_Roundtrip(t *testing.T) {
 	repo := store.NewTeamRepository()
 	ctx := context.Background()
 
-	team := &domain.Team{Name: "Infodesk", HasShifts: true}
+	team := &domain.Team{Name: "Infodesk", Color: "#FFD6A5", HasShifts: true}
 	require.NoError(t, repo.Create(ctx, team))
 	require.NotEmpty(t, team.ID)
 
 	loaded, err := repo.GetByID(ctx, team.ID)
 	require.NoError(t, err)
 	require.Equal(t, "Infodesk", loaded.Name)
+	require.Equal(t, "#FFD6A5", loaded.Color)
 	require.True(t, loaded.HasShifts)
 
 	byName, err := repo.GetByName(ctx, "Infodesk")

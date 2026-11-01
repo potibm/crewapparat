@@ -140,7 +140,7 @@ func (r *organizerRepository) GetByID(ctx context.Context, id uuid.UUID) (*domai
 	var dbRow dbOrganizer
 
 	err := r.db.WithContext(ctx).
-		Preload("Participations").
+		Preload("Participations.Teams").
 		First(&dbRow, "id = ?", id).Error
 	if err != nil {
 		return nil, err
