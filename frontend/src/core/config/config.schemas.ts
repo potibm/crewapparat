@@ -19,6 +19,12 @@ export const AppConfigSchema = z.object({
     hour: "2-digit",
     minute: "2-digit",
   }),
+  pronoun_options: z
+    .array(z.string())
+    .default(["she/her", "he/him", "they/them"]),
+  language_options: z
+    .array(z.string())
+    .default(["de", "en", "fr", "hu", "no", "nl", "ru", "pl"]),
   auth: z
     .object({
       type: z.enum(["oidc"]),

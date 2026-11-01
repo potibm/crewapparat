@@ -20,6 +20,8 @@ const dummyConfig: AppConfig = {
     month: "long",
     day: "numeric",
   },
+  pronoun_options: ["she/her", "he/him", "they/them"],
+  language_options: ["de", "en"],
 };
 
 describe("useAppConfig", () => {

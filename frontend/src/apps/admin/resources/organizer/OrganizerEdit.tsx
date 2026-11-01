@@ -4,9 +4,11 @@ import {
   SimpleForm,
   TextInput,
   AutocompleteArrayInput,
+  AutocompleteInput,
   NumberInput,
   ImageInput,
   ImageField,
+  BooleanInput,
   useEditContext,
   useGetIdentity,
   usePermissions,
@@ -14,18 +16,8 @@ import {
   useNotify,
 } from "react-admin";
 import { Card, CardContent, CardHeader, Stack } from "@mui/material";
-import { PronounsInput } from "./PronounsInput";
-
-const languageChoices = [
-  { id: "de", name: "German (de)" },
-  { id: "en", name: "English (en)" },
-  { id: "fr", name: "French (fr)" },
-  { id: "hu", name: "Hungarian (hu)" },
-  { id: "no", name: "Norwegian (no)" },
-  { id: "nl", name: "Dutch (nl)" },
-  { id: "ru", name: "Russian (ru)" },
-  { id: "pl", name: "Polish (pl)" },
-];
+import { useAppConfig } from "@core/config/useConfig";
+import { OrganizerAvatar } from "./OrganizerAvatar";
 
 const OrganizerEditForm = () => {
   const { record, isPending } = useEditContext();
@@ -33,6 +25,16 @@ const OrganizerEditForm = () => {
   const { permissions } = usePermissions();
   const redirect = useRedirect();
   const notify = useNotify();
+  const config = useAppConfig();
+
+  const pronounChoices = (config.pronoun_options ?? []).map((value) => ({
+    id: value,
+    name: value,
+  }));
+  const languageChoices = (config.language_options ?? []).map((value) => ({
+    id: value,
+    name: value,
+  }));
 
   useEffect(() => {
     if (isPending || !record) return;
@@ -55,7 +57,13 @@ const OrganizerEditForm = () => {
           <Stack spacing={2}>
             <TextInput source="handle" />
             <TextInput source="realname" />
-            <PronounsInput source="pronouns" />
+            <AutocompleteInput
+              source="pronouns"
+              choices={pronounChoices}
+              onCreate={(filter?: string) =>
+                filter ? { id: filter, name: filter } : undefined
+              }
+            />
             <AutocompleteArrayInput
               source="languages"
               choices={languageChoices}
@@ -88,6 +96,14 @@ const OrganizerEditForm = () => {
         <CardHeader title="Avatar" />
         <CardContent>
           <Stack spacing={2}>
+            {record?.avatar_url && (
+              <OrganizerAvatar
+                src={record.avatar_url}
+                handle={record.handle}
+                realname={record.realname}
+                size={96}
+              />
+            )}
             <ImageInput
               source="media_upload"
               accept={{ "image/*": [".png", ".jpg", ".jpeg"] }}
@@ -96,6 +112,9 @@ const OrganizerEditForm = () => {
             >
               <ImageField source="src" title="title" />
             </ImageInput>
+            {record?.avatar_url && (
+              <BooleanInput source="remove_avatar" label="Remove avatar" />
+            )}
           </Stack>
         </CardContent>
       </Card>

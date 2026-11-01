@@ -51,6 +51,8 @@ const baseConfig: AppConfig = {
     month: "long",
     day: "numeric",
   },
+  pronoun_options: ["she/her", "he/him", "they/them"],
+  language_options: ["de", "en"],
 };
 
 function renderWithConfig(config: AppConfig) {

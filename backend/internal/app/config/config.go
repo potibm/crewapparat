@@ -43,6 +43,9 @@ func InitViper() {
 	viper.SetDefault("app.cors_allow_origins", []string{})
 	viper.SetDefault("app.redis_url", "")
 
+	viper.SetDefault("app.pronoun_options", []string{"she/her", "he/him", "they/them"})
+	viper.SetDefault("app.language_options", []string{"de", "en", "fr", "hu", "no", "nl", "ru", "pl"})
+
 	viper.SetDefault("format.date.locale", "da-DK")
 	viper.SetDefault("format.date.options", DefaultDateOptions)
 

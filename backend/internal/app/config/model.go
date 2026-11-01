@@ -26,7 +26,10 @@ type AppConfig struct {
 	RedisURL           RedisURL               `mapstructure:"redis_url"           validate:"omitempty,url"`
 
 	OtelEndpoint string `mapstructure:"otel_endpoint" validate:"omitempty"`
-	Port         int    `mapstructure:"port"          validate:"required,gt=0,lte=65535"`
+
+	PronounOptions  []string `json:"pronoun_options"  mapstructure:"pronoun_options"`
+	LanguageOptions []string `json:"language_options" mapstructure:"language_options"`
+	Port            int      `mapstructure:"port"     validate:"required,gt=0,lte=65535"`
 }
 
 type CorsAllowOriginsConfig []string
