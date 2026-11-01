@@ -15,7 +15,8 @@ import {
   useNotify,
   useGetList,
 } from "react-admin";
-import { Card, CardContent, CardHeader, Stack } from "@mui/material";
+import { Box, Card, CardContent, CardHeader, Link, Stack } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useAppConfig } from "@core/config/useConfig";
 import { ParticipationSection } from "./ParticipationSection";
 
@@ -112,10 +113,75 @@ const OrganizerEditForm = () => {
             <Stack spacing={2}>
               <TextInput source="email" />
               <TextInput source="phone" />
-              <TextInput source="slack_handle" />
+              <TextInput
+                source="slack_handle"
+                helperText={
+                  <Box
+                    component="span"
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    Click on
+                    <Link
+                      href="https://evoke-eu.slack.com/account/profile"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      your profile
+                    </Link>
+                    , click the three dots button
+                    <MoreVertIcon
+                      fontSize="inherit"
+                      sx={{
+                        border: 1,
+                        borderColor: "divider",
+                        borderRadius: 1,
+                        p: 0.25,
+                        bgcolor: "action.hover",
+                      }}
+                    />
+                    and choose &quot;Copy display name&quot;.
+                  </Box>
+                }
+              />
               <TextInput
                 source="slack_profile_url"
-                helperText="Click on your profile, click the three dots button and choose 'copy profile link'."
+                helperText={
+                  <Box
+                    component="span"
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    Click on
+                    <Link
+                      href="https://evoke-eu.slack.com/account/profile"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      your profile
+                    </Link>
+                    , click the three dots button
+                    <MoreVertIcon
+                      fontSize="inherit"
+                      sx={{
+                        border: 1,
+                        borderColor: "divider",
+                        borderRadius: 1,
+                        p: 0.25,
+                        bgcolor: "action.hover",
+                      }}
+                    />
+                    and choose &quot;Copy link to profile&quot;.
+                  </Box>
+                }
               />
               <NumberInput source="demozoo_id" helperText="Demozoo scener ID" />
             </Stack>
