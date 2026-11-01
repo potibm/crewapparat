@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
   Create,
   SimpleForm,
@@ -13,18 +14,20 @@ import { useAppConfig } from "@core/config/useConfig";
 const OrganizerCreate = () => {
   const config = useAppConfig();
 
-  const pronounChoices = (config.pronoun_options ?? []).map((value) => ({
-    id: value,
-    name: value,
-  }));
-  const languageChoices = (config.language_options ?? []).map((value) => ({
-    id: value,
-    name: value,
-  }));
+  const pronounInputRef = useRef<HTMLInputElement>(null);
+  const languageInputRef = useRef<HTMLInputElement>(null);
+
+  const pronounChoices = Array.from(new Set(config.pronoun_options ?? [])).map(
+    (value) => ({ id: value, name: value }),
+  );
+
+  const languageChoices = Array.from(
+    new Set(config.language_options ?? []),
+  ).map((value) => ({ id: value, name: value }));
 
   return (
     <Create>
-      <SimpleForm defaultValues={{ media_upload: undefined }}>
+      <SimpleForm>
         <TextInput source="handle" />
         <TextInput source="realname" />
         <TextInput source="email" />
@@ -33,17 +36,46 @@ const OrganizerCreate = () => {
         <AutocompleteInput
           source="pronouns"
           choices={pronounChoices}
-          onCreate={(filter?: string) =>
-            filter ? { id: filter, name: filter } : undefined
-          }
+          TextFieldProps={{ inputRef: pronounInputRef }}
+          onCreate={() => {
+            const newValue = pronounInputRef.current?.value?.trim() ?? "";
+            if (newValue) {
+              const newChoice = { id: newValue, name: newValue };
+              pronounChoices.push(newChoice);
+              return newChoice;
+            }
+            // eslint-disable-next-line no-alert
+            const prompted = prompt("Enter a new pronoun");
+            if (!prompted) return undefined;
+            const newChoice = { id: prompted, name: prompted };
+            pronounChoices.push(newChoice);
+            return newChoice;
+          }}
+          autoSelect
         />
         <AutocompleteArrayInput
           source="languages"
           choices={languageChoices}
-          onCreate={(filter?: string) =>
-            filter ? { id: filter, name: filter } : undefined
-          }
+          TextFieldProps={{ inputRef: languageInputRef }}
+          onCreate={() => {
+            const raw = languageInputRef.current?.value?.trim() ?? "";
+            const newValue = raw.toLowerCase();
+            if (newValue && newValue.length === 2) {
+              const newChoice = { id: newValue, name: newValue };
+              languageChoices.push(newChoice);
+              return newChoice;
+            }
+            // eslint-disable-next-line no-alert
+            const prompted = prompt("Enter a new language (2-letter code)");
+            if (!prompted) return undefined;
+            const normalized = prompted.trim().toLowerCase();
+            if (normalized.length !== 2) return undefined;
+            const newChoice = { id: normalized, name: normalized };
+            languageChoices.push(newChoice);
+            return newChoice;
+          }}
           translateChoice={false}
+          autoSelect
         />
         <ImageInput
           source="media_upload"
