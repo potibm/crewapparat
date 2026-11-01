@@ -5,9 +5,8 @@ import {
   TextInput,
   AutocompleteArrayInput,
   NumberInput,
-  FileInput,
+  ImageInput,
   ImageField,
-  BooleanInput,
   useEditContext,
   useGetIdentity,
   usePermissions,
@@ -16,7 +15,6 @@ import {
 } from "react-admin";
 import { Card, CardContent, CardHeader, Stack } from "@mui/material";
 import { PronounsInput } from "./PronounsInput";
-import { OrganizerAvatar } from "./OrganizerAvatar";
 
 const languageChoices = [
   { id: "de", name: "German (de)" },
@@ -46,7 +44,11 @@ const OrganizerEditForm = () => {
   }, [record, identity, permissions, isPending, redirect, notify]);
 
   return (
-    <SimpleForm>
+    <SimpleForm
+      defaultValues={(rec: { avatar_url?: string }) => ({
+        media_upload: rec?.avatar_url ? { src: rec.avatar_url } : undefined,
+      })}
+    >
       <Card sx={{ width: "100%", mb: 2 }}>
         <CardHeader title="Profile" />
         <CardContent>
@@ -86,25 +88,14 @@ const OrganizerEditForm = () => {
         <CardHeader title="Avatar" />
         <CardContent>
           <Stack spacing={2}>
-            {record?.avatar_url && (
-              <OrganizerAvatar
-                src={record.avatar_url}
-                handle={record.handle}
-                realname={record.realname}
-                size={96}
-              />
-            )}
-            <FileInput
+            <ImageInput
               source="media_upload"
-              accept={{ "image/*": [".png", ".jpg", ".jpeg", ".webp"] }}
+              accept={{ "image/*": [".png", ".jpg", ".jpeg"] }}
               label="Avatar"
               placeholder={<p>Drag image here or click to upload</p>}
             >
               <ImageField source="src" title="title" />
-            </FileInput>
-            {record?.avatar_url && (
-              <BooleanInput source="remove_avatar" label="Remove avatar" />
-            )}
+            </ImageInput>
           </Stack>
         </CardContent>
       </Card>

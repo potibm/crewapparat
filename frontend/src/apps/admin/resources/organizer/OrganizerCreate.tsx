@@ -18,7 +18,7 @@ const OrganizerCreate = () => (
       <PronounsInput source="pronouns" />
       <FileInput
         source="media_upload"
-        accept={{ "image/*": [".png", ".jpg", ".jpeg", ".webp"] }}
+        accept={{ "image/*": [".png", ".jpg", ".jpeg"] }}
         label="Avatar"
         placeholder={<p>Drag image here or click to upload</p>}
       >

@@ -57,11 +57,17 @@ const handleOrganizerFileUpload = async (
   const data = params.data as OrganizerFormData;
 
   if (!data.media_upload?.rawFile) {
+    const removed =
+      data.media_upload === null &&
+      !!(params as UpdateParams).previousData?.avatar_url;
     const { media_upload: _media_upload, ...rest } = data;
     // Preserve the existing avatar URL when the form does not carry one
     // (e.g. on edits where no new file was selected), mirroring the
     // billedapparat behaviour of not wiping unchanged media.
-    if (rest.avatar_url === undefined) {
+    if (removed) {
+      rest.remove_avatar = true;
+      delete (rest as { avatar_url?: string }).avatar_url;
+    } else if (rest.avatar_url === undefined) {
       const previousAvatar = (params as UpdateParams).previousData?.avatar_url;
       if (previousAvatar) {
         rest.avatar_url = previousAvatar;
