@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDataProvider, useGetList, useNotify } from "react-admin";
 import {
   Autocomplete,
@@ -8,6 +8,7 @@ import {
   CardContent,
   CardHeader,
   Checkbox,
+  Divider,
   FormControl,
   FormControlLabel,
   InputLabel,
@@ -15,14 +16,31 @@ import {
   Select,
   Stack,
   TextField,
+  Typography,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import { useAppConfig } from "@core/config/useConfig";
+import type { ParticipationRecord } from "../participation/participation.types";
+import { ShiftSchedule } from "./ShiftSchedule";
 
 interface ParticipationSectionProps {
   organizerId?: string;
   activeYear?: string;
 }
+
+interface TeamChoice {
+  id: string;
+  name: string;
+  has_shifts?: boolean;
+}
+
+interface OrganizerChoice {
+  id: string;
+  handle: string;
+  realname?: string;
+}
+
+const PAGE_SIZE = 500;
 
 export const ParticipationSection = ({
   organizerId,
@@ -44,13 +62,13 @@ export const ParticipationSection = ({
     { enabled: !!organizerId && !!activeYear },
   );
 
-  const participation = participations?.[0];
+  const participation = participations?.[0] as ParticipationRecord | undefined;
 
   const { data: teams } = useGetList("teams", {
     pagination: { page: 1, perPage: 100 },
   });
 
-  const teamChoices = (teams ?? []).map((t: { id: string; name: string }) => ({
+  const teamChoices = ((teams ?? []) as TeamChoice[]).map((t) => ({
     id: t.id,
     name: t.name,
   }));
@@ -60,6 +78,11 @@ export const ParticipationSection = ({
   const [partAdditionalPaid, setPartAdditionalPaid] = useState(false);
   const [partConsent, setPartConsent] = useState(false);
   const [partTeams, setPartTeams] = useState<string[]>([]);
+  const [preferredPartners, setPreferredPartners] = useState<string[]>([]);
+  const [shiftPreferredTimes, setShiftPreferredTimes] = useState<number[]>([]);
+  const [shiftUnavailableTimes, setShiftUnavailableTimes] = useState<number[]>(
+    [],
+  );
   const [savingPart, setSavingPart] = useState(false);
 
   const tshirtInputRef = useRef<HTMLInputElement>(null);
@@ -71,13 +94,80 @@ export const ParticipationSection = ({
     ]),
   ).map((value) => ({ id: value, name: value }));
 
+  const shiftTeamIds = useMemo(
+    () =>
+      new Set(
+        ((teams ?? []) as TeamChoice[])
+          .filter((t) => t.has_shifts && partTeams.includes(t.id))
+          .map((t) => t.id),
+      ),
+    [teams, partTeams],
+  );
+
+  const showShifts = shiftTeamIds.size > 0;
+
+  // Organizers who share a shift team this year, used as partner choices.
+  const { data: yearParticipations } = useGetList(
+    "participations",
+    {
+      pagination: { page: 1, perPage: PAGE_SIZE },
+      filter: { event_year_id: activeYear },
+    },
+    { enabled: showShifts && !!activeYear },
+  );
+
+  const { data: allOrganizers } = useGetList(
+    "organizers",
+    {
+      pagination: { page: 1, perPage: PAGE_SIZE },
+      sort: { field: "handle", order: "ASC" },
+    },
+    { enabled: showShifts },
+  );
+
+  const partnerChoices = useMemo(() => {
+    const organizersById = new Map(
+      ((allOrganizers ?? []) as OrganizerChoice[]).map((o) => [o.id, o]),
+    );
+
+    const partnerIds = new Set(
+      ((yearParticipations ?? []) as ParticipationRecord[])
+        .filter(
+          (p) =>
+            p.organizer_id !== organizerId &&
+            (p.teams ?? []).some((t) => shiftTeamIds.has(t.id)),
+        )
+        .map((p) => p.organizer_id),
+    );
+
+    return [...partnerIds]
+      .map((id) => organizersById.get(id))
+      .filter((o): o is OrganizerChoice => o !== undefined)
+      .map((o) => ({ id: o.id, name: o.handle }));
+  }, [allOrganizers, yearParticipations, organizerId, shiftTeamIds]);
+
   useEffect(() => {
-    if (!participation) return;
+    if (!participation) {
+      setPartStatus("pending");
+      setPartTShirt("");
+      setPartAdditionalPaid(false);
+      setPartConsent(false);
+      setPartTeams([]);
+      setPreferredPartners([]);
+      setShiftPreferredTimes([]);
+      setShiftUnavailableTimes([]);
+
+      return;
+    }
+
     setPartStatus(participation.status ?? "pending");
     setPartTShirt(participation.t_shirt_size ?? "");
     setPartAdditionalPaid(!!participation.additional_paid_shirt);
     setPartConsent(!!participation.public_website_consent);
-    setPartTeams((participation.teams ?? []).map((t: { id: string }) => t.id));
+    setPartTeams((participation.teams ?? []).map((t) => t.id));
+    setPreferredPartners(participation.shift_preferred_partner ?? []);
+    setShiftPreferredTimes(participation.shift_preferred_times ?? []);
+    setShiftUnavailableTimes(participation.shift_unavailable_times ?? []);
   }, [participation]);
 
   const handleSaveParticipation = async () => {
@@ -91,6 +181,11 @@ export const ParticipationSection = ({
         t_shirt_size: tshirtInputRef.current?.value?.trim() || partTShirt,
         additional_paid_shirt: partAdditionalPaid,
         public_website_consent: partConsent,
+        // Always send the shift data so unselecting the team only hides it
+        // instead of deleting it.
+        shift_preferred_times: shiftPreferredTimes,
+        shift_unavailable_times: shiftUnavailableTimes,
+        shift_preferred_partner: preferredPartners,
         teams: teamChoices.filter((t) => partTeams.includes(t.id)),
       };
       if (participation?.id) {
@@ -178,6 +273,43 @@ export const ParticipationSection = ({
               ))}
             </Select>
           </FormControl>
+
+          {showShifts && (
+            <>
+              <Divider />
+              <Typography variant="h6">Shift planning</Typography>
+              {config.shift.start && config.shift.block_count > 0 ? (
+                <ShiftSchedule
+                  start={config.shift.start}
+                  blockCount={config.shift.block_count}
+                  preferred={shiftPreferredTimes}
+                  unavailable={shiftUnavailableTimes}
+                  onChange={(preferred, unavailable) => {
+                    setShiftPreferredTimes(preferred);
+                    setShiftUnavailableTimes(unavailable);
+                  }}
+                />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Shift planning is not configured.
+                </Typography>
+              )}
+              <Autocomplete
+                multiple
+                size="small"
+                fullWidth
+                options={partnerChoices.map((c) => c.id)}
+                getOptionLabel={(id) =>
+                  partnerChoices.find((c) => c.id === id)?.name ?? id
+                }
+                value={preferredPartners}
+                onChange={(_event, value) => setPreferredPartners(value)}
+                renderInput={(params) => (
+                  <TextField {...params} label="Preferred shift partners" />
+                )}
+              />
+            </>
+          )}
         </Stack>
       </CardContent>
       <Box

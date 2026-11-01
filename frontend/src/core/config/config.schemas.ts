@@ -28,6 +28,12 @@ export const AppConfigSchema = z.object({
   tshirt_size_options: z
     .array(z.string())
     .default(["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL"]),
+  shift: z
+    .object({
+      start: z.string().default(""),
+      block_count: z.number().int().nonnegative().default(0),
+    })
+    .default({ start: "", block_count: 0 }),
   auth: z
     .object({
       type: z.enum(["oidc"]),

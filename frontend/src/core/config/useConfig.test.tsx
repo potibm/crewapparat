@@ -23,6 +23,10 @@ const dummyConfig: AppConfig = {
   pronoun_options: ["she/her", "he/him", "they/them"],
   language_options: ["de", "en"],
   tshirt_size_options: ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL"],
+  shift: {
+    start: "2026-08-07T16:00:00+02:00",
+    block_count: 90,
+  },
 };
 
 describe("useAppConfig", () => {
