@@ -1,6 +1,7 @@
 package hub
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,8 +31,17 @@ func respondWithInvalidIDFormatProblem(c *gin.Context) {
 	respondWithProblem(c, http.StatusBadRequest, "Bad Request", "Invalid ID format")
 }
 
+// respondWithInternalServerProblem logs the detail - which may contain internal
+// error information such as database messages - and returns a generic problem
+// response so that implementation details never leak to the client.
 func respondWithInternalServerProblem(c *gin.Context, detail string) {
-	respondWithProblem(c, http.StatusInternalServerError, "Internal Server Error", detail)
+	slog.Error("internal server error",
+		"detail", detail,
+		"method", c.Request.Method,
+		"path", c.Request.URL.Path,
+	)
+
+	respondWithProblem(c, http.StatusInternalServerError, "Internal Server Error", "An internal server error occurred")
 }
 
 func respondWithNotFoundProblem(c *gin.Context, detail string) {

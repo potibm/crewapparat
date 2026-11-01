@@ -172,3 +172,36 @@ func TestGetMe_Unlinked(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
+
+func newIsAdminServer(t *testing.T) *Server {
+	t.Helper()
+
+	server, err := NewServer(Config{
+		Cfg: config.Config{
+			Auth: &config.AuthConfig{OidcAdminGroup: "crewapparat-admins"},
+		},
+	})
+	require.NoError(t, err)
+
+	return server
+}
+
+func TestIsAdmin_MatchesConfiguredGroup(t *testing.T) {
+	server := newIsAdminServer(t)
+
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Set("userGroups", []string{"other", "crewapparat-admins"})
+
+	assert.True(t, server.isAdmin(c, "user-123"))
+}
+
+func TestIsAdmin_IgnoresUnexpectedGroupsType(t *testing.T) {
+	server := newIsAdminServer(t)
+
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Set("userGroups", "not-a-slice")
+
+	assert.NotPanics(t, func() {
+		assert.False(t, server.isAdmin(c, "user-123"))
+	})
+}

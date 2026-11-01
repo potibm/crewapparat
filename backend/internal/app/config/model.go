@@ -30,7 +30,7 @@ type AppConfig struct {
 	PronounOptions    []string `json:"pronoun_options"     mapstructure:"pronoun_options"`
 	LanguageOptions   []string `json:"language_options"    mapstructure:"language_options"`
 	TShirtSizeOptions []string `json:"tshirt_size_options" mapstructure:"tshirt_size_options"`
-	Port            int      `mapstructure:"port"     validate:"required,gt=0,lte=65535"`
+	Port              int      `mapstructure:"port"        validate:"required,gt=0,lte=65535"`
 }
 
 type CorsAllowOriginsConfig []string

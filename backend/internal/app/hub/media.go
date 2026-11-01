@@ -2,6 +2,7 @@ package hub
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -18,6 +19,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
 	"github.com/potibm/crewapparat/internal/app/config"
@@ -28,10 +30,30 @@ const (
 	avatarSize     = 512
 )
 
+var (
+	// ErrAvatarTooLarge is returned when the uploaded avatar exceeds maxAvatarBytes.
+	ErrAvatarTooLarge = errors.New("avatar file too large")
+	// ErrAvatarUnsupported is returned when the uploaded file is not a supported image.
+	ErrAvatarUnsupported = errors.New("avatar file is not a supported image")
+)
+
+// respondWithAvatarStorageProblem maps avatar upload failures to HTTP responses:
+// user-caused problems become a 400 with a helpful message, everything else a
+// generic 500 so internal details stay out of the response.
+func respondWithAvatarStorageProblem(c *gin.Context, err error) {
+	if errors.Is(err, ErrAvatarTooLarge) || errors.Is(err, ErrAvatarUnsupported) {
+		respondWithBadRequestProblem(c, err.Error())
+
+		return
+	}
+
+	respondWithInternalServerProblem(c, "Failed to store avatar: "+err.Error())
+}
+
 //nolint:mnd // image processing constants
 func saveAvatarFile(fileHeader *multipart.FileHeader) (string, error) {
 	if fileHeader.Size > maxAvatarBytes {
-		return "", fmt.Errorf("file too large (max %d bytes)", maxAvatarBytes)
+		return "", fmt.Errorf("%w (max %d bytes)", ErrAvatarTooLarge, maxAvatarBytes)
 	}
 
 	src, err := fileHeader.Open()
@@ -45,13 +67,14 @@ func saveAvatarFile(fileHeader *multipart.FileHeader) (string, error) {
 		return "", fmt.Errorf("failed to read uploaded file: %w", err)
 	}
 
-	if !strings.HasPrefix(http.DetectContentType(data), "image/") {
-		return "", fmt.Errorf("uploaded file is not an image")
+	contentType := http.DetectContentType(data)
+	if !strings.HasPrefix(contentType, "image/") {
+		return "", fmt.Errorf("%w: %s", ErrAvatarUnsupported, contentType)
 	}
 
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		return "", fmt.Errorf("failed to decode image: %w", err)
+		return "", fmt.Errorf("%w: %v", ErrAvatarUnsupported, err)
 	}
 
 	out := resizeToSquareJPEG(img, avatarSize)

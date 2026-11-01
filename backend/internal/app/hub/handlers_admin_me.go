@@ -121,10 +121,12 @@ func (s *Server) isAdmin(c *gin.Context, userID string) bool {
 		return false
 	}
 
-	if groups, exists := c.Get("userGroups"); exists {
-		for _, g := range groups.([]string) {
-			if g == s.cfg.Auth.OidcAdminGroup {
-				return true
+	if groupsVal, exists := c.Get("userGroups"); exists {
+		if groups, ok := groupsVal.([]string); ok {
+			for _, g := range groups {
+				if g == s.cfg.Auth.OidcAdminGroup {
+					return true
+				}
 			}
 		}
 	}

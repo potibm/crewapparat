@@ -122,7 +122,7 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 	if fileHeader != nil {
 		url, err := saveAvatarFile(fileHeader)
 		if err != nil {
-			respondWithInternalServerProblem(c, "Failed to store avatar: "+err.Error())
+			respondWithAvatarStorageProblem(c, err)
 
 			return
 		}
@@ -243,7 +243,7 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 	if fileHeader != nil {
 		url, err := saveAvatarFile(fileHeader)
 		if err != nil {
-			respondWithInternalServerProblem(c, "Failed to store avatar: "+err.Error())
+			respondWithAvatarStorageProblem(c, err)
 
 			return
 		}
@@ -260,21 +260,12 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 		organizer.Slug = existing.Slug
 	}
 
-	if removeAvatar {
+	// A newly uploaded avatar always wins over a removal request, so a file is
+	// never written to disk and then discarded.
+	if fileHeader == nil && removeAvatar {
 		organizer.AvatarURL = ""
 	} else if organizer.AvatarURL == "" && fileHeader == nil {
 		organizer.AvatarURL = existing.AvatarURL
-	}
-
-	if fileHeader != nil {
-		url, err := saveAvatarFile(fileHeader)
-		if err != nil {
-			respondWithInternalServerProblem(c, "Failed to store avatar: "+err.Error())
-
-			return
-		}
-
-		organizer.AvatarURL = url
 	}
 
 	if err := s.organizerRepo.Update(c.Request.Context(), &organizer); err != nil {
