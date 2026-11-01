@@ -25,6 +25,9 @@ export const AppConfigSchema = z.object({
   language_options: z
     .array(z.string())
     .default(["de", "en", "fr", "hu", "no", "nl", "ru", "pl"]),
+  tshirt_size_options: z
+    .array(z.string())
+    .default(["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL"]),
   auth: z
     .object({
       type: z.enum(["oidc"]),

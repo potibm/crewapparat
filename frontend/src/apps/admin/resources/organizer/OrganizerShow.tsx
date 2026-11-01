@@ -5,6 +5,7 @@ import {
   useNotify,
   usePermissions,
   DataTable,
+  useGetList,
 } from "react-admin";
 import {
   Box,
@@ -33,9 +34,22 @@ const OrganizerShowContent = () => {
   const { permissions } = usePermissions();
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
+  const { data: eventYears } = useGetList("event-years", {
+    pagination: { page: 1, perPage: 100 },
+  });
+  const activeYear = eventYears?.find(
+    (y: { is_active?: boolean; year: string }) => y.is_active,
+  )?.year;
+
   if (!record) return null;
 
   const isAdmin = Array.isArray(permissions) && permissions.includes("admin");
+
+  const sortedParticipations = record.participations
+    ? [...record.participations].sort((a, b) =>
+        (b.event_year_id ?? "").localeCompare(a.event_year_id ?? ""),
+      )
+    : [];
 
   const publicUrl = `${window.location.origin}/u/${record.slug}`;
   const handleCopy = async () => {
@@ -262,8 +276,18 @@ const OrganizerShowContent = () => {
         <Card sx={{ gridColumn: { xs: "auto", md: "1 / -1" } }}>
           <CardHeader title="Participations" />
           <CardContent>
-            {record.participations && record.participations.length > 0 ? (
-              <DataTable data={record.participations} bulkActionButtons={false}>
+            {sortedParticipations.length > 0 ? (
+              <DataTable
+                data={sortedParticipations}
+                bulkActionButtons={false}
+                rowClick={false}
+                rowSx={(rec: Record<string, unknown>) =>
+                  rec.event_year_id === activeYear
+                    ? { bgcolor: "action.selected" }
+                    : {}
+                }
+              >
+                {" "}
                 <DataTable.Col source="event_year_id" />
                 <DataTable.Col source="status" />
                 <DataTable.Col source="t_shirt_size" />

@@ -27,8 +27,9 @@ type AppConfig struct {
 
 	OtelEndpoint string `mapstructure:"otel_endpoint" validate:"omitempty"`
 
-	PronounOptions  []string `json:"pronoun_options"  mapstructure:"pronoun_options"`
-	LanguageOptions []string `json:"language_options" mapstructure:"language_options"`
+	PronounOptions    []string `json:"pronoun_options"     mapstructure:"pronoun_options"`
+	LanguageOptions   []string `json:"language_options"    mapstructure:"language_options"`
+	TShirtSizeOptions []string `json:"tshirt_size_options" mapstructure:"tshirt_size_options"`
 	Port            int      `mapstructure:"port"     validate:"required,gt=0,lte=65535"`
 }
 
