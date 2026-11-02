@@ -12,7 +12,7 @@ import { AvatarLightbox } from "./AvatarLightbox";
 import { OrganizerAvatar } from "./OrganizerAvatar";
 import { SlackIcon } from "./OrganizerIcons";
 import type { OrganizerRecord } from "./organizer.types";
-import { Box, Chip, IconButton, Typography } from "@mui/material";
+import { Box, Chip, IconButton, Tooltip, Typography } from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import { TeamChips } from "./TeamChips";
@@ -94,43 +94,61 @@ const OrganizerListContent = () => {
             disableSort
             render={(record: OrganizerRecord) => (
               <Box sx={{ display: "flex", gap: 0.5 }}>
-                <IconButton
-                  size="small"
-                  component="a"
-                  href={record.email ? `mailto:${record.email}` : undefined}
-                  disabled={!record.email}
-                  onClick={(event) => event.stopPropagation()}
-                  sx={{ color: record.email ? "action" : "action.disabled" }}
-                >
-                  <EmailIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  component="a"
-                  href={record.phone ? `tel:${record.phone}` : undefined}
-                  disabled={!record.phone}
-                  onClick={(event) => event.stopPropagation()}
-                  sx={{ color: record.phone ? "action" : "action.disabled" }}
-                >
-                  <PhoneIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  component="a"
-                  href={record.slack_profile_url || undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  disabled={!record.slack_handle && !record.slack_profile_url}
-                  onClick={(event) => event.stopPropagation()}
-                  sx={{
-                    color:
-                      record.slack_handle || record.slack_profile_url
-                        ? "action"
-                        : "action.disabled",
-                  }}
-                >
-                  <SlackIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title={record.email || "No email"} arrow>
+                  <span>
+                    <IconButton
+                      size="small"
+                      component="a"
+                      href={record.email ? `mailto:${record.email}` : undefined}
+                      disabled={!record.email}
+                      onClick={(event) => event.stopPropagation()}
+                      sx={{
+                        color: record.email ? "action" : "action.disabled",
+                      }}
+                    >
+                      <EmailIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title={record.phone || "No phone"} arrow>
+                  <span>
+                    <IconButton
+                      size="small"
+                      component="a"
+                      href={record.phone ? `tel:${record.phone}` : undefined}
+                      disabled={!record.phone}
+                      onClick={(event) => event.stopPropagation()}
+                      sx={{
+                        color: record.phone ? "action" : "action.disabled",
+                      }}
+                    >
+                      <PhoneIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title={record.slack_handle || "No Slack"} arrow>
+                  <span>
+                    <IconButton
+                      size="small"
+                      component="a"
+                      href={record.slack_profile_url || undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      disabled={
+                        !record.slack_handle && !record.slack_profile_url
+                      }
+                      onClick={(event) => event.stopPropagation()}
+                      sx={{
+                        color:
+                          record.slack_handle || record.slack_profile_url
+                            ? "action"
+                            : "action.disabled",
+                      }}
+                    >
+                      <SlackIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
               </Box>
             )}
           />
