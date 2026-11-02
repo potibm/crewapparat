@@ -39,10 +39,14 @@ const OrganizerListContent = () => {
     sort: { field: "name", order: "ASC" },
   });
 
-  const teamChoices = (teams ?? []).map((t: { id: string; name: string }) => ({
-    id: t.id,
-    name: t.name,
-  }));
+  const teamChoices = (teams ?? [])
+    .filter(
+      (t: { id: string; name: string; active?: boolean }) => t.active !== false,
+    )
+    .map((t: { id: string; name: string }) => ({
+      id: t.id,
+      name: t.name,
+    }));
 
   const organizerFilters = [
     <TextInput key="q" source="q" label="Search" alwaysOn />,
@@ -188,7 +192,11 @@ const OrganizerListContent = () => {
             render={(record: OrganizerRecord) =>
               record.current_participation_teams &&
               record.current_participation_teams.length > 0 ? (
-                <TeamChips teams={record.current_participation_teams} />
+                <TeamChips
+                  teams={record.current_participation_teams.filter(
+                    (t) => t.active !== false,
+                  )}
+                />
               ) : (
                 <Typography variant="body2" color="text.secondary">
                   —

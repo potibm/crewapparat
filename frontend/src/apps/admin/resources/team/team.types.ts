@@ -5,4 +5,5 @@ export interface TeamRecord extends RaRecord {
   name: string;
   color?: string;
   has_shifts: boolean;
+  active: boolean;
 }

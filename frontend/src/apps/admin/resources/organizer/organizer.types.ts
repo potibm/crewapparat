@@ -21,5 +21,6 @@ export interface OrganizerRecord extends RaRecord {
     id: string;
     name: string;
     color?: string;
+    active?: boolean;
   }[];
 }

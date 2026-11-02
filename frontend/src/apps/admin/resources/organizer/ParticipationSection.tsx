@@ -32,6 +32,7 @@ interface TeamChoice {
   id: string;
   name: string;
   has_shifts?: boolean;
+  active?: boolean;
 }
 
 interface OrganizerChoice {
@@ -68,10 +69,12 @@ export const ParticipationSection = ({
     pagination: { page: 1, perPage: 100 },
   });
 
-  const teamChoices = ((teams ?? []) as TeamChoice[]).map((t) => ({
-    id: t.id,
-    name: t.name,
-  }));
+  const teamChoices = ((teams ?? []) as TeamChoice[])
+    .filter((t) => t.active !== false)
+    .map((t) => ({
+      id: t.id,
+      name: t.name,
+    }));
 
   const [partStatus, setPartStatus] = useState("pending");
   const [partTShirt, setPartTShirt] = useState("");

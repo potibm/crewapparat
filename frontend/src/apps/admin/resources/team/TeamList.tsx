@@ -29,7 +29,7 @@ const TeamListContent = () => {
         )
       }
     >
-      <DataTable rowClick="edit" bulkActionButtons={false}>
+      <DataTable rowClick={isAdmin ? "edit" : false} bulkActionButtons={false}>
         <DataTable.Col source="name" />
         <DataTable.Col
           label="Color"
@@ -53,8 +53,11 @@ const TeamListContent = () => {
         <DataTable.Col source="has_shifts">
           <BooleanField source="has_shifts" />
         </DataTable.Col>
+        <DataTable.Col source="active">
+          <BooleanField source="active" />
+        </DataTable.Col>
         <DataTable.Col>
-          <EditButton />
+          {isAdmin && <EditButton />}
           {isAdmin && (
             <DeleteButton
               confirmTitle="Delete team"
