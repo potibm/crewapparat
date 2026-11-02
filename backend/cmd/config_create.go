@@ -1,0 +1,73 @@
+package cmd
+
+import (
+	"fmt"
+	"log/slog"
+
+	"github.com/potibm/crewapparat/internal/app/config"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+)
+
+var (
+	configCreateForce    bool
+	configCreateFilename string
+)
+
+func NewConfigCreateCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create",
+		Short: "Create a new configuration file with default values",
+		Annotations: map[string]string{
+			skipConfigValidationAnnotation: "true",
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			const defaultFrontendURL = "https://localhost:3400"
+
+			viper.SetDefault("app.frontend_url", defaultFrontendURL)
+			viper.SetDefault("app.cors_allow_origins", []string{defaultFrontendURL})
+
+			viper.SetDefault("auth", config.AuthConfig{
+				Type:             "oidc",
+				Name:             "Dex",
+				AuthorityURL:     "https://dex.crewapparat.test/dex",
+				ClientID:         "react-admin-client",
+				OidcAdminGroup:   "crewapparat-admins",
+				ProxyAdmins:      []string{},
+				HeaderUserSub:    "X-User-Sub",
+				HeaderUserGroups: "X-User-Groups",
+			})
+
+			filename := configCreateFilename
+
+			var writeErr error
+			if configCreateForce {
+				writeErr = viper.WriteConfigAs(filename)
+			} else {
+				writeErr = viper.SafeWriteConfigAs(filename)
+			}
+
+			if writeErr != nil {
+				if _, ok := writeErr.(viper.ConfigFileNotFoundError); !ok {
+					return fmt.Errorf(
+						"file %s already exists or was not able to be created: %w",
+						filename,
+						writeErr,
+					)
+				}
+
+				return fmt.Errorf("error writing the config: %w", writeErr)
+			}
+
+			slog.Info("Configuration file created successfully", "filename", filename)
+
+			return nil
+		},
+	}
+
+	cmd.Flags().BoolVarP(&configCreateForce, "force", "f", false, "Overwrite existing config file if it already exists")
+	cmd.Flags().
+		StringVarP(&configCreateFilename, "output", "o", "config/config.yaml", "Filename for the generated config file")
+
+	return cmd
+}

@@ -1,0 +1,33 @@
+issuer: https://dex.crewapparat.test/dex
+storage:
+  type: memory
+web:
+  http: 0.0.0.0:5556
+  allowedOrigins: ['https://crewapparat.test']
+staticClients:
+- id: react-admin-client
+  redirectURIs:
+  - 'https://crewapparat.test/auth-callback'
+  name: 'Crewapparat Admin'
+  public: true
+
+enablePasswordDB: true
+staticPasswords:
+- email: "admin@example.com"
+  # bcrypt hash for the password "password"
+  hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+  username: "Admin"
+  userID: "92c18da6-46e6-44e1-b462-08bfb8eb2f38"
+  groups: ["crewapparat-admins", "crew"]
+- email: "user@example.com"
+  # bcrypt hash for the password "password"
+  hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+  username: "User"
+  userID: "b0c35c31-a681-4298-81ea-c7878c5d0e7e"
+  groups: ["crew"]
+- email: "unassigned@example.com"
+  # bcrypt hash for the password "password"
+  hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+  username: "Unassigned"
+  userID: "c0ffee00-0000-4000-8000-000000000099"
+  groups: ["crew"] 

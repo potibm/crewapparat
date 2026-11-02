@@ -1,0 +1,19 @@
+app:
+  cors_allow_origins: https://crewapparat.test
+  db_filename: crewapparat
+  frontend_url: "https://crewapparat.test"
+  log_format: json
+  log_level: debug
+  version: dev
+auth:
+  oidc_admin_group: crewapparat-admins
+sentry:
+  dsn: ""
+  environment: development
+  replay_error_sample_rate: 0.1
+  replay_session_sample_rate: 0.1
+  trace_sample_rate: 0.1
+shift:
+  # Block 0 starts on Friday at 16:00; 90 half-hour blocks cover Fri-Sun.
+  start: "2026-08-07T16:00:00+02:00"
+  block_count: 90
