@@ -163,6 +163,26 @@ func (s *Server) DeleteEventYear(c *gin.Context) {
 		return
 	}
 
+	// Prevent deletion of the active year.
+	eventYear, err := s.eventYearRepo.GetByYear(c.Request.Context(), year)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			respondWithNotFoundProblem(c, "Event year not found")
+
+			return
+		}
+
+		respondWithInternalServerProblem(c, "Failed to get event year: "+err.Error())
+
+		return
+	}
+
+	if eventYear.IsActive {
+		respondWithConflictProblem(c, "Cannot delete the active event year. Activate another year first.")
+
+		return
+	}
+
 	// Delete all participations for this year first.
 	participations, _, err := s.participationRepo.List(
 		c.Request.Context(),

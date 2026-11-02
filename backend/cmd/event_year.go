@@ -144,6 +144,16 @@ func NewEventYearDeleteCmd() *cobra.Command {
 			eventYearRepo := dbStore.NewEventYearRepository()
 			participationRepo := dbStore.NewParticipationRepository()
 
+			// Prevent deletion of the active year.
+			eventYear, err := eventYearRepo.GetByYear(ctx, year)
+			if err != nil {
+				return fmt.Errorf("event year %s not found: %w", year, err)
+			}
+
+			if eventYear.IsActive {
+				return fmt.Errorf("cannot delete the active event year; activate another year first")
+			}
+
 			// Delete all participations for this year first.
 			participations, _, err := participationRepo.List(
 				ctx,
