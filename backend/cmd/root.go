@@ -120,6 +120,9 @@ func Execute() error {
 	)
 	rootCmd.AddCommand(databaseCmd)
 
+	eventYearCmd := NewEventYearCmd()
+	rootCmd.AddCommand(eventYearCmd)
+
 	return rootCmd.ExecuteContext(ctx)
 }
 
