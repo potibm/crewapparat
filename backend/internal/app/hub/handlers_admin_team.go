@@ -88,6 +88,15 @@ func (s *Server) UpdateTeam(c *gin.Context) {
 		return
 	}
 
+	userID, _ := c.Get("userID")
+
+	uid, _ := userID.(string)
+	if !s.isAdmin(c, uid) {
+		respondWithForbiddenProblem(c, "Only admins can update teams")
+
+		return
+	}
+
 	var team domain.Team
 	if err := c.ShouldBindJSON(&team); err != nil {
 		respondWithFailedToParsePayloadProblem(c, err)
@@ -160,6 +169,11 @@ func parseTeamFilters(c *gin.Context) repository.TeamListFilters {
 
 	if q := c.Query("q"); q != "" {
 		filters.Query = &q
+	}
+
+	if v := c.Query("active"); v != "" {
+		b := v == "true" || v == "1"
+		filters.Active = &b
 	}
 
 	return filters

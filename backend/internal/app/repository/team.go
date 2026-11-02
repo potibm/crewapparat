@@ -9,8 +9,9 @@ import (
 )
 
 type TeamListFilters struct {
-	Query *string
-	ID    *uuid.UUID
+	Query  *string
+	ID     *uuid.UUID
+	Active *bool
 }
 
 type TeamListParams = ListParams

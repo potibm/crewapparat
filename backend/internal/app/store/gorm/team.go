@@ -14,6 +14,7 @@ type dbTeam struct {
 	Name      string    `gorm:"uniqueIndex;column:name"`
 	Color     string    `gorm:"column:color"`
 	HasShifts bool      `gorm:"default:false;column:has_shifts"`
+	Active    bool      `gorm:"default:true;column:active"`
 }
 
 func (dbTeam) TableName() string { return "teams" }
@@ -28,6 +29,7 @@ func fromDomainTeam(t *domain.Team) *dbTeam {
 		Name:      t.Name,
 		Color:     t.Color,
 		HasShifts: t.HasShifts,
+		Active:    t.Active,
 	}
 }
 
@@ -37,5 +39,6 @@ func toDomainTeam(db *dbTeam) *domain.Team {
 		Name:      db.Name,
 		Color:     db.Color,
 		HasShifts: db.HasShifts,
+		Active:    db.Active,
 	}
 }

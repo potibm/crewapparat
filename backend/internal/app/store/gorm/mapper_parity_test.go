@@ -112,7 +112,7 @@ func TestMapperRoundtrip(t *testing.T) {
 	})
 
 	t.Run("Team", func(t *testing.T) {
-		in := &domain.Team{ID: uuid.New(), Name: "Infodesk", Color: "#FFD6A5", HasShifts: true}
+		in := &domain.Team{ID: uuid.New(), Name: "Infodesk", Color: "#FFD6A5", HasShifts: true, Active: true}
 		require.Equal(t, *in, *toDomainTeam(fromDomainTeam(in)))
 	})
 

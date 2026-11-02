@@ -10,4 +10,7 @@ type Team struct {
 	Color string `json:"color,omitempty"`
 	// HasShifts marks teams whose members need shift planning (e.g. Infodesk).
 	HasShifts bool `json:"has_shifts"`
+	// Active marks whether the team can still be selected by users. Only
+	// admins may toggle it; inactive teams stay visible in historical data.
+	Active bool `json:"active"`
 }

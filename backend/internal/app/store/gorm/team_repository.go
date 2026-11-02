@@ -93,6 +93,10 @@ func (r *teamRepository) List(
 		query = query.Where("id = ?", *filters.ID)
 	}
 
+	if filters.Active != nil {
+		query = query.Where("active = ?", *filters.Active)
+	}
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count teams: %w", err)
 	}

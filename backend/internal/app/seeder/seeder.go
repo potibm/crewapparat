@@ -218,7 +218,7 @@ func (s *Seeder) seedTeams(ctx context.Context) ([]domain.Team, error) {
 			return nil, fmt.Errorf("failed to look up team %s: %w", name, err)
 		}
 
-		team := &domain.Team{Name: name, Color: wantColor, HasShifts: wantShifts}
+		team := &domain.Team{Name: name, Color: wantColor, HasShifts: wantShifts, Active: true}
 		if err := s.repos.Teams.Create(ctx, team); err != nil {
 			return nil, fmt.Errorf("failed to create team %s: %w", name, err)
 		}
