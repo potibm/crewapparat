@@ -12,7 +12,6 @@ import { useAppConfig } from "@core/config/useConfig";
 import organizers from "./resources/organizer";
 import eventYears from "./resources/event-year";
 import teams from "./resources/team";
-import participations from "./resources/participation";
 import invites from "./resources/invite";
 
 export const AdminApp = () => (
@@ -38,7 +37,6 @@ export const AppBootstrapper = () => {
       <Resource {...organizers} />
       <Resource {...eventYears} />
       <Resource {...teams} />
-      <Resource {...participations} />
       <Resource {...invites} />
       <CustomRoutes>
         <Route path="/u/:slug" element={<SlugRedirect />} />
