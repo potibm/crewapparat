@@ -55,6 +55,10 @@ export const TeamChips = ({ teams }: { teams?: TeamChipItem[] }) => {
               bgcolor: color,
               color: "#1f2937",
               fontWeight: 600,
+              border: "none",
+              "& .MuiChip-label": {
+                color: "#1f2937",
+              },
               "&:hover": { bgcolor: color, filter: "brightness(0.95)" },
             }}
           />

@@ -54,6 +54,15 @@ func (s *Server) GetTeam(c *gin.Context) {
 }
 
 func (s *Server) CreateTeam(c *gin.Context) {
+	userID, _ := c.Get("userID")
+
+	uid, _ := userID.(string)
+	if !s.isAdmin(c, uid) {
+		respondWithForbiddenProblem(c, "Only admins can create teams")
+
+		return
+	}
+
 	var team domain.Team
 	if err := c.ShouldBindJSON(&team); err != nil {
 		respondWithFailedToParsePayloadProblem(c, err)
@@ -108,6 +117,15 @@ func (s *Server) DeleteTeam(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		respondWithInvalidIDFormatProblem(c)
+
+		return
+	}
+
+	userID, _ := c.Get("userID")
+
+	uid, _ := userID.(string)
+	if !s.isAdmin(c, uid) {
+		respondWithForbiddenProblem(c, "Only admins can delete teams")
 
 		return
 	}
