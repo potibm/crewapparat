@@ -223,94 +223,101 @@ export const ParticipationSection = ({
               value={partStatus}
               onChange={(e) => setPartStatus(e.target.value)}
             >
-              <MenuItem value="pending">Pending</MenuItem>
+              {(participation?.status === "confirmed" ||
+                participation?.status === "declined") === false && (
+                <MenuItem value="pending">Pending</MenuItem>
+              )}
               <MenuItem value="confirmed">Confirmed</MenuItem>
               <MenuItem value="declined">Declined</MenuItem>
             </Select>
           </FormControl>
-          <Autocomplete
-            size="small"
-            fullWidth
-            options={tshirtSizeChoices.map((c) => c.id)}
-            value={partTShirt || null}
-            onChange={(_event, newValue) => setPartTShirt(newValue ?? "")}
-            freeSolo
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="T-Shirt size"
-                inputRef={tshirtInputRef}
-              />
-            )}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={partAdditionalPaid}
-                onChange={(e) => setPartAdditionalPaid(e.target.checked)}
-              />
-            }
-            label="Additional paid shirt"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={partConsent}
-                onChange={(e) => setPartConsent(e.target.checked)}
-              />
-            }
-            label="Public website consent"
-          />
-          <FormControl fullWidth size="small">
-            <InputLabel>Teams</InputLabel>
-            <Select
-              multiple
-              label="Teams"
-              value={partTeams}
-              onChange={(e) => setPartTeams(e.target.value as string[])}
-            >
-              {teamChoices.map((t) => (
-                <MenuItem key={t.id} value={t.id}>
-                  {t.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {showShifts && (
+          {partStatus !== "declined" && (
             <>
-              <Divider />
-              <Typography variant="h6">Shift planning</Typography>
-              {config.shift.start && config.shift.block_count > 0 ? (
-                <ShiftSchedule
-                  start={config.shift.start}
-                  blockCount={config.shift.block_count}
-                  preferred={shiftPreferredTimes}
-                  unavailable={shiftUnavailableTimes}
-                  onChange={(preferred, unavailable) => {
-                    setShiftPreferredTimes(preferred);
-                    setShiftUnavailableTimes(unavailable);
-                  }}
-                />
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Shift planning is not configured.
-                </Typography>
-              )}
               <Autocomplete
-                multiple
                 size="small"
                 fullWidth
-                options={partnerChoices.map((c) => c.id)}
-                getOptionLabel={(id) =>
-                  partnerChoices.find((c) => c.id === id)?.name ?? id
-                }
-                value={preferredPartners}
-                onChange={(_event, value) => setPreferredPartners(value)}
+                options={tshirtSizeChoices.map((c) => c.id)}
+                value={partTShirt || null}
+                onChange={(_event, newValue) => setPartTShirt(newValue ?? "")}
+                freeSolo
                 renderInput={(params) => (
-                  <TextField {...params} label="Preferred shift partners" />
+                  <TextField
+                    {...params}
+                    label="T-Shirt size"
+                    inputRef={tshirtInputRef}
+                  />
                 )}
               />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={partAdditionalPaid}
+                    onChange={(e) => setPartAdditionalPaid(e.target.checked)}
+                  />
+                }
+                label="Additional paid shirt"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={partConsent}
+                    onChange={(e) => setPartConsent(e.target.checked)}
+                  />
+                }
+                label="Public website consent"
+              />
+              <FormControl fullWidth size="small">
+                <InputLabel>Teams</InputLabel>
+                <Select
+                  multiple
+                  label="Teams"
+                  value={partTeams}
+                  onChange={(e) => setPartTeams(e.target.value as string[])}
+                >
+                  {teamChoices.map((t) => (
+                    <MenuItem key={t.id} value={t.id}>
+                      {t.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {showShifts && (
+                <>
+                  <Divider />
+                  <Typography variant="h6">Shift planning</Typography>
+                  {config.shift.start && config.shift.block_count > 0 ? (
+                    <ShiftSchedule
+                      start={config.shift.start}
+                      blockCount={config.shift.block_count}
+                      preferred={shiftPreferredTimes}
+                      unavailable={shiftUnavailableTimes}
+                      onChange={(preferred, unavailable) => {
+                        setShiftPreferredTimes(preferred);
+                        setShiftUnavailableTimes(unavailable);
+                      }}
+                    />
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      Shift planning is not configured.
+                    </Typography>
+                  )}
+                  <Autocomplete
+                    multiple
+                    size="small"
+                    fullWidth
+                    options={partnerChoices.map((c) => c.id)}
+                    getOptionLabel={(id) =>
+                      partnerChoices.find((c) => c.id === id)?.name ?? id
+                    }
+                    value={preferredPartners}
+                    onChange={(_event, value) => setPreferredPartners(value)}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Preferred shift partners" />
+                    )}
+                  />
+                </>
+              )}
             </>
           )}
         </Stack>

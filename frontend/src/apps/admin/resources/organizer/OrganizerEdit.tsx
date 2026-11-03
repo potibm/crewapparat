@@ -20,6 +20,23 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useAppConfig } from "@core/config/useConfig";
 import { ParticipationSection } from "./ParticipationSection";
 
+const validateSlackProfileUrl = (value?: string) =>
+  value && !/^https:\/\/[a-z0-9-]+\.slack\.com\/team\/[A-Za-z0-9]+$/.test(value)
+    ? "Must be https://<workspace>.slack.com/team/<id>"
+    : undefined;
+
+const validateHttpUrl = (value?: string) => {
+  if (!value) return undefined;
+  try {
+    const u = new URL(value);
+    if (u.protocol !== "http:" && u.protocol !== "https:")
+      return "Must be a valid http(s) URL";
+  } catch {
+    return "Must be a valid URL";
+  }
+  return undefined;
+};
+
 const OrganizerEditForm = () => {
   const { record, isPending } = useEditContext();
   const { data: identity } = useGetIdentity();
@@ -103,6 +120,18 @@ const OrganizerEditForm = () => {
                 translateChoice={false}
                 autoSelect
               />
+              <NumberInput
+                source="first_year_as_organizer"
+                helperText="Year of first participation as organizer for this event"
+                validate={(value) => {
+                  if (value == null || value === "") return undefined;
+                  const n = Number(value);
+                  const max = new Date().getFullYear() + 1;
+                  if (n < 1980 || n > max)
+                    return `Must be between 1980 and ${max}`;
+                  return undefined;
+                }}
+              />
             </Stack>
           </CardContent>
         </Card>
@@ -150,6 +179,7 @@ const OrganizerEditForm = () => {
               />
               <TextInput
                 source="slack_profile_url"
+                validate={validateSlackProfileUrl}
                 helperText={
                   <Box
                     component="span"
@@ -182,6 +212,11 @@ const OrganizerEditForm = () => {
                     and choose &quot;Copy link to profile&quot;.
                   </Box>
                 }
+              />
+              <TextInput
+                source="mediawiki_profile_url"
+                helperText="MediaWiki profile URL"
+                validate={validateHttpUrl}
               />
               <NumberInput source="demozoo_id" helperText="Demozoo scener ID" />
             </Stack>

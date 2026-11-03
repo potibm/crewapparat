@@ -15,8 +15,10 @@ type Organizer struct {
 	Phone           string    `json:"phone"`
 	SlackHandle     string    `json:"slack_handle,omitempty"`
 	SlackProfileURL string    `json:"slack_profile_url,omitempty"`
+	MediaWikiProfileURL string `json:"mediawiki_profile_url,omitempty"`
 	AvatarURL       string    `json:"avatar_url,omitempty"`
 	DemozooID       *uint     `json:"demozoo_id,omitempty"`
+	FirstYearAsOrganizer *int `json:"first_year_as_organizer,omitempty"`
 	Pronouns        string    `json:"pronouns,omitempty"`
 
 	// Languages is stored as a JSON array in SQLite. API: ["de", "en"]

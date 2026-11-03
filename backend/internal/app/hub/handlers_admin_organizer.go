@@ -2,10 +2,14 @@ package hub
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -120,6 +124,7 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 		organizer.Phone = c.PostForm("phone")
 		organizer.SlackHandle = c.PostForm("slack_handle")
 		organizer.SlackProfileURL = c.PostForm("slack_profile_url")
+		organizer.MediaWikiProfileURL = c.PostForm("mediawiki_profile_url")
 		organizer.Pronouns = c.PostForm("pronouns")
 		organizer.Languages = c.PostFormArray("languages")
 
@@ -129,6 +134,16 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 				u := uint(n)
 				organizer.DemozooID = &u
 			}
+		}
+		if v := c.PostForm("first_year_as_organizer"); v != "" {
+			n, err := strconv.Atoi(v)
+			if err != nil {
+				respondWithBadRequestProblem(c, "invalid first_year_as_organizer: must be an integer")
+
+				return
+			}
+
+			organizer.FirstYearAsOrganizer = &n
 		}
 	} else {
 		if err := c.ShouldBindJSON(&organizer); err != nil {
@@ -147,6 +162,18 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 		}
 
 		organizer.AvatarURL = url
+	}
+
+	if err := validateOrganizerProfileURLs(organizer.SlackProfileURL, organizer.MediaWikiProfileURL); err != nil {
+		respondWithBadRequestProblem(c, err.Error())
+
+		return
+	}
+
+	if err := validateFirstYearAsOrganizer(organizer.FirstYearAsOrganizer); err != nil {
+		respondWithBadRequestProblem(c, err.Error())
+
+		return
 	}
 
 	if organizer.Slug == "" {
@@ -227,6 +254,7 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 		organizer.Phone = c.PostForm("phone")
 		organizer.SlackHandle = c.PostForm("slack_handle")
 		organizer.SlackProfileURL = c.PostForm("slack_profile_url")
+		organizer.MediaWikiProfileURL = c.PostForm("mediawiki_profile_url")
 		organizer.Pronouns = c.PostForm("pronouns")
 		organizer.Languages = c.PostFormArray("languages")
 
@@ -240,6 +268,16 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 				u := uint(n)
 				organizer.DemozooID = &u
 			}
+		}
+		if v := c.PostForm("first_year_as_organizer"); v != "" {
+			n, err := strconv.Atoi(v)
+			if err != nil {
+				respondWithBadRequestProblem(c, "invalid first_year_as_organizer: must be an integer")
+
+				return
+			}
+
+			organizer.FirstYearAsOrganizer = &n
 		}
 	} else {
 		var payload struct {
@@ -285,6 +323,18 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 		organizer.AvatarURL = ""
 	} else if organizer.AvatarURL == "" && fileHeader == nil {
 		organizer.AvatarURL = existing.AvatarURL
+	}
+
+	if err := validateOrganizerProfileURLs(organizer.SlackProfileURL, organizer.MediaWikiProfileURL); err != nil {
+		respondWithBadRequestProblem(c, err.Error())
+
+		return
+	}
+
+	if err := validateFirstYearAsOrganizer(organizer.FirstYearAsOrganizer); err != nil {
+		respondWithBadRequestProblem(c, err.Error())
+
+		return
 	}
 
 	if err := s.organizerRepo.Update(c.Request.Context(), &organizer); err != nil {
@@ -336,6 +386,40 @@ func (s *Server) DeleteOrganizer(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": id})
 }
 
+var slackProfileURLPattern = regexp.MustCompile(`^https://[a-zA-Z0-9-]+\.slack\.com/team/[A-Za-z0-9]+$`)
+
+func validateOrganizerProfileURLs(slackURL, wikiURL string) error {
+	if slackURL != "" {
+		if !slackProfileURLPattern.MatchString(slackURL) {
+			return errors.New("invalid slack_profile_url: expected https://<workspace>.slack.com/team/<id>")
+		}
+	}
+
+	if wikiURL != "" {
+		parsed, err := url.Parse(wikiURL)
+		if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+			return errors.New("invalid mediawiki_profile_url: must be a valid http(s) URL")
+		}
+
+		if parsed.Scheme != "http" && parsed.Scheme != "https" {
+			return errors.New("invalid mediawiki_profile_url: scheme must be http or https")
+		}
+	}
+
+	return nil
+}
+func validateFirstYearAsOrganizer(year *int) error {
+	if year == nil {
+		return nil
+	}
+
+	currentYear := time.Now().Year()
+	if *year < 1980 || *year > currentYear+1 {
+		return fmt.Errorf("first_year_as_organizer must be between 1980 and %d", currentYear+1)
+	}
+
+	return nil
+}
 func parseOrganizerListParams(c *gin.Context) repository.OrganizerListParams {
 	return repository.OrganizerListParams{
 		Offset: parseIntQueryParam(c, "_start", 0),

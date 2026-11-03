@@ -30,8 +30,10 @@ func TestMapperRoundtrip(t *testing.T) {
 			Phone:           "+49 123",
 			SlackHandle:     "slack-handle",
 			SlackProfileURL: "https://slack.example/u/abc",
+			MediaWikiProfileURL: "https://wiki.example.org/index.php/User:Test",
 			AvatarURL:       "https://example.com/a.png",
 			DemozooID:       &demozoo,
+			FirstYearAsOrganizer: func() *int { v := 2019; return &v }(),
 			Pronouns:        "they/them",
 			Languages:       []string{"de", "en"},
 		}
@@ -47,6 +49,9 @@ func TestMapperRoundtrip(t *testing.T) {
 		require.Equal(t, in.Phone, out.Phone)
 		require.Equal(t, in.SlackHandle, out.SlackHandle)
 		require.Equal(t, in.SlackProfileURL, out.SlackProfileURL)
+		require.Equal(t, in.MediaWikiProfileURL, out.MediaWikiProfileURL)
+		require.NotNil(t, out.FirstYearAsOrganizer)
+		require.Equal(t, *in.FirstYearAsOrganizer, *out.FirstYearAsOrganizer)
 		require.Equal(t, in.AvatarURL, out.AvatarURL)
 		require.NotNil(t, out.DemozooID)
 		require.Equal(t, demozoo, *out.DemozooID)

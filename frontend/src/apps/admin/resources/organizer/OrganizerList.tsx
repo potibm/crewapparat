@@ -190,6 +190,7 @@ const OrganizerListContent = () => {
             label="Teams"
             disableSort
             render={(record: OrganizerRecord) =>
+              record.current_participation_status === "confirmed" &&
               record.current_participation_teams &&
               record.current_participation_teams.length > 0 ? (
                 <TeamChips

@@ -36,9 +36,11 @@ interface OrganizerFormData {
   phone?: string;
   slack_handle?: string;
   slack_profile_url?: string;
+  mediawiki_profile_url?: string;
   pronouns?: string;
   languages?: string[];
   demozoo_id?: number | string;
+  first_year_as_organizer?: number | string;
   avatar_url?: string;
   remove_avatar?: boolean;
   media_upload?: {
@@ -89,10 +91,14 @@ const handleOrganizerFileUpload = async (
   formData.append("phone", data.phone || "");
   formData.append("slack_handle", data.slack_handle || "");
   formData.append("slack_profile_url", data.slack_profile_url || "");
+  formData.append("mediawiki_profile_url", data.mediawiki_profile_url || "");
   formData.append("pronouns", data.pronouns || "");
   (data.languages || []).forEach((lang) => formData.append("languages", lang));
   if (data.demozoo_id != null && data.demozoo_id !== "") {
     formData.append("demozoo_id", String(data.demozoo_id));
+  }
+  if (data.first_year_as_organizer != null && data.first_year_as_organizer !== "") {
+    formData.append("first_year_as_organizer", String(data.first_year_as_organizer));
   }
   if (data.avatar_url) {
     formData.append("avatar_url", data.avatar_url);

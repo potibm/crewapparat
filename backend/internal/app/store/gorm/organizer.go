@@ -17,11 +17,13 @@ type dbOrganizer struct {
 	Realname        string    `gorm:"column:realname"`
 	Email           string    `gorm:"uniqueIndex;column:email"`
 	Phone           string    `gorm:"column:phone"`
-	SlackHandle     string    `gorm:"column:slack_handle"`
-	SlackProfileURL string    `gorm:"column:slack_profile_url"`
-	AvatarURL       string    `gorm:"column:avatar_url"`
-	DemozooID       *uint     `gorm:"column:demozoo_id"`
-	Pronouns        string    `gorm:"column:pronouns"`
+	SlackHandle         string    `gorm:"column:slack_handle"`
+	SlackProfileURL     string    `gorm:"column:slack_profile_url"`
+	MediaWikiProfileURL string    `gorm:"column:mediawiki_profile_url"`
+	AvatarURL           string    `gorm:"column:avatar_url"`
+	DemozooID           *uint     `gorm:"column:demozoo_id"`
+	FirstYearAsOrganizer *int     `gorm:"column:first_year_as_organizer"`
+	Pronouns            string    `gorm:"column:pronouns"`
 
 	Languages []string `gorm:"serializer:json;column:languages"`
 
@@ -43,11 +45,13 @@ func fromDomainOrganizer(o *domain.Organizer) *dbOrganizer {
 		Realname:        o.Realname,
 		Email:           o.Email,
 		Phone:           o.Phone,
-		SlackHandle:     o.SlackHandle,
-		SlackProfileURL: o.SlackProfileURL,
-		AvatarURL:       o.AvatarURL,
-		DemozooID:       o.DemozooID,
-		Pronouns:        o.Pronouns,
+		SlackHandle:         o.SlackHandle,
+		SlackProfileURL:     o.SlackProfileURL,
+		MediaWikiProfileURL: o.MediaWikiProfileURL,
+		AvatarURL:           o.AvatarURL,
+		DemozooID:           o.DemozooID,
+		FirstYearAsOrganizer: o.FirstYearAsOrganizer,
+		Pronouns:            o.Pronouns,
 		Languages:       o.Languages,
 	}
 
@@ -67,11 +71,13 @@ func toDomainOrganizer(db *dbOrganizer) *domain.Organizer {
 		Realname:        db.Realname,
 		Email:           db.Email,
 		Phone:           db.Phone,
-		SlackHandle:     db.SlackHandle,
-		SlackProfileURL: db.SlackProfileURL,
-		AvatarURL:       db.AvatarURL,
-		DemozooID:       db.DemozooID,
-		Pronouns:        db.Pronouns,
+		SlackHandle:         db.SlackHandle,
+		SlackProfileURL:     db.SlackProfileURL,
+		MediaWikiProfileURL: db.MediaWikiProfileURL,
+		AvatarURL:           db.AvatarURL,
+		DemozooID:           db.DemozooID,
+		FirstYearAsOrganizer: db.FirstYearAsOrganizer,
+		Pronouns:            db.Pronouns,
 		Languages:       db.Languages,
 	}
 

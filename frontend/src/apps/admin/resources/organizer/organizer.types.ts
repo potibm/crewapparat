@@ -11,8 +11,10 @@ export interface OrganizerRecord extends RaRecord {
   phone: string;
   slack_handle?: string;
   slack_profile_url?: string;
+  mediawiki_profile_url?: string;
   avatar_url?: string;
   demozoo_id?: number;
+  first_year_as_organizer?: number;
   pronouns?: string;
   languages?: string[];
   participations?: ParticipationRecord[];
