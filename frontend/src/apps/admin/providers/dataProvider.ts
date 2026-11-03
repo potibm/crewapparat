@@ -97,8 +97,14 @@ const handleOrganizerFileUpload = async (
   if (data.demozoo_id != null && data.demozoo_id !== "") {
     formData.append("demozoo_id", String(data.demozoo_id));
   }
-  if (data.first_year_as_organizer != null && data.first_year_as_organizer !== "") {
-    formData.append("first_year_as_organizer", String(data.first_year_as_organizer));
+  if (
+    data.first_year_as_organizer != null &&
+    data.first_year_as_organizer !== ""
+  ) {
+    formData.append(
+      "first_year_as_organizer",
+      String(data.first_year_as_organizer),
+    );
   }
   if (data.avatar_url) {
     formData.append("avatar_url", data.avatar_url);

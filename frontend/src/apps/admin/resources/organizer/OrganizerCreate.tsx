@@ -106,10 +106,7 @@ const OrganizerCreate = () => {
           source="slack_profile_url"
           validate={validateSlackProfileUrl}
         />
-        <TextInput
-          source="mediawiki_profile_url"
-          validate={validateHttpUrl}
-        />
+        <TextInput source="mediawiki_profile_url" validate={validateHttpUrl} />
         <NumberInput
           source="first_year_as_organizer"
           helperText="Year of first participation as organizer for this event"

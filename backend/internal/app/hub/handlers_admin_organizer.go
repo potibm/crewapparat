@@ -135,6 +135,7 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 				organizer.DemozooID = &u
 			}
 		}
+
 		if v := c.PostForm("first_year_as_organizer"); v != "" {
 			n, err := strconv.Atoi(v)
 			if err != nil {
@@ -269,6 +270,7 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 				organizer.DemozooID = &u
 			}
 		}
+
 		if v := c.PostForm("first_year_as_organizer"); v != "" {
 			n, err := strconv.Atoi(v)
 			if err != nil {
@@ -408,6 +410,7 @@ func validateOrganizerProfileURLs(slackURL, wikiURL string) error {
 
 	return nil
 }
+
 func validateFirstYearAsOrganizer(year *int) error {
 	if year == nil {
 		return nil
@@ -420,6 +423,7 @@ func validateFirstYearAsOrganizer(year *int) error {
 
 	return nil
 }
+
 func parseOrganizerListParams(c *gin.Context) repository.OrganizerListParams {
 	return repository.OrganizerListParams{
 		Offset: parseIntQueryParam(c, "_start", 0),
