@@ -12,7 +12,15 @@ import { AvatarLightbox } from "./AvatarLightbox";
 import { OrganizerAvatar } from "./OrganizerAvatar";
 import { SlackIcon } from "./OrganizerIcons";
 import type { OrganizerRecord } from "./organizer.types";
-import { Box, Chip, IconButton, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  Chip,
+  IconButton,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import { TeamChips } from "./TeamChips";
@@ -26,6 +34,8 @@ const statusChoices = [
 
 const OrganizerListContent = () => {
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { data: eventYears } = useGetList("event-years", {
     pagination: { page: 1, perPage: 100 },
@@ -57,13 +67,7 @@ const OrganizerListContent = () => {
       choices={statusChoices}
       alwaysOn
     />,
-    <SelectInput
-      key="team"
-      source="team"
-      label="Team"
-      choices={teamChoices}
-      alwaysOn
-    />,
+    <SelectInput key="team" source="team" label="Team" choices={teamChoices} />,
   ];
 
   return (
@@ -73,31 +77,49 @@ const OrganizerListContent = () => {
         filterDefaultValues={{ status: "confirmed" }}
         filters={organizerFilters}
       >
-        <DataTable bulkActionButtons={false} rowClick="show">
+        <DataTable
+          bulkActionButtons={false}
+          rowClick="show"
+          sx={{ "& .MuiTableCell-root": { py: 0.75 } }}
+        >
           <DataTable.Col
-            label="Avatar"
-            render={(record: OrganizerRecord) => {
-              return (
+            source="handle"
+            label="Organizer"
+            render={(record: OrganizerRecord) => (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <OrganizerAvatar
                   src={record.avatar_url}
                   handle={record.handle}
                   realname={record.realname}
-                  size={40}
+                  size={32}
                   onClick={(event) => {
                     event.stopPropagation();
                     if (record.avatar_url) setLightboxSrc(record.avatar_url);
                   }}
                 />
-              );
-            }}
+                <Box>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {record.handle}
+                  </Typography>
+                  {isMobile && record.realname && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: "block" }}
+                    >
+                      {record.realname}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            )}
           />
-          <DataTable.Col source="handle" />
-          <DataTable.Col source="realname" />
+          {!isMobile && <DataTable.Col source="realname" />}
           <DataTable.Col
             label="Contact"
             disableSort
             render={(record: OrganizerRecord) => (
-              <Box sx={{ display: "flex", gap: 0.5 }}>
+              <Box sx={{ display: "flex", gap: 0 }}>
                 <Tooltip title={record.email || "No email"} arrow>
                   <span>
                     <IconButton
@@ -156,55 +178,61 @@ const OrganizerListContent = () => {
               </Box>
             )}
           />
-          <DataTable.Col
-            label="Status"
-            disableSort
-            render={(record: OrganizerRecord) => {
-              const status = record.current_participation_status;
-              const colorMap: Record<string, "success" | "default" | "error"> =
-                {
+          {!isMobile && (
+            <DataTable.Col
+              label="Status"
+              disableSort
+              render={(record: OrganizerRecord) => {
+                const status = record.current_participation_status;
+                const colorMap: Record<
+                  string,
+                  "success" | "default" | "error"
+                > = {
                   confirmed: "success",
                   pending: "default",
                   declined: "error",
                 };
-              const labelMap: Record<string, string> = {
-                confirmed: "Active",
-                pending: "Pending",
-                declined: "Declined",
-              };
-              return status ? (
-                <Chip
-                  label={labelMap[status] || status}
-                  size="small"
-                  color={colorMap[status] || "default"}
-                  variant={status === "pending" ? "outlined" : "filled"}
-                />
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  —
-                </Typography>
-              );
-            }}
-          />
-          <DataTable.Col
-            label="Teams"
-            disableSort
-            render={(record: OrganizerRecord) =>
-              record.current_participation_status === "confirmed" &&
-              record.current_participation_teams &&
-              record.current_participation_teams.length > 0 ? (
-                <TeamChips
-                  teams={record.current_participation_teams.filter(
-                    (t) => t.active !== false,
-                  )}
-                />
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  —
-                </Typography>
-              )
-            }
-          />
+                const labelMap: Record<string, string> = {
+                  confirmed: "Active",
+                  pending: "Pending",
+                  declined: "Declined",
+                };
+                return status ? (
+                  <Chip
+                    label={labelMap[status] || status}
+                    size="small"
+                    color={colorMap[status] || "default"}
+                    variant={status === "pending" ? "outlined" : "filled"}
+                  />
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    —
+                  </Typography>
+                );
+              }}
+            />
+          )}
+          {!isMobile && (
+            <DataTable.Col
+              label="Teams"
+              disableSort
+              render={(record: OrganizerRecord) =>
+                record.current_participation_status === "confirmed" &&
+                record.current_participation_teams &&
+                record.current_participation_teams.length > 0 ? (
+                  <TeamChips
+                    teams={record.current_participation_teams.filter(
+                      (t) => t.active !== false,
+                    )}
+                  />
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    —
+                  </Typography>
+                )
+              }
+            />
+          )}
           <DataTable.Col>
             <EditButton />
             <DeleteButton
