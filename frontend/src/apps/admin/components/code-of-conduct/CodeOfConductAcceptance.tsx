@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -25,12 +25,6 @@ export const CodeOfConductAcceptance = ({
   const [confirmed, setConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // A different version was published in the meantime: force a fresh consent.
-  useEffect(() => {
-    setConfirmed(false);
-    setSubmitting(false);
-  }, [codeOfConduct.id]);
 
   const publishedAt = codeOfConduct.published_at
     ? new Intl.DateTimeFormat(date_locale, {

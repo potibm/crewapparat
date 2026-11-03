@@ -88,6 +88,7 @@ export const MyLayout = (props: LayoutProps) => {
   if (state === "required" && codeOfConduct) {
     return (
       <CodeOfConductAcceptance
+        key={codeOfConduct.id}
         codeOfConduct={codeOfConduct}
         onAccept={accept}
       />

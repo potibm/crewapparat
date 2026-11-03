@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -101,7 +102,94 @@ func (s *Server) GetOrganizer(c *gin.Context) {
 	c.JSON(http.StatusOK, organizer)
 }
 
-//nolint:nestif // multipart/JSON branching
+// canEditOrganizer allows admins and the organizer themselves to edit a
+// profile.
+func (s *Server) canEditOrganizer(c *gin.Context, organizer *domain.Organizer) bool {
+	userID, _ := c.Get("userID")
+
+	uid, _ := userID.(string)
+	if uid == "" {
+		return false
+	}
+
+	if s.isAdmin(c, uid) {
+		return true
+	}
+
+	return organizer.OidcSub != nil && *organizer.OidcSub == uid
+}
+
+// preserveOrganizerSystemFields keeps values that are not part of the edit
+// form but must survive an update.
+func preserveOrganizerSystemFields(organizer, existing *domain.Organizer) {
+	if organizer.OidcSub == nil {
+		organizer.OidcSub = existing.OidcSub
+	}
+
+	if organizer.Slug == "" {
+		organizer.Slug = existing.Slug
+	}
+}
+
+// resolveAvatarURL decides which avatar URL to persist: a newly uploaded file
+// wins over everything, then an explicit removal, then an explicitly provided
+// URL, and finally the previously stored one.
+func resolveAvatarURL(
+	fileHeader *multipart.FileHeader,
+	providedURL, existingURL string,
+	removeAvatar bool,
+) (string, error) {
+	if fileHeader != nil {
+		return saveAvatarFile(fileHeader)
+	}
+
+	if removeAvatar {
+		return "", nil
+	}
+
+	if providedURL != "" {
+		return providedURL, nil
+	}
+
+	return existingURL, nil
+}
+
+// parseOrganizerFromMultipart extracts the organizer fields from a
+// multipart/form-data request. URL and first-year validation stay in the
+// handlers so this only does mechanical parsing.
+func parseOrganizerFromMultipart(c *gin.Context) (domain.Organizer, error) {
+	var organizer domain.Organizer
+
+	organizer.Handle = c.PostForm("handle")
+	organizer.Realname = c.PostForm("realname")
+	organizer.Email = c.PostForm("email")
+	organizer.Phone = c.PostForm("phone")
+	organizer.SlackHandle = c.PostForm("slack_handle")
+	organizer.SlackProfileURL = c.PostForm("slack_profile_url")
+	organizer.MediaWikiProfileURL = c.PostForm("mediawiki_profile_url")
+	organizer.Pronouns = c.PostForm("pronouns")
+	organizer.Languages = c.PostFormArray("languages")
+	organizer.AvatarURL = c.PostForm("avatar_url")
+
+	if v := c.PostForm("demozoo_id"); v != "" {
+		if n, err := strconv.ParseUint(v, 10, 64); err == nil {
+			u := uint(n)
+			organizer.DemozooID = &u
+		}
+	}
+
+	if v := c.PostForm("first_year_as_organizer"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil {
+			return organizer, fmt.Errorf("invalid first_year_as_organizer: must be an integer")
+		}
+
+		organizer.FirstYearAsOrganizer = &n
+	}
+
+	return organizer, nil
+}
+
 func (s *Server) CreateOrganizer(c *gin.Context) {
 	userID, _ := c.Get("userID")
 
@@ -118,34 +206,14 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 	var organizer domain.Organizer
 
 	if isMultipart {
-		organizer.Handle = c.PostForm("handle")
-		organizer.Realname = c.PostForm("realname")
-		organizer.Email = c.PostForm("email")
-		organizer.Phone = c.PostForm("phone")
-		organizer.SlackHandle = c.PostForm("slack_handle")
-		organizer.SlackProfileURL = c.PostForm("slack_profile_url")
-		organizer.MediaWikiProfileURL = c.PostForm("mediawiki_profile_url")
-		organizer.Pronouns = c.PostForm("pronouns")
-		organizer.Languages = c.PostFormArray("languages")
+		parsed, err := parseOrganizerFromMultipart(c)
+		if err != nil {
+			respondWithBadRequestProblem(c, err.Error())
 
-		organizer.AvatarURL = c.PostForm("avatar_url")
-		if v := c.PostForm("demozoo_id"); v != "" {
-			if n, err := strconv.ParseUint(v, 10, 64); err == nil {
-				u := uint(n)
-				organizer.DemozooID = &u
-			}
+			return
 		}
 
-		if v := c.PostForm("first_year_as_organizer"); v != "" {
-			n, err := strconv.Atoi(v)
-			if err != nil {
-				respondWithBadRequestProblem(c, "invalid first_year_as_organizer: must be an integer")
-
-				return
-			}
-
-			organizer.FirstYearAsOrganizer = &n
-		}
+		organizer = parsed
 	} else {
 		if err := c.ShouldBindJSON(&organizer); err != nil {
 			respondWithFailedToParsePayloadProblem(c, err)
@@ -154,16 +222,14 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 		}
 	}
 
-	if fileHeader != nil {
-		url, err := saveAvatarFile(fileHeader)
-		if err != nil {
-			respondWithAvatarStorageProblem(c, err)
+	avatarURL, err := resolveAvatarURL(fileHeader, organizer.AvatarURL, "", false)
+	if err != nil {
+		respondWithAvatarStorageProblem(c, err)
 
-			return
-		}
-
-		organizer.AvatarURL = url
+		return
 	}
+
+	organizer.AvatarURL = avatarURL
 
 	if err := validateOrganizerProfileURLs(organizer.SlackProfileURL, organizer.MediaWikiProfileURL); err != nil {
 		respondWithBadRequestProblem(c, err.Error())
@@ -208,7 +274,6 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 	c.JSON(http.StatusCreated, organizer)
 }
 
-//nolint:nestif,gocognit,cyclop // multipart/JSON branching
 func (s *Server) UpdateOrganizer(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -230,15 +295,10 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("userID")
+	if !s.canEditOrganizer(c, existing) {
+		respondWithForbiddenProblem(c, "You can only update your own organizer profile")
 
-	uid, _ := userID.(string)
-	if !s.isAdmin(c, uid) {
-		if existing.OidcSub == nil || *existing.OidcSub != uid {
-			respondWithForbiddenProblem(c, "You can only update your own organizer profile")
-
-			return
-		}
+		return
 	}
 
 	fileHeader, _ := c.FormFile("media_upload")
@@ -249,37 +309,17 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 	var organizer domain.Organizer
 
 	if isMultipart {
-		organizer.Handle = c.PostForm("handle")
-		organizer.Realname = c.PostForm("realname")
-		organizer.Email = c.PostForm("email")
-		organizer.Phone = c.PostForm("phone")
-		organizer.SlackHandle = c.PostForm("slack_handle")
-		organizer.SlackProfileURL = c.PostForm("slack_profile_url")
-		organizer.MediaWikiProfileURL = c.PostForm("mediawiki_profile_url")
-		organizer.Pronouns = c.PostForm("pronouns")
-		organizer.Languages = c.PostFormArray("languages")
+		parsed, err := parseOrganizerFromMultipart(c)
+		if err != nil {
+			respondWithBadRequestProblem(c, err.Error())
 
-		organizer.AvatarURL = c.PostForm("avatar_url")
+			return
+		}
+
+		organizer = parsed
+
 		if c.PostForm("remove_avatar") == "true" {
 			removeAvatar = true
-		}
-
-		if v := c.PostForm("demozoo_id"); v != "" {
-			if n, err := strconv.ParseUint(v, 10, 64); err == nil {
-				u := uint(n)
-				organizer.DemozooID = &u
-			}
-		}
-
-		if v := c.PostForm("first_year_as_organizer"); v != "" {
-			n, err := strconv.Atoi(v)
-			if err != nil {
-				respondWithBadRequestProblem(c, "invalid first_year_as_organizer: must be an integer")
-
-				return
-			}
-
-			organizer.FirstYearAsOrganizer = &n
 		}
 	} else {
 		var payload struct {
@@ -299,33 +339,24 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 
 	organizer.ID = id
 
-	if fileHeader != nil {
-		url, err := saveAvatarFile(fileHeader)
-		if err != nil {
-			respondWithAvatarStorageProblem(c, err)
-
-			return
-		}
-
-		organizer.AvatarURL = url
-	}
-
 	// Preserve immutable / system fields that are not part of the edit form.
-	if organizer.OidcSub == nil {
-		organizer.OidcSub = existing.OidcSub
-	}
-
-	if organizer.Slug == "" {
-		organizer.Slug = existing.Slug
-	}
+	preserveOrganizerSystemFields(&organizer, existing)
 
 	// A newly uploaded avatar always wins over a removal request, so a file is
 	// never written to disk and then discarded.
-	if fileHeader == nil && removeAvatar {
-		organizer.AvatarURL = ""
-	} else if organizer.AvatarURL == "" && fileHeader == nil {
-		organizer.AvatarURL = existing.AvatarURL
+	avatarURL, err := resolveAvatarURL(
+		fileHeader,
+		organizer.AvatarURL,
+		existing.AvatarURL,
+		removeAvatar,
+	)
+	if err != nil {
+		respondWithAvatarStorageProblem(c, err)
+
+		return
 	}
+
+	organizer.AvatarURL = avatarURL
 
 	if err := validateOrganizerProfileURLs(organizer.SlackProfileURL, organizer.MediaWikiProfileURL); err != nil {
 		respondWithBadRequestProblem(c, err.Error())
