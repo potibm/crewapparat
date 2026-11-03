@@ -41,7 +41,7 @@ func (r *eventYearRepository) Create(ctx context.Context, year *domain.EventYear
 
 func (r *eventYearRepository) Update(ctx context.Context, year *domain.EventYear) error {
 	var existing dbEventYear
-	if err := r.db.WithContext(ctx).First(&existing, "year = ?", year.Year).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&existing, whereYear, year.Year).Error; err != nil {
 		return fmt.Errorf("failed to load event year %s: %w", year.Year, err)
 	}
 
@@ -57,7 +57,7 @@ func (r *eventYearRepository) Update(ctx context.Context, year *domain.EventYear
 }
 
 func (r *eventYearRepository) Delete(ctx context.Context, year string) error {
-	result := r.db.WithContext(ctx).Delete(&dbEventYear{}, "year = ?", year)
+	result := r.db.WithContext(ctx).Delete(&dbEventYear{}, whereYear, year)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete event year %s: %w", year, result.Error)
 	}
@@ -110,7 +110,7 @@ func (r *eventYearRepository) List(
 func (r *eventYearRepository) GetByYear(ctx context.Context, year string) (*domain.EventYear, error) {
 	var dbRow dbEventYear
 
-	if err := r.db.WithContext(ctx).First(&dbRow, "year = ?", year).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&dbRow, whereYear, year).Error; err != nil {
 		return nil, err
 	}
 
@@ -137,7 +137,7 @@ func (r *eventYearRepository) GetActive(ctx context.Context) (*domain.EventYear,
 func (r *eventYearRepository) ActivateYear(ctx context.Context, year string) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var existing dbEventYear
-		if err := tx.First(&existing, "year = ?", year).Error; err != nil {
+		if err := tx.First(&existing, whereYear, year).Error; err != nil {
 			return fmt.Errorf("event year %s not found: %w", year, err)
 		}
 
@@ -148,7 +148,7 @@ func (r *eventYearRepository) ActivateYear(ctx context.Context, year string) err
 		}
 
 		if err := tx.Model(&dbEventYear{}).
-			Where("year = ?", year).
+			Where(whereYear, year).
 			Update("is_active", true).Error; err != nil {
 			return fmt.Errorf("failed to activate event year %s: %w", year, err)
 		}

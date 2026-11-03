@@ -7,9 +7,9 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	_ "image/gif"
+	_ "image/gif" // register the GIF decoder for image.Decode
 	"image/jpeg"
-	_ "image/png"
+	_ "image/png" // register the PNG decoder for image.Decode
 	"io"
 	"log/slog"
 	"math"
@@ -132,37 +132,13 @@ func bilinearScale(dst, src *image.RGBA, size int) {
 		for x := 0; x < size; x++ {
 			sx := (float64(x)+0.5)*float64(srcW)/float64(size) - 0.5
 			sy := (float64(y)+0.5)*float64(srcH)/float64(size) - 0.5
-			x0 := int(math.Floor(sx))
-			y0 := int(math.Floor(sy))
+			x0 := clampIndex(int(math.Floor(sx)), srcW)
+			y0 := clampIndex(int(math.Floor(sy)), srcH)
+			x1 := clampIndex(x0+1, srcW)
+			y1 := clampIndex(y0+1, srcH)
 
-			if x0 < 0 {
-				x0 = 0
-			}
-
-			if y0 < 0 {
-				y0 = 0
-			}
-
-			x1 := x0 + 1
-			if x1 >= srcW {
-				x1 = srcW - 1
-			}
-
-			y1 := y0 + 1
-			if y1 >= srcH {
-				y1 = srcH - 1
-			}
-
-			fx := sx - float64(x0)
-			fy := sy - float64(y0)
-
-			if fx < 0 {
-				fx = 0
-			}
-
-			if fy < 0 {
-				fy = 0
-			}
+			fx := clampFraction(sx - float64(x0))
+			fy := clampFraction(sy - float64(y0))
 
 			c00 := src.RGBAAt(srcBounds.Min.X+x0, srcBounds.Min.Y+y0)
 			c10 := src.RGBAAt(srcBounds.Min.X+x1, srcBounds.Min.Y+y0)
@@ -184,4 +160,26 @@ func bilinearChannel(c00, c10, c01, c11 uint8, fx, fy float64) uint8 {
 	val := top*(1-fy) + bot*fy
 
 	return uint8(math.Round(val))
+}
+
+// clampIndex clamps an index into [0, limit-1].
+func clampIndex(index, limit int) int {
+	if index < 0 {
+		return 0
+	}
+
+	if index >= limit {
+		return limit - 1
+	}
+
+	return index
+}
+
+// clampFraction clamps an interpolation weight into [0, 1].
+func clampFraction(value float64) float64 {
+	if value < 0 {
+		return 0
+	}
+
+	return value
 }

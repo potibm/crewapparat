@@ -1,8 +1,7 @@
 import { Admin, Resource } from "react-admin";
 import { CustomRoutes } from "ra-core";
-import { Route } from "react-router";
 import SlugRedirect from "./components/SlugRedirect";
-import { BrowserRouter } from "react-router";
+import { BrowserRouter, Route } from "react-router";
 import { MyTheme, MyDarkTheme } from "./theme/MyTheme";
 import { MyLayout } from "./theme/MyLayout";
 import { dataProvider } from "./providers/dataProvider";
@@ -13,6 +12,7 @@ import organizers from "./resources/organizer";
 import eventYears from "./resources/event-year";
 import teams from "./resources/team";
 import invites from "./resources/invite";
+import codeOfConducts from "./resources/code-of-conduct";
 
 export const AdminApp = () => (
   <BrowserRouter>
@@ -38,6 +38,7 @@ export const AppBootstrapper = () => {
       <Resource {...eventYears} />
       <Resource {...teams} />
       <Resource {...invites} />
+      <Resource {...codeOfConducts} />
       <CustomRoutes>
         <Route path="/u/:slug" element={<SlugRedirect />} />
       </CustomRoutes>

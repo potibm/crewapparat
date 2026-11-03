@@ -33,6 +33,8 @@ var allModels = []interface{}{
 	&dbOrganizer{},
 	&dbParticipation{},
 	&dbInvite{},
+	&dbCodeOfConduct{},
+	&dbCodeOfConductAcceptance{},
 }
 
 var joinTables = []interface{}{
@@ -169,6 +171,11 @@ func newStore(dsn string) (*Store, error) {
 	// Backfill immutable slugs for organizers that predate the column.
 	if err := backfillOrganizerSlugs(db); err != nil {
 		return nil, fmt.Errorf("failed to backfill organizer slugs: %w", err)
+	}
+
+	// Backfill versions for code of conduct records that predate the column.
+	if err := backfillCodeOfConductVersions(db); err != nil {
+		return nil, fmt.Errorf("failed to backfill code of conduct versions: %w", err)
 	}
 
 	return &Store{db: db}, nil

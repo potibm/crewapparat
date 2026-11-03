@@ -29,8 +29,10 @@ func newTestEnv(t *testing.T) *testEnv {
 	require.NoError(t, st.PurgeAll())
 
 	server, err := NewServer(Config{
-		Cfg:           config.Config{},
-		OrganizerRepo: st.NewOrganizerRepository(),
+		Cfg:               config.Config{},
+		OrganizerRepo:     st.NewOrganizerRepository(),
+		CodeOfConductRepo: st.NewCodeOfConductRepository(),
+		AcceptanceRepo:    st.NewCodeOfConductAcceptanceRepository(),
 	})
 	require.NoError(t, err)
 

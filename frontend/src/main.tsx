@@ -95,5 +95,5 @@ export async function bootstrapApp() {
 }
 
 if (!import.meta.env.TEST) {
-  bootstrapApp();
+  await bootstrapApp();
 }

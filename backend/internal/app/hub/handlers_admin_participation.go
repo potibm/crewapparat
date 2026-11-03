@@ -40,7 +40,7 @@ func (s *Server) GetParticipation(c *gin.Context) {
 	participation, err := s.participationRepo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Participation not found")
+			respondWithNotFoundProblem(c, participationNotFound)
 
 			return
 		}
@@ -79,6 +79,19 @@ func (s *Server) UpdateParticipation(c *gin.Context) {
 		return
 	}
 
+	existing, err := s.participationRepo.GetByID(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			respondWithNotFoundProblem(c, participationNotFound)
+
+			return
+		}
+
+		respondWithInternalServerProblem(c, "Failed to get participation: "+err.Error())
+
+		return
+	}
+
 	var participation domain.Participation
 	if err := c.ShouldBindJSON(&participation); err != nil {
 		respondWithFailedToParsePayloadProblem(c, err)
@@ -88,9 +101,18 @@ func (s *Server) UpdateParticipation(c *gin.Context) {
 
 	participation.ID = id
 
+	// Enforce status transitions: once a participation leaves "pending" it
+	// can never go back to "pending", but confirmed<->declined is allowed.
+	if participation.Status == domain.ParticipationStatusPending &&
+		existing.Status != domain.ParticipationStatusPending {
+		respondWithConflictProblem(c, "participation status cannot be reset to pending")
+
+		return
+	}
+
 	if err := s.participationRepo.Update(c.Request.Context(), &participation); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Participation not found")
+			respondWithNotFoundProblem(c, participationNotFound)
 
 			return
 		}
@@ -114,7 +136,7 @@ func (s *Server) DeleteParticipation(c *gin.Context) {
 
 	if err := s.participationRepo.Delete(c.Request.Context(), id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Participation not found")
+			respondWithNotFoundProblem(c, participationNotFound)
 
 			return
 		}

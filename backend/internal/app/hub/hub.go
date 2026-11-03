@@ -36,6 +36,8 @@ type Config struct {
 	TeamRepo          repository.TeamRepository
 	ParticipationRepo repository.ParticipationRepository
 	InviteRepo        repository.InviteRepository
+	CodeOfConductRepo repository.CodeOfConductRepository
+	AcceptanceRepo    repository.CodeOfConductAcceptanceRepository
 
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
@@ -53,6 +55,8 @@ type Server struct {
 	teamRepo          repository.TeamRepository
 	participationRepo repository.ParticipationRepository
 	inviteRepo        repository.InviteRepository
+	codeOfConductRepo repository.CodeOfConductRepository
+	acceptanceRepo    repository.CodeOfConductAcceptanceRepository
 
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
@@ -72,6 +76,8 @@ func NewServer(cfg Config) (*Server, error) {
 		teamRepo:            cfg.TeamRepo,
 		participationRepo:   cfg.ParticipationRepo,
 		inviteRepo:          cfg.InviteRepo,
+		codeOfConductRepo:   cfg.CodeOfConductRepo,
+		acceptanceRepo:      cfg.AcceptanceRepo,
 		RegisterAdminRoutes: cfg.RegisterAdminRoutes,
 	}, nil
 }
@@ -106,7 +112,9 @@ func (s *Server) Run(ctx context.Context) error {
 	case <-ctx.Done():
 		s.logger.Info("Shutting down server gracefully...")
 
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), defaultShutdownTimeout)
+		// Derive from the parent context so trace/log values survive, but strip
+		// its cancellation: the parent is already done when this branch runs.
+		shutdownCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), defaultShutdownTimeout)
 		defer cancel()
 
 		if err := srv.Shutdown(shutdownCtx); err != nil {
@@ -177,6 +185,7 @@ func (s *Server) setupRouter() (*gin.Engine, error) {
 	}
 
 	if s.RegisterAdminRoutes != nil {
+		admin.Use(s.requireCodeOfConductAcceptance())
 		s.RegisterAdminRoutes(admin)
 	}
 

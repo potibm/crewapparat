@@ -19,6 +19,7 @@ export default defineConfig({
     port: frontendPort,
     strictPort: true,
     allowedHosts: ["crewapparat.test", "localhost"],
+    cors: { origin: true },
     proxy: {
       "^/(api|media|style)": {
         target: backendTarget,

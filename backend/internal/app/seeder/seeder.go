@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
@@ -87,12 +88,40 @@ var (
 	languagePool = []string{"de", "en", "da", "nl", "fr", "sv"}
 )
 
+// defaultCodeOfConductText is the seeded published Code of Conduct (Markdown).
+var defaultCodeOfConductText = `# Code of Conduct
+
+We are committed to providing a friendly, safe, and welcoming environment for
+everyone, regardless of experience level, gender identity, sexual orientation,
+disability, personal appearance, body size, race, ethnicity, age, religion, or
+nationality.
+
+## Expected Behaviour
+
+- Be respectful and considerate.
+- Use welcoming and inclusive language.
+- Gracefully accept constructive criticism.
+- Focus on what is best for the community.
+
+## Unacceptable Behaviour
+
+- Harassment, discrimination, or derogatory comments.
+- Personal attacks or trolling.
+- Publishing others' private information without consent.
+
+## Reporting
+
+If you experience or witness unacceptable behaviour, please report it to the
+organizers. All reports will be handled confidentially.
+`
+
 // Repositories bundles everything the seeder writes to.
 type Repositories struct {
 	Organizers     repository.OrganizerRepository
 	Teams          repository.TeamRepository
 	EventYears     repository.EventYearRepository
 	Participations repository.ParticipationRepository
+	CodeOfConducts repository.CodeOfConductRepository
 }
 
 // Seeder fills the database with a plausible crew.
@@ -169,6 +198,10 @@ func (s *Seeder) Run(ctx context.Context) error {
 
 	participations, err := s.seedParticipations(ctx, organizers, teams)
 	if err != nil {
+		return err
+	}
+
+	if err := s.seedCodeOfConduct(ctx); err != nil {
 		return err
 	}
 
@@ -305,6 +338,36 @@ func (s *Seeder) ensureEventYear(ctx context.Context, year string) error {
 	}
 
 	slog.Debug("Seeded event year", "year", year)
+
+	return nil
+}
+
+// seedCodeOfConduct ensures a published Code of Conduct exists. Idempotent: if
+// a published version already exists, nothing is created.
+func (s *Seeder) seedCodeOfConduct(ctx context.Context) error {
+	_, err := s.repos.CodeOfConducts.GetLatestPublished(ctx)
+	if err == nil {
+		return nil
+	}
+
+	if !gorm.IsNotFound(err) {
+		return fmt.Errorf("failed to look up code of conduct: %w", err)
+	}
+
+	now := time.Now()
+
+	coc := &domain.CodeOfConduct{
+		Version:     "1.0.0",
+		Status:      domain.CodeOfConductStatusPublished,
+		ChangeNote:  "Initial version",
+		Text:        defaultCodeOfConductText,
+		PublishedAt: &now,
+	}
+	if err := s.repos.CodeOfConducts.Create(ctx, coc); err != nil {
+		return fmt.Errorf("failed to create code of conduct: %w", err)
+	}
+
+	slog.Info("Seeded code of conduct", "id", coc.ID)
 
 	return nil
 }

@@ -23,11 +23,33 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import EmailIcon from "@mui/icons-material/Email";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PhoneIcon from "@mui/icons-material/Phone";
-import { DemozooIcon, SlackIcon } from "./OrganizerIcons";
+import { DemozooIcon, SlackIcon, MediaWikiIcon } from "./OrganizerIcons";
 import { OrganizerRecord } from "./organizer.types";
 import { AvatarLightbox } from "./AvatarLightbox";
 import { OrganizerAvatar } from "./OrganizerAvatar";
 import { TeamChips } from "./TeamChips";
+
+const SlackContact = ({ record }: { record: OrganizerRecord }) => {
+  if (!record.slack_handle && !record.slack_profile_url) {
+    return <Typography variant="body1">—</Typography>;
+  }
+
+  if (!record.slack_profile_url) {
+    return <Typography variant="body1">{record.slack_handle}</Typography>;
+  }
+
+  return (
+    <Link
+      href={record.slack_profile_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}
+    >
+      {record.slack_handle || "Slack profile"}
+      <OpenInNewIcon fontSize="inherit" />
+    </Link>
+  );
+};
 
 const OrganizerShowContent = () => {
   const record = useRecordContext<OrganizerRecord>();
@@ -57,10 +79,14 @@ const OrganizerShowContent = () => {
   );
 
   const activeTeams =
+    record.current_participation_status === "confirmed" &&
     record.current_participation_teams &&
     record.current_participation_teams.length > 0
       ? record.current_participation_teams
-      : (activeParticipation?.teams ?? []);
+      : record.current_participation_status === "confirmed" &&
+          activeParticipation?.teams
+        ? activeParticipation.teams
+        : [];
 
   const publicUrl = `${window.location.origin}/u/${record.slug}`;
   const handleCopy = async () => {
@@ -172,6 +198,14 @@ const OrganizerShowContent = () => {
               </Box>
               <Box>
                 <Typography variant="caption" color="text.secondary">
+                  First year as organizer
+                </Typography>
+                <Typography variant="body1">
+                  {record.first_year_as_organizer ?? "—"}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
                   Languages
                 </Typography>
                 <Stack
@@ -219,29 +253,7 @@ const OrganizerShowContent = () => {
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <SlackIcon fontSize="small" color="action" />
-                {record.slack_handle || record.slack_profile_url ? (
-                  record.slack_profile_url ? (
-                    <Link
-                      href={record.slack_profile_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                      }}
-                    >
-                      {record.slack_handle || "Slack profile"}
-                      <OpenInNewIcon fontSize="inherit" />
-                    </Link>
-                  ) : (
-                    <Typography variant="body1">
-                      {record.slack_handle}
-                    </Typography>
-                  )
-                ) : (
-                  <Typography variant="body1">—</Typography>
-                )}
+                <SlackContact record={record} />
               </Box>
             </Stack>
           </CardContent>
@@ -271,6 +283,24 @@ const OrganizerShowContent = () => {
                   <Typography variant="body1">—</Typography>
                 )}
               </Box>
+              {record.mediawiki_profile_url && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <MediaWikiIcon fontSize="small" color="action" />
+                  <Link
+                    href={record.mediawiki_profile_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                    }}
+                  >
+                    MediaWiki profile
+                    <OpenInNewIcon fontSize="inherit" />
+                  </Link>
+                </Box>
+              )}
               {isAdmin && record.oidc_sub && (
                 <Box>
                   <Typography variant="caption" color="text.secondary">
@@ -301,6 +331,26 @@ const OrganizerShowContent = () => {
               >
                 <DataTable.Col source="event_year_id" />
                 <DataTable.Col source="status" />
+                <DataTable.Col
+                  label="Teams"
+                  disableSort
+                  render={(record: {
+                    status?: string;
+                    teams?: { id: string; name: string; active?: boolean }[];
+                  }) =>
+                    record.status === "confirmed" &&
+                    record.teams &&
+                    record.teams.length > 0 ? (
+                      <TeamChips
+                        teams={record.teams.filter((t) => t.active !== false)}
+                      />
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        —
+                      </Typography>
+                    )
+                  }
+                />
               </DataTable>
             ) : (
               <Typography color="text.secondary">

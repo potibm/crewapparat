@@ -55,7 +55,7 @@ func (r *inviteRepository) Create(ctx context.Context, invite *domain.Invite) er
 
 func (r *inviteRepository) Update(ctx context.Context, invite *domain.Invite) error {
 	var existing dbInvite
-	if err := r.db.WithContext(ctx).First(&existing, "id = ?", invite.ID).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&existing, whereID, invite.ID).Error; err != nil {
 		return fmt.Errorf("failed to load invite %s: %w", invite.ID, err)
 	}
 
@@ -71,7 +71,7 @@ func (r *inviteRepository) Update(ctx context.Context, invite *domain.Invite) er
 }
 
 func (r *inviteRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.WithContext(ctx).Delete(&dbInvite{}, "id = ?", id)
+	result := r.db.WithContext(ctx).Delete(&dbInvite{}, whereID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete invite %s: %w", id, result.Error)
 	}
@@ -103,11 +103,11 @@ func (r *inviteRepository) List(
 	}
 
 	if filters.ID != nil {
-		query = query.Where("id = ?", *filters.ID)
+		query = query.Where(whereID, *filters.ID)
 	}
 
 	if filters.Email != nil {
-		query = query.Where("email = ?", *filters.Email)
+		query = query.Where(whereEmail, *filters.Email)
 	}
 
 	if filters.Status != nil {
@@ -138,7 +138,7 @@ func (r *inviteRepository) List(
 func (r *inviteRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Invite, error) {
 	var dbRow dbInvite
 
-	if err := r.db.WithContext(ctx).First(&dbRow, "id = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&dbRow, whereID, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -148,7 +148,7 @@ func (r *inviteRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.I
 func (r *inviteRepository) GetByEmail(ctx context.Context, email string) (*domain.Invite, error) {
 	var dbRow dbInvite
 
-	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&dbRow).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where(whereEmail, email).First(&dbRow).Error; err != nil {
 		return nil, err
 	}
 
@@ -172,7 +172,7 @@ func (r *inviteRepository) EmailExists(ctx context.Context, email string) (bool,
 
 	if err := r.db.WithContext(ctx).
 		Model(&dbOrganizer{}).
-		Where("email = ?", email).
+		Where(whereEmail, email).
 		Count(&count).Error; err != nil {
 		return false, fmt.Errorf("failed to check organizer email: %w", err)
 	}
@@ -183,7 +183,7 @@ func (r *inviteRepository) EmailExists(ctx context.Context, email string) (bool,
 
 	if err := r.db.WithContext(ctx).
 		Model(&dbInvite{}).
-		Where("email = ?", email).
+		Where(whereEmail, email).
 		Count(&count).Error; err != nil {
 		return false, fmt.Errorf("failed to check invite email: %w", err)
 	}
@@ -213,7 +213,7 @@ func (r *inviteRepository) SubmitForReview(
 
 	result := r.db.WithContext(ctx).
 		Model(&dbInvite{}).
-		Where("id = ?", id).
+		Where(whereID, id).
 		Updates(updates)
 	if result.Error != nil {
 		return fmt.Errorf("failed to submit invite %s: %w", id, result.Error)
@@ -234,7 +234,7 @@ func (r *inviteRepository) Review(
 ) error {
 	result := r.db.WithContext(ctx).
 		Model(&dbInvite{}).
-		Where("id = ?", id).
+		Where(whereID, id).
 		Updates(map[string]any{
 			"status":         string(status),
 			"reviewed_by_id": reviewerID,

@@ -53,7 +53,7 @@ func (s *Server) GetEventYear(c *gin.Context) {
 	eventYear, err := s.eventYearRepo.GetByYear(c.Request.Context(), year)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Event year not found")
+			respondWithNotFoundProblem(c, eventYearNotFound)
 
 			return
 		}
@@ -167,7 +167,7 @@ func (s *Server) DeleteEventYear(c *gin.Context) {
 	eventYear, err := s.eventYearRepo.GetByYear(c.Request.Context(), year)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Event year not found")
+			respondWithNotFoundProblem(c, eventYearNotFound)
 
 			return
 		}
@@ -206,7 +206,7 @@ func (s *Server) DeleteEventYear(c *gin.Context) {
 
 	if err := s.eventYearRepo.Delete(c.Request.Context(), year); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Event year not found")
+			respondWithNotFoundProblem(c, eventYearNotFound)
 
 			return
 		}

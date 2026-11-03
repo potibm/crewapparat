@@ -40,7 +40,7 @@ func (s *Server) GetTeam(c *gin.Context) {
 	team, err := s.teamRepo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Team not found")
+			respondWithNotFoundProblem(c, teamNotFound)
 
 			return
 		}
@@ -108,7 +108,7 @@ func (s *Server) UpdateTeam(c *gin.Context) {
 
 	if err := s.teamRepo.Update(c.Request.Context(), &team); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Team not found")
+			respondWithNotFoundProblem(c, teamNotFound)
 
 			return
 		}
@@ -141,7 +141,7 @@ func (s *Server) DeleteTeam(c *gin.Context) {
 
 	if err := s.teamRepo.Delete(c.Request.Context(), id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Team not found")
+			respondWithNotFoundProblem(c, teamNotFound)
 
 			return
 		}

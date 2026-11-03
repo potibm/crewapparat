@@ -44,7 +44,7 @@ func (r *teamRepository) Create(ctx context.Context, team *domain.Team) error {
 
 func (r *teamRepository) Update(ctx context.Context, team *domain.Team) error {
 	var existing dbTeam
-	if err := r.db.WithContext(ctx).First(&existing, "id = ?", team.ID).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&existing, whereID, team.ID).Error; err != nil {
 		return fmt.Errorf("failed to load team %s: %w", team.ID, err)
 	}
 
@@ -60,7 +60,7 @@ func (r *teamRepository) Update(ctx context.Context, team *domain.Team) error {
 }
 
 func (r *teamRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.WithContext(ctx).Delete(&dbTeam{}, "id = ?", id)
+	result := r.db.WithContext(ctx).Delete(&dbTeam{}, whereID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete team %s: %w", id, result.Error)
 	}
@@ -90,7 +90,7 @@ func (r *teamRepository) List(
 	}
 
 	if filters.ID != nil {
-		query = query.Where("id = ?", *filters.ID)
+		query = query.Where(whereID, *filters.ID)
 	}
 
 	if filters.Active != nil {
@@ -121,7 +121,7 @@ func (r *teamRepository) List(
 func (r *teamRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Team, error) {
 	var dbRow dbTeam
 
-	if err := r.db.WithContext(ctx).First(&dbRow, "id = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&dbRow, whereID, id).Error; err != nil {
 		return nil, err
 	}
 

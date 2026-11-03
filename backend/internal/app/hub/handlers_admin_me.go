@@ -4,8 +4,10 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"github.com/potibm/crewapparat/internal/app/domain"
@@ -19,6 +21,12 @@ type meResponse struct {
 	Pronouns  string `json:"pronouns,omitempty"`
 	AvatarURL string `json:"avatar_url,omitempty"`
 	IsAdmin   bool   `json:"is_admin"`
+
+	// CodeOfConduct is the currently published version and
+	// CodeOfConductAcceptedAt is the moment this user accepted it. Both are
+	// null when there is no published version or no acceptance yet.
+	CodeOfConduct           *domain.CodeOfConduct `json:"code_of_conduct"`
+	CodeOfConductAcceptedAt *time.Time            `json:"code_of_conduct_accepted_at"`
 }
 
 func (s *Server) GetMe(c *gin.Context) {
@@ -42,7 +50,52 @@ func (s *Server) GetMe(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, toMeResponse(organizer, s.isAdmin(c, userID.(string))))
+	response := toMeResponse(organizer, s.isAdmin(c, userID.(string)))
+
+	coc, acceptedAt, err := s.myCodeOfConductStatus(c, organizer.ID)
+	if err != nil {
+		respondWithInternalServerProblem(c, "Failed to get code of conduct: "+err.Error())
+
+		return
+	}
+
+	response.CodeOfConduct = coc
+	response.CodeOfConductAcceptedAt = acceptedAt
+
+	c.JSON(http.StatusOK, response)
+}
+
+// myCodeOfConductStatus returns the current published version together with
+// the acceptance of that version for the given organizer.
+func (s *Server) myCodeOfConductStatus(
+	c *gin.Context,
+	organizerID uuid.UUID,
+) (*domain.CodeOfConduct, *time.Time, error) {
+	coc, err := s.codeOfConductRepo.GetLatestPublished(c.Request.Context())
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil, nil
+		}
+
+		return nil, nil, err
+	}
+
+	acceptance, err := s.acceptanceRepo.GetByOrganizerAndCodeOfConduct(
+		c.Request.Context(),
+		organizerID,
+		coc.ID,
+	)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return coc, nil, nil
+		}
+
+		return nil, nil, err
+	}
+
+	acceptedAt := acceptance.AcceptedAt
+
+	return coc, &acceptedAt, nil
 }
 
 // LinkMe implements the account-linking step from concept §4.1.5: a user whose
