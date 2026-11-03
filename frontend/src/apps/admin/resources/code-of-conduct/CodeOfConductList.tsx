@@ -7,7 +7,7 @@ import {
   DeleteButton,
   useRecordContext,
 } from "react-admin";
-import { Chip } from "@mui/material";
+import { Box, Chip, Typography } from "@mui/material";
 import type { CodeOfConductRecord } from "./code-of-conduct.types";
 import { useLatestPublishedCodeOfConduct } from "./useLatestPublishedCodeOfConduct";
 
@@ -51,17 +51,21 @@ const CodeOfConductList = () => {
     <List filters={filters}>
       <DataTable bulkActionButtons={false} rowClick="show">
         <DataTable.Col source="id" />
-        <DataTable.Col source="status" />
         <DataTable.Col
+          source="version"
           label="Version"
-          disableSort
-          render={(record: CodeOfConductRecord) =>
-            record.id === currentId ? (
-              <Chip label="Current" color="success" size="small" />
-            ) : null
-          }
+          render={(record: CodeOfConductRecord) => (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography variant="body2">{record.version || "—"}</Typography>
+              {record.id === currentId && (
+                <Chip label="Current" color="success" size="small" />
+              )}
+            </Box>
+          )}
         />
-        <DataTable.Col source="published_at" />
+        <DataTable.Col source="status" />
+        <DataTable.Col source="accepted_count" label="Accepted" disableSort />
+        <DataTable.Col source="published_at" disableSort />
         <DataTable.Col>
           <CodeOfConductRowActions />
         </DataTable.Col>

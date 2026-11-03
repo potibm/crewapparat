@@ -11,6 +11,7 @@ import { Alert, Box } from "@mui/material";
 import { MarkdownInput } from "../../components/inputs/MarkdownInput";
 import { MarkdownField } from "../../components/fields/MarkdownField";
 import type { CodeOfConductRecord } from "./code-of-conduct.types";
+import { validateVersion } from "./code-of-conduct.version";
 
 const CodeOfConductEditContent = () => {
   const record = useRecordContext<CodeOfConductRecord>();
@@ -25,6 +26,7 @@ const CodeOfConductEditContent = () => {
           </Alert>
         </Box>
         <SimpleShowLayout>
+          <TextField source="version" />
           <TextField source="status" />
           <TextField source="published_at" />
           <MarkdownField source="text" />
@@ -36,6 +38,12 @@ const CodeOfConductEditContent = () => {
 
   return (
     <SimpleForm>
+      <TextInput
+        source="version"
+        label="Version"
+        validate={validateVersion}
+        helperText="Semantic version, e.g. 1.0.0"
+      />
       <SelectInput
         source="status"
         choices={[

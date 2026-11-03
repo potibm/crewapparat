@@ -1,6 +1,7 @@
 import { Create, SimpleForm, SelectInput, TextInput } from "react-admin";
 import { MarkdownInput } from "../../components/inputs/MarkdownInput";
 import { useLatestPublishedCodeOfConduct } from "./useLatestPublishedCodeOfConduct";
+import { nextPatchVersion, validateVersion } from "./code-of-conduct.version";
 
 const CodeOfConductCreateForm = () => {
   const { data, isPending } = useLatestPublishedCodeOfConduct();
@@ -13,8 +14,18 @@ const CodeOfConductCreateForm = () => {
 
   return (
     <SimpleForm
-      defaultValues={{ status: "pending", text: previous?.text ?? "" }}
+      defaultValues={{
+        version: nextPatchVersion(previous?.version),
+        status: "pending",
+        text: previous?.text ?? "",
+      }}
     >
+      <TextInput
+        source="version"
+        label="Version"
+        validate={validateVersion}
+        helperText="Semantic version, e.g. 1.0.0"
+      />
       <SelectInput
         source="status"
         choices={[

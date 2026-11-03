@@ -101,7 +101,7 @@ func TestUpdateCodeOfConduct_PublishedIsImmutable(t *testing.T) {
 	})
 
 	t.Run("allows updates of a pending code of conduct", func(t *testing.T) {
-		w := update(pending.ID.String(), `{"status":"pending","text":"improved draft"}`)
+		w := update(pending.ID.String(), `{"version":"0.9.0","status":"pending","text":"improved draft"}`)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 
@@ -111,7 +111,7 @@ func TestUpdateCodeOfConduct_PublishedIsImmutable(t *testing.T) {
 	})
 
 	t.Run("publishing is allowed once and then locked", func(t *testing.T) {
-		w := update(pending.ID.String(), `{"status":"published","text":"improved draft"}`)
+		w := update(pending.ID.String(), `{"version":"0.9.0","status":"published","text":"improved draft"}`)
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		stored, getErr := repo.GetByID(context.Background(), pending.ID)

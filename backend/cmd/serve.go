@@ -83,6 +83,7 @@ func NewServeCmd() *cobra.Command {
 				ParticipationRepo: dbStore.NewParticipationRepository(),
 				InviteRepo:        dbStore.NewInviteRepository(),
 				CodeOfConductRepo: dbStore.NewCodeOfConductRepository(),
+				AcceptanceRepo:    dbStore.NewCodeOfConductAcceptanceRepository(),
 			})
 			if err != nil {
 				return fmt.Errorf("failed to initialize server: %w", err)
@@ -92,6 +93,7 @@ func NewServeCmd() *cobra.Command {
 				// Me
 				admin.GET("/me", server.GetMe)
 				admin.POST("/me/link", server.LinkMe)
+				admin.POST("/me/code-of-conduct/accept", server.AcceptCodeOfConduct)
 
 				// Organizers
 				admin.GET("/organizers", server.ListOrganizers)
@@ -135,6 +137,7 @@ func NewServeCmd() *cobra.Command {
 				admin.GET("/code-of-conducts/:id", server.GetCodeOfConduct)
 				admin.PUT("/code-of-conducts/:id", server.UpdateCodeOfConduct)
 				admin.DELETE("/code-of-conducts/:id", server.DeleteCodeOfConduct)
+				admin.GET("/code-of-conduct-acceptances", server.ListCodeOfConductAcceptances)
 			}
 
 			return server.Run(ctx)

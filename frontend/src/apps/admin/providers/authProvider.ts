@@ -1,6 +1,7 @@
 import { createLogger } from "@core/logger/logger";
 import { UserManager } from "oidc-client-ts";
 import { AuthProvider } from "react-admin";
+import type { CodeOfConductRecord } from "../resources/code-of-conduct/code-of-conduct.types";
 
 const log = createLogger("Auth");
 
@@ -35,6 +36,8 @@ interface MeData {
   pronouns?: string;
   avatar_url?: string;
   is_admin: boolean;
+  code_of_conduct: CodeOfConductRecord | null;
+  code_of_conduct_accepted_at: string | null;
 }
 
 let meCache: { data: MeData; expires: number } | null = null;
@@ -55,7 +58,7 @@ export const linkMe = async (): Promise<boolean> => {
   }
 };
 
-const fetchMe = async (): Promise<MeData | null> => {
+export const fetchMe = async (): Promise<MeData | null> => {
   const now = Date.now();
   if (meCache && meCache.expires > now) return meCache.data;
   if (mePromise) return mePromise;
@@ -141,6 +144,14 @@ export const authProvider: AuthProvider = {
   },
 
   checkError: async (error) => {
+    if (error.status === 428) {
+      // A new Code of Conduct version was published while the user is working:
+      // reload so the acceptance gate kicks in again.
+      globalThis.location.reload();
+
+      return;
+    }
+
     if (error.status === 401 || error.status === 403) {
       throw new Error("Unauthorized API access");
     }

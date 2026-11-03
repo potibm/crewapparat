@@ -113,6 +113,7 @@ func TestSeeder_RunCreatesEverything(t *testing.T) {
 	coc, err := repos.CodeOfConducts.GetLatestPublished(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, domain.CodeOfConductStatusPublished, coc.Status)
+	assert.Equal(t, "1.0.0", coc.Version)
 	assert.Equal(t, "Initial version", coc.ChangeNote)
 	assert.NotEmpty(t, coc.Text)
 

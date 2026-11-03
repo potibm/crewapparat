@@ -17,6 +17,7 @@ type codeOfConductRepository struct {
 
 var codeOfConductSortColumns = map[string]string{
 	"id":        "id",
+	"version":   "version",
 	"status":    "status",
 	"created":   "created_at",
 	"published": "published_at",
@@ -131,4 +132,18 @@ func (r *codeOfConductRepository) GetLatestPublished(ctx context.Context) (*doma
 	}
 
 	return toDomainCodeOfConduct(&dbRow), nil
+}
+
+func (r *codeOfConductRepository) CountAcceptances(ctx context.Context, id uuid.UUID) (int64, error) {
+	var total int64
+
+	err := r.db.WithContext(ctx).
+		Model(&dbCodeOfConductAcceptance{}).
+		Where("code_of_conduct_id = ?", id).
+		Count(&total).Error
+	if err != nil {
+		return 0, fmt.Errorf("failed to count acceptances for code of conduct %s: %w", id, err)
+	}
+
+	return total, nil
 }

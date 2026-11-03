@@ -9,9 +9,11 @@ import {
   UserMenu,
   Logout,
 } from "react-admin";
-import { Typography, Box } from "@mui/material";
+import { Typography, Box, CircularProgress } from "@mui/material";
 import { Logo } from "@core/logo/Logo";
 import { useAppConfig } from "@core/config/useConfig";
+import { useMyCodeOfConduct } from "../components/code-of-conduct/useMyCodeOfConduct";
+import { CodeOfConductAcceptance } from "../components/code-of-conduct/CodeOfConductAcceptance";
 
 const MyUserMenu = () => (
   <UserMenu>
@@ -65,6 +67,32 @@ export const MyMenu = (props: MenuProps) => {
   );
 };
 
-export const MyLayout = (props: LayoutProps) => (
-  <Layout {...props} appBar={MyAppBar} menu={MyMenu} />
-);
+export const MyLayout = (props: LayoutProps) => {
+  const { state, codeOfConduct, accept } = useMyCodeOfConduct();
+
+  if (state === "checking") {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (state === "required" && codeOfConduct) {
+    return (
+      <CodeOfConductAcceptance
+        codeOfConduct={codeOfConduct}
+        onAccept={accept}
+      />
+    );
+  }
+
+  return <Layout {...props} appBar={MyAppBar} menu={MyMenu} />;
+};

@@ -67,3 +67,12 @@ func respondWithForbiddenProblem(c *gin.Context, detail string) {
 func respondWithConflictProblem(c *gin.Context, detail string) {
 	respondWithProblem(c, http.StatusConflict, "Conflict", detail)
 }
+
+func respondWithCodeOfConductRequiredProblem(c *gin.Context) {
+	respondWithProblem(
+		c,
+		http.StatusPreconditionRequired,
+		"Code of Conduct acceptance required",
+		"Accept the current Code of Conduct to continue",
+	)
+}

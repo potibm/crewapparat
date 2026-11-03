@@ -25,4 +25,5 @@ type CodeOfConductRepository interface {
 	) ([]domain.CodeOfConduct, int64, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.CodeOfConduct, error)
 	GetLatestPublished(ctx context.Context) (*domain.CodeOfConduct, error)
+	CountAcceptances(ctx context.Context, id uuid.UUID) (int64, error)
 }

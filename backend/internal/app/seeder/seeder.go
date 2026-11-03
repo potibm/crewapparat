@@ -357,6 +357,7 @@ func (s *Seeder) seedCodeOfConduct(ctx context.Context) error {
 	now := time.Now()
 
 	coc := &domain.CodeOfConduct{
+		Version:     "1.0.0",
 		Status:      domain.CodeOfConductStatusPublished,
 		ChangeNote:  "Initial version",
 		Text:        defaultCodeOfConductText,

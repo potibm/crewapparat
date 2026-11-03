@@ -37,6 +37,7 @@ type Config struct {
 	ParticipationRepo repository.ParticipationRepository
 	InviteRepo        repository.InviteRepository
 	CodeOfConductRepo repository.CodeOfConductRepository
+	AcceptanceRepo    repository.CodeOfConductAcceptanceRepository
 
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
@@ -55,6 +56,7 @@ type Server struct {
 	participationRepo repository.ParticipationRepository
 	inviteRepo        repository.InviteRepository
 	codeOfConductRepo repository.CodeOfConductRepository
+	acceptanceRepo    repository.CodeOfConductAcceptanceRepository
 
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
@@ -75,6 +77,7 @@ func NewServer(cfg Config) (*Server, error) {
 		participationRepo:   cfg.ParticipationRepo,
 		inviteRepo:          cfg.InviteRepo,
 		codeOfConductRepo:   cfg.CodeOfConductRepo,
+		acceptanceRepo:      cfg.AcceptanceRepo,
 		RegisterAdminRoutes: cfg.RegisterAdminRoutes,
 	}, nil
 }
@@ -180,6 +183,7 @@ func (s *Server) setupRouter() (*gin.Engine, error) {
 	}
 
 	if s.RegisterAdminRoutes != nil {
+		admin.Use(s.requireCodeOfConductAcceptance())
 		s.RegisterAdminRoutes(admin)
 	}
 

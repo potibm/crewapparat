@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -24,6 +25,17 @@ func (s *Server) ListCodeOfConducts(c *gin.Context) {
 		respondWithInternalServerProblem(c, "Failed to list code of conducts: "+err.Error())
 
 		return
+	}
+
+	for i := range items {
+		count, countErr := s.codeOfConductRepo.CountAcceptances(c.Request.Context(), items[i].ID)
+		if countErr != nil {
+			respondWithInternalServerProblem(c, "Failed to count acceptances: "+countErr.Error())
+
+			return
+		}
+
+		items[i].AcceptedCount = count
 	}
 
 	c.Header("X-Total-Count", strconv.FormatInt(total, 10))
@@ -51,6 +63,15 @@ func (s *Server) GetCodeOfConduct(c *gin.Context) {
 		return
 	}
 
+	count, err := s.codeOfConductRepo.CountAcceptances(c.Request.Context(), coc.ID)
+	if err != nil {
+		respondWithInternalServerProblem(c, "Failed to count acceptances: "+err.Error())
+
+		return
+	}
+
+	coc.AcceptedCount = count
+
 	c.JSON(http.StatusOK, coc)
 }
 
@@ -68,6 +89,10 @@ func (s *Server) CreateCodeOfConduct(c *gin.Context) {
 	if err := c.ShouldBindJSON(&coc); err != nil {
 		respondWithFailedToParsePayloadProblem(c, err)
 
+		return
+	}
+
+	if !validateCodeOfConductVersion(c, coc.Version) {
 		return
 	}
 
@@ -126,6 +151,10 @@ func (s *Server) UpdateCodeOfConduct(c *gin.Context) {
 	if err := c.ShouldBindJSON(&coc); err != nil {
 		respondWithFailedToParsePayloadProblem(c, err)
 
+		return
+	}
+
+	if !validateCodeOfConductVersion(c, coc.Version) {
 		return
 	}
 
@@ -226,4 +255,18 @@ func parseCodeOfConductFilters(c *gin.Context) repository.CodeOfConductListFilte
 	}
 
 	return filters
+}
+
+var codeOfConductVersionPattern = regexp.MustCompile(`^\d+\.\d+\.\d+$`)
+
+// validateCodeOfConductVersion ensures the version is a plain semantic
+// version. Uniqueness is not enforced: keeping this simple is intentional.
+func validateCodeOfConductVersion(c *gin.Context, version string) bool {
+	if !codeOfConductVersionPattern.MatchString(version) {
+		respondWithBadRequestProblem(c, "Version must be a semantic version like 1.0.0")
+
+		return false
+	}
+
+	return true
 }
