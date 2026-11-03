@@ -239,6 +239,13 @@ export const authProvider: AuthProvider = {
       return true;
     }
 
+    if (
+      resource === "code-of-conducts" &&
+      (action === "show" || action === "view" || action === "list")
+    ) {
+      return true;
+    }
+
     return false;
   },
 };

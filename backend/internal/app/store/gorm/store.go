@@ -33,6 +33,7 @@ var allModels = []interface{}{
 	&dbOrganizer{},
 	&dbParticipation{},
 	&dbInvite{},
+	&dbCodeOfConduct{},
 }
 
 var joinTables = []interface{}{

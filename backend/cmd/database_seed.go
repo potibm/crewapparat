@@ -48,6 +48,7 @@ func NewDatabaseSeedCmd() *cobra.Command {
 					Teams:          dbStore.NewTeamRepository(),
 					EventYears:     dbStore.NewEventYearRepository(),
 					Participations: dbStore.NewParticipationRepository(),
+					CodeOfConducts: dbStore.NewCodeOfConductRepository(),
 				},
 				seeder.WithOrganizerCount(seedOrganizerCount),
 				seeder.WithSeed(seedRNGValue),

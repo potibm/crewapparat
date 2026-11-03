@@ -36,6 +36,7 @@ type Config struct {
 	TeamRepo          repository.TeamRepository
 	ParticipationRepo repository.ParticipationRepository
 	InviteRepo        repository.InviteRepository
+	CodeOfConductRepo repository.CodeOfConductRepository
 
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
@@ -53,6 +54,7 @@ type Server struct {
 	teamRepo          repository.TeamRepository
 	participationRepo repository.ParticipationRepository
 	inviteRepo        repository.InviteRepository
+	codeOfConductRepo repository.CodeOfConductRepository
 
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
@@ -72,6 +74,7 @@ func NewServer(cfg Config) (*Server, error) {
 		teamRepo:            cfg.TeamRepo,
 		participationRepo:   cfg.ParticipationRepo,
 		inviteRepo:          cfg.InviteRepo,
+		codeOfConductRepo:   cfg.CodeOfConductRepo,
 		RegisterAdminRoutes: cfg.RegisterAdminRoutes,
 	}, nil
 }

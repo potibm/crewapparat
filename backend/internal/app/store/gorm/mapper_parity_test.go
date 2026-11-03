@@ -22,20 +22,24 @@ func TestMapperRoundtrip(t *testing.T) {
 		sub := "rauthy-sub-123"
 		demozoo := uint(4711)
 		in := &domain.Organizer{
-			ID:              uuid.New(),
-			OidcSub:         &sub,
-			Handle:          "demoscene-handle",
-			Realname:        "Real Name",
-			Email:           "crew@example.com",
-			Phone:           "+49 123",
-			SlackHandle:     "slack-handle",
-			SlackProfileURL: "https://slack.example/u/abc",
-			MediaWikiProfileURL: "https://wiki.example.org/index.php/User:Test",
-			AvatarURL:       "https://example.com/a.png",
-			DemozooID:       &demozoo,
-			FirstYearAsOrganizer: func() *int { v := 2019; return &v }(),
-			Pronouns:        "they/them",
-			Languages:       []string{"de", "en"},
+			ID:                   uuid.New(),
+			OidcSub:              &sub,
+			Handle:               "demoscene-handle",
+			Realname:             "Real Name",
+			Email:                "crew@example.com",
+			Phone:                "+49 123",
+			SlackHandle:          "slack-handle",
+			SlackProfileURL:      "https://slack.example/u/abc",
+			MediaWikiProfileURL:  "https://wiki.example.org/index.php/User:Test",
+			AvatarURL:            "https://example.com/a.png",
+			DemozooID:            &demozoo,
+			FirstYearAsOrganizer: func() *int {
+				v := 2019
+
+				return &v
+			}(),
+			Pronouns:             "they/them",
+			Languages:            []string{"de", "en"},
 		}
 
 		out := toDomainOrganizer(fromDomainOrganizer(in))
@@ -125,6 +129,24 @@ func TestMapperRoundtrip(t *testing.T) {
 		in := &domain.EventYear{Year: "2026", IsActive: true}
 		require.Equal(t, *in, *toDomainEventYear(fromDomainEventYear(in)))
 	})
+
+	t.Run("CodeOfConduct", func(t *testing.T) {
+		now := time.Now()
+		in := &domain.CodeOfConduct{
+			ID:          uuid.New(),
+			Status:      domain.CodeOfConductStatusPublished,
+			ChangeNote:  "Clarified the reporting process",
+			Text:        "# Hello\n\nWorld",
+			PublishedAt: &now,
+		}
+		out := toDomainCodeOfConduct(fromDomainCodeOfConduct(in))
+		require.Equal(t, in.ID, out.ID)
+		require.Equal(t, in.Status, out.Status)
+		require.Equal(t, in.ChangeNote, out.ChangeNote)
+		require.Equal(t, in.Text, out.Text)
+		require.NotNil(t, out.PublishedAt)
+		require.True(t, now.Equal(*out.PublishedAt))
+	})
 }
 
 // apiOnlyFields exist only in the domain type, not in the db model. They are
@@ -160,6 +182,7 @@ func TestFeldNamenParitaet(t *testing.T) {
 		{"Team", reflect.TypeOf(domain.Team{}), reflect.TypeOf(dbTeam{})},
 		{"EventYear", reflect.TypeOf(domain.EventYear{}), reflect.TypeOf(dbEventYear{})},
 		{"Invite", reflect.TypeOf(domain.Invite{}), reflect.TypeOf(dbInvite{})},
+		{"CodeOfConduct", reflect.TypeOf(domain.CodeOfConduct{}), reflect.TypeOf(dbCodeOfConduct{})},
 	}
 
 	for _, tc := range cases {

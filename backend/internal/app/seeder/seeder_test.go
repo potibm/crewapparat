@@ -110,6 +110,12 @@ func TestSeeder_RunCreatesEverything(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, previous.IsActive, "there must be exactly one active year")
 
+	coc, err := repos.CodeOfConducts.GetLatestPublished(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, domain.CodeOfConductStatusPublished, coc.Status)
+	assert.Equal(t, "Initial version", coc.ChangeNote)
+	assert.NotEmpty(t, coc.Text)
+
 	for _, def := range DexUsers() {
 		t.Run("dex/"+def.Email, func(t *testing.T) {
 			found, err := repos.Organizers.GetByEmail(ctx, def.Email)
@@ -298,6 +304,7 @@ func newTestStore(t *testing.T) Repositories {
 		Teams:          store.NewTeamRepository(),
 		EventYears:     store.NewEventYearRepository(),
 		Participations: store.NewParticipationRepository(),
+		CodeOfConducts: store.NewCodeOfConductRepository(),
 	}
 }
 
