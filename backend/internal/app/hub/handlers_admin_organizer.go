@@ -1,6 +1,7 @@
 package hub
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -46,12 +47,12 @@ func (s *Server) GetOrganizerBySlug(c *gin.Context) {
 	organizer, err := s.organizerRepo.GetBySlug(c.Request.Context(), slug)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Organizer not found")
+			respondWithNotFoundProblem(c, organizerNotFound)
 
 			return
 		}
 
-		respondWithInternalServerProblem(c, "Failed to get organizer: "+err.Error())
+		respondWithInternalServerProblem(c, organizerGetErrorPrefix+err.Error())
 
 		return
 	}
@@ -70,12 +71,12 @@ func (s *Server) GetOrganizer(c *gin.Context) {
 	organizer, err := s.organizerRepo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Organizer not found")
+			respondWithNotFoundProblem(c, organizerNotFound)
 
 			return
 		}
 
-		respondWithInternalServerProblem(c, "Failed to get organizer: "+err.Error())
+		respondWithInternalServerProblem(c, organizerGetErrorPrefix+err.Error())
 
 		return
 	}
@@ -100,6 +101,25 @@ func (s *Server) GetOrganizer(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, organizer)
+}
+
+// uniqueOrganizerSlug builds a unique slug from the handle by appending a
+// counter when the base slug is already taken.
+func (s *Server) uniqueOrganizerSlug(ctx context.Context, handle string) (string, error) {
+	base := domain.Slugify(handle)
+	slug := base
+
+	for i := 2; ; i++ {
+		if _, err := s.organizerRepo.GetBySlug(ctx, slug); err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return slug, nil
+			}
+
+			return "", err
+		}
+
+		slug = base + "-" + strconv.Itoa(i)
+	}
 }
 
 // canEditOrganizer allows admins and the organizer themselves to edit a
@@ -244,21 +264,11 @@ func (s *Server) CreateOrganizer(c *gin.Context) {
 	}
 
 	if organizer.Slug == "" {
-		base := domain.Slugify(organizer.Handle)
+		slug, err := s.uniqueOrganizerSlug(c.Request.Context(), organizer.Handle)
+		if err != nil {
+			respondWithInternalServerProblem(c, "Failed to check slug: "+err.Error())
 
-		slug := base
-		for i := 2; ; i++ {
-			if _, err := s.organizerRepo.GetBySlug(c.Request.Context(), slug); err != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					break
-				}
-
-				respondWithInternalServerProblem(c, "Failed to check slug: "+err.Error())
-
-				return
-			}
-
-			slug = base + "-" + strconv.Itoa(i)
+			return
 		}
 
 		organizer.Slug = slug
@@ -285,12 +295,12 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 	existing, err := s.organizerRepo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Organizer not found")
+			respondWithNotFoundProblem(c, organizerNotFound)
 
 			return
 		}
 
-		respondWithInternalServerProblem(c, "Failed to get organizer: "+err.Error())
+		respondWithInternalServerProblem(c, organizerGetErrorPrefix+err.Error())
 
 		return
 	}
@@ -372,7 +382,7 @@ func (s *Server) UpdateOrganizer(c *gin.Context) {
 
 	if err := s.organizerRepo.Update(c.Request.Context(), &organizer); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Organizer not found")
+			respondWithNotFoundProblem(c, organizerNotFound)
 
 			return
 		}
@@ -405,7 +415,7 @@ func (s *Server) DeleteOrganizer(c *gin.Context) {
 
 	if err := s.organizerRepo.Delete(c.Request.Context(), id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Organizer not found")
+			respondWithNotFoundProblem(c, organizerNotFound)
 
 			return
 		}

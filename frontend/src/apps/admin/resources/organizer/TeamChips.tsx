@@ -26,7 +26,7 @@ const colorFor = (team: TeamChipItem): string => {
 
   let hash = 0;
   for (const char of team.name) {
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    hash = (hash * 31 + (char.codePointAt(0) ?? 0)) >>> 0;
   }
 
   return fallbackColors[hash % fallbackColors.length];

@@ -112,7 +112,9 @@ func (s *Server) Run(ctx context.Context) error {
 	case <-ctx.Done():
 		s.logger.Info("Shutting down server gracefully...")
 
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), defaultShutdownTimeout)
+		// Derive from the parent context so trace/log values survive, but strip
+		// its cancellation: the parent is already done when this branch runs.
+		shutdownCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), defaultShutdownTimeout)
 		defer cancel()
 
 		if err := srv.Shutdown(shutdownCtx); err != nil {

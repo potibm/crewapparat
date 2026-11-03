@@ -29,6 +29,28 @@ import { AvatarLightbox } from "./AvatarLightbox";
 import { OrganizerAvatar } from "./OrganizerAvatar";
 import { TeamChips } from "./TeamChips";
 
+const SlackContact = ({ record }: { record: OrganizerRecord }) => {
+  if (!record.slack_handle && !record.slack_profile_url) {
+    return <Typography variant="body1">—</Typography>;
+  }
+
+  if (!record.slack_profile_url) {
+    return <Typography variant="body1">{record.slack_handle}</Typography>;
+  }
+
+  return (
+    <Link
+      href={record.slack_profile_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}
+    >
+      {record.slack_handle || "Slack profile"}
+      <OpenInNewIcon fontSize="inherit" />
+    </Link>
+  );
+};
+
 const OrganizerShowContent = () => {
   const record = useRecordContext<OrganizerRecord>();
   const notify = useNotify();
@@ -231,29 +253,7 @@ const OrganizerShowContent = () => {
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <SlackIcon fontSize="small" color="action" />
-                {record.slack_handle || record.slack_profile_url ? (
-                  record.slack_profile_url ? (
-                    <Link
-                      href={record.slack_profile_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                      }}
-                    >
-                      {record.slack_handle || "Slack profile"}
-                      <OpenInNewIcon fontSize="inherit" />
-                    </Link>
-                  ) : (
-                    <Typography variant="body1">
-                      {record.slack_handle}
-                    </Typography>
-                  )
-                ) : (
-                  <Typography variant="body1">—</Typography>
-                )}
+                <SlackContact record={record} />
               </Box>
             </Stack>
           </CardContent>

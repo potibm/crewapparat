@@ -143,18 +143,20 @@ export const authProvider: AuthProvider = {
     }
   },
 
-  checkError: async (error) => {
+  checkError: (error) => {
     if (error.status === 428) {
       // A new Code of Conduct version was published while the user is working:
       // reload so the acceptance gate kicks in again.
       globalThis.location.reload();
 
-      return;
+      return Promise.resolve();
     }
 
     if (error.status === 401 || error.status === 403) {
-      throw new Error("Unauthorized API access");
+      return Promise.reject(new Error("Unauthorized API access"));
     }
+
+    return Promise.resolve();
   },
 
   logout: async () => {

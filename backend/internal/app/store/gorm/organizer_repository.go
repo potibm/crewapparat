@@ -49,7 +49,7 @@ func (r *organizerRepository) Create(ctx context.Context, organizer *domain.Orga
 
 func (r *organizerRepository) Update(ctx context.Context, organizer *domain.Organizer) error {
 	var existing dbOrganizer
-	if err := r.db.WithContext(ctx).First(&existing, "id = ?", organizer.ID).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&existing, whereID, organizer.ID).Error; err != nil {
 		return fmt.Errorf("failed to load organizer %s: %w", organizer.ID, err)
 	}
 
@@ -66,7 +66,7 @@ func (r *organizerRepository) Update(ctx context.Context, organizer *domain.Orga
 }
 
 func (r *organizerRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.WithContext(ctx).Delete(&dbOrganizer{}, "id = ?", id)
+	result := r.db.WithContext(ctx).Delete(&dbOrganizer{}, whereID, id)
 	if result.Error != nil {
 		return fmt.Errorf("delete organizer %s: %w", id, result.Error)
 	}
@@ -141,7 +141,7 @@ func (r *organizerRepository) GetByID(ctx context.Context, id uuid.UUID) (*domai
 
 	err := r.db.WithContext(ctx).
 		Preload("Participations.Teams").
-		First(&dbRow, "id = ?", id).Error
+		First(&dbRow, whereID, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (r *organizerRepository) GetByEmail(ctx context.Context, email string) (*do
 	var dbRow dbOrganizer
 
 	err := r.db.WithContext(ctx).
-		Where("email = ?", email).
+		Where(whereEmail, email).
 		First(&dbRow).Error
 	if err != nil {
 		return nil, err
@@ -200,7 +200,7 @@ func (r *organizerRepository) applyFilters(
 	}
 
 	if filters.ID != nil {
-		query = query.Where("id = ?", *filters.ID)
+		query = query.Where(whereID, *filters.ID)
 	}
 
 	if filters.Slug != nil {
@@ -264,7 +264,7 @@ func backfillOrganizerSlugs(db *gorm.DB) error {
 		used[slug] = true
 		rows[i].Slug = slug
 
-		if err := db.Model(&dbOrganizer{}).Where("id = ?", rows[i].ID).Update("slug", slug).Error; err != nil {
+		if err := db.Model(&dbOrganizer{}).Where(whereID, rows[i].ID).Update("slug", slug).Error; err != nil {
 			return err
 		}
 	}

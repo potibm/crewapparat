@@ -51,38 +51,7 @@ interface OrganizerFormData {
 
 const ORGANIZER_RESOURCE = "organizers";
 
-const handleOrganizerFileUpload = async (
-  resource: string,
-  params: UpdateParams | CreateParams,
-  method: "POST" | "PUT",
-) => {
-  const data = params.data as OrganizerFormData;
-
-  if (!data.media_upload?.rawFile) {
-    const removed =
-      data.media_upload === null &&
-      !!(params as UpdateParams).previousData?.avatar_url;
-    const { media_upload: _media_upload, ...rest } = data;
-    // Preserve the existing avatar URL when the form does not carry one
-    // (e.g. on edits where no new file was selected), mirroring the
-    // billedapparat behaviour of not wiping unchanged media.
-    if (removed) {
-      rest.remove_avatar = true;
-      delete (rest as { avatar_url?: string }).avatar_url;
-    } else if (rest.avatar_url === undefined) {
-      const previousAvatar = (params as UpdateParams).previousData?.avatar_url;
-      if (previousAvatar) {
-        rest.avatar_url = previousAvatar;
-      }
-    }
-    const newParams = { ...params, data: rest };
-
-    if (method === "POST") {
-      return baseProvider.create(resource, newParams as CreateParams);
-    }
-    return baseProvider.update(resource, newParams as UpdateParams);
-  }
-
+const buildOrganizerFormData = (data: OrganizerFormData) => {
   const formData = new FormData();
 
   formData.append("handle", data.handle || "");
@@ -94,9 +63,11 @@ const handleOrganizerFileUpload = async (
   formData.append("mediawiki_profile_url", data.mediawiki_profile_url || "");
   formData.append("pronouns", data.pronouns || "");
   (data.languages || []).forEach((lang) => formData.append("languages", lang));
+
   if (data.demozoo_id != null && data.demozoo_id !== "") {
     formData.append("demozoo_id", String(data.demozoo_id));
   }
+
   if (
     data.first_year_as_organizer != null &&
     data.first_year_as_organizer !== ""
@@ -106,15 +77,63 @@ const handleOrganizerFileUpload = async (
       String(data.first_year_as_organizer),
     );
   }
+
   if (data.avatar_url) {
     formData.append("avatar_url", data.avatar_url);
   }
+
   if (data.remove_avatar) {
     formData.append("remove_avatar", "true");
   }
 
-  formData.append("media_upload", data.media_upload.rawFile);
+  if (data.media_upload?.rawFile) {
+    formData.append("media_upload", data.media_upload.rawFile);
+  }
 
+  return formData;
+};
+
+// Without a new file, only the metadata changes. Preserve the existing avatar
+// URL unless the form explicitly removed it.
+const sendOrganizerWithoutFile = (
+  resource: string,
+  params: UpdateParams | CreateParams,
+  method: "POST" | "PUT",
+) => {
+  const data = params.data as OrganizerFormData;
+  const previousAvatar = (params as UpdateParams).previousData?.avatar_url;
+  const removed = data.media_upload === null && !!previousAvatar;
+
+  const { media_upload: _media_upload, ...rest } = data;
+
+  if (removed) {
+    rest.remove_avatar = true;
+    delete (rest as { avatar_url?: string }).avatar_url;
+  } else if (rest.avatar_url === undefined && previousAvatar) {
+    rest.avatar_url = previousAvatar;
+  }
+
+  const newParams = { ...params, data: rest };
+
+  if (method === "POST") {
+    return baseProvider.create(resource, newParams as CreateParams);
+  }
+
+  return baseProvider.update(resource, newParams as UpdateParams);
+};
+
+const handleOrganizerFileUpload = async (
+  resource: string,
+  params: UpdateParams | CreateParams,
+  method: "POST" | "PUT",
+) => {
+  const data = params.data as OrganizerFormData;
+
+  if (!data.media_upload?.rawFile) {
+    return sendOrganizerWithoutFile(resource, params, method);
+  }
+
+  const formData = buildOrganizerFormData(data);
   const id = "id" in params ? params.id : "";
 
   const url =

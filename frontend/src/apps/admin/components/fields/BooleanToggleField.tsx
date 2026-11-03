@@ -59,7 +59,3 @@ export const BooleanToggleField = ({
     />
   );
 };
-
-BooleanToggleField.defaultProps = {
-  addLabel: true,
-};

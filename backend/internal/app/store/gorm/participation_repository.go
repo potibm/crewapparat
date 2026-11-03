@@ -51,7 +51,7 @@ func (r *participationRepository) Create(ctx context.Context, participation *dom
 
 func (r *participationRepository) Update(ctx context.Context, participation *domain.Participation) error {
 	var existing dbParticipation
-	if err := r.db.WithContext(ctx).First(&existing, "id = ?", participation.ID).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&existing, whereID, participation.ID).Error; err != nil {
 		return fmt.Errorf("failed to load participation %s: %w", participation.ID, err)
 	}
 
@@ -78,7 +78,7 @@ func (r *participationRepository) Update(ctx context.Context, participation *dom
 }
 
 func (r *participationRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.WithContext(ctx).Delete(&dbParticipation{}, "id = ?", id)
+	result := r.db.WithContext(ctx).Delete(&dbParticipation{}, whereID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete participation %s: %w", id, result.Error)
 	}
@@ -112,7 +112,7 @@ func (r *participationRepository) List(
 	}
 
 	if filters.ID != nil {
-		query = query.Where("id = ?", *filters.ID)
+		query = query.Where(whereID, *filters.ID)
 	}
 
 	if filters.OrganizerID != nil {
@@ -163,7 +163,7 @@ func (r *participationRepository) GetByID(ctx context.Context, id uuid.UUID) (*d
 
 	err := r.db.WithContext(ctx).
 		Preload("Teams").
-		First(&dbRow, "id = ?", id).Error
+		First(&dbRow, whereID, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func (r *participationRepository) SetTeams(
 	teams []domain.Team,
 ) error {
 	var existing dbParticipation
-	if err := r.db.WithContext(ctx).First(&existing, "id = ?", participationID).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&existing, whereID, participationID).Error; err != nil {
 		return fmt.Errorf("failed to load participation %s: %w", participationID, err)
 	}
 

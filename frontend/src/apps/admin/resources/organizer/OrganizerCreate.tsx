@@ -77,7 +77,7 @@ const OrganizerCreate = () => {
           onCreate={() => {
             const raw = languageInputRef.current?.value?.trim() ?? "";
             const newValue = raw.toLowerCase();
-            if (newValue && newValue.length === 2) {
+            if (newValue?.length === 2) {
               const newChoice = { id: newValue, name: newValue };
               languageChoices.push(newChoice);
               return newChoice;

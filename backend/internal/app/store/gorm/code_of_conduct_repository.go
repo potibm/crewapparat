@@ -45,7 +45,7 @@ func (r *codeOfConductRepository) Create(ctx context.Context, coc *domain.CodeOf
 
 func (r *codeOfConductRepository) Update(ctx context.Context, coc *domain.CodeOfConduct) error {
 	var existing dbCodeOfConduct
-	if err := r.db.WithContext(ctx).First(&existing, "id = ?", coc.ID).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&existing, whereID, coc.ID).Error; err != nil {
 		return fmt.Errorf("failed to load code of conduct %s: %w", coc.ID, err)
 	}
 
@@ -61,7 +61,7 @@ func (r *codeOfConductRepository) Update(ctx context.Context, coc *domain.CodeOf
 }
 
 func (r *codeOfConductRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := r.db.WithContext(ctx).Delete(&dbCodeOfConduct{}, "id = ?", id)
+	result := r.db.WithContext(ctx).Delete(&dbCodeOfConduct{}, whereID, id)
 	if result.Error != nil {
 		return fmt.Errorf("failed to delete code of conduct %s: %w", id, result.Error)
 	}
@@ -113,7 +113,7 @@ func (r *codeOfConductRepository) List(
 func (r *codeOfConductRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.CodeOfConduct, error) {
 	var dbRow dbCodeOfConduct
 
-	if err := r.db.WithContext(ctx).First(&dbRow, "id = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&dbRow, whereID, id).Error; err != nil {
 		return nil, err
 	}
 

@@ -7,8 +7,8 @@ import {
   usePermissions,
   TopToolbar,
   ExportButton,
+  BooleanField,
 } from "react-admin";
-import { BooleanField } from "react-admin";
 import { Box, Typography } from "@mui/material";
 import type { TeamRecord } from "./team.types";
 

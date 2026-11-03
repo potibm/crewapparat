@@ -40,7 +40,7 @@ func (s *Server) GetInvite(c *gin.Context) {
 	invite, err := s.inviteRepo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Invite not found")
+			respondWithNotFoundProblem(c, inviteNotFound)
 
 			return
 		}
@@ -90,7 +90,7 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 
 	if err := s.inviteRepo.Update(c.Request.Context(), &invite); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Invite not found")
+			respondWithNotFoundProblem(c, inviteNotFound)
 
 			return
 		}
@@ -114,7 +114,7 @@ func (s *Server) DeleteInvite(c *gin.Context) {
 
 	if err := s.inviteRepo.Delete(c.Request.Context(), id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Invite not found")
+			respondWithNotFoundProblem(c, inviteNotFound)
 
 			return
 		}

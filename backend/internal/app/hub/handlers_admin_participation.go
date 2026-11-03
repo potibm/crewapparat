@@ -40,7 +40,7 @@ func (s *Server) GetParticipation(c *gin.Context) {
 	participation, err := s.participationRepo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Participation not found")
+			respondWithNotFoundProblem(c, participationNotFound)
 
 			return
 		}
@@ -82,7 +82,7 @@ func (s *Server) UpdateParticipation(c *gin.Context) {
 	existing, err := s.participationRepo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Participation not found")
+			respondWithNotFoundProblem(c, participationNotFound)
 
 			return
 		}
@@ -112,7 +112,7 @@ func (s *Server) UpdateParticipation(c *gin.Context) {
 
 	if err := s.participationRepo.Update(c.Request.Context(), &participation); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Participation not found")
+			respondWithNotFoundProblem(c, participationNotFound)
 
 			return
 		}
@@ -136,7 +136,7 @@ func (s *Server) DeleteParticipation(c *gin.Context) {
 
 	if err := s.participationRepo.Delete(c.Request.Context(), id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			respondWithNotFoundProblem(c, "Participation not found")
+			respondWithNotFoundProblem(c, participationNotFound)
 
 			return
 		}

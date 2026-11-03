@@ -1,8 +1,7 @@
 import { Admin, Resource } from "react-admin";
 import { CustomRoutes } from "ra-core";
-import { Route } from "react-router";
 import SlugRedirect from "./components/SlugRedirect";
-import { BrowserRouter } from "react-router";
+import { BrowserRouter, Route } from "react-router";
 import { MyTheme, MyDarkTheme } from "./theme/MyTheme";
 import { MyLayout } from "./theme/MyLayout";
 import { dataProvider } from "./providers/dataProvider";
