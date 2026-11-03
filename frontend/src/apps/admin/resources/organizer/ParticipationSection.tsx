@@ -149,6 +149,11 @@ export const ParticipationSection = ({
       .map((o) => ({ id: o.id, name: o.handle }));
   }, [allOrganizers, yearParticipations, organizerId, shiftTeamIds]);
 
+  // The form state mirrors the participation of the selected organizer/year.
+  // Resetting it from an effect is intentional here: the object returned by
+  // useGetList is the single source of truth and every switch between
+  // organizers or years has to replace the local draft.
+  /* eslint-disable @eslint-react/set-state-in-effect */
   useEffect(() => {
     if (!participation) {
       setPartStatus("pending");
@@ -172,6 +177,7 @@ export const ParticipationSection = ({
     setShiftPreferredTimes(participation.shift_preferred_times ?? []);
     setShiftUnavailableTimes(participation.shift_unavailable_times ?? []);
   }, [participation]);
+  /* eslint-enable @eslint-react/set-state-in-effect */
 
   const handleSaveParticipation = async () => {
     if (!organizerId || !activeYear) return;
