@@ -13,6 +13,7 @@ const codeOfConducts: ResourceProps = {
   edit,
   create,
   icon: ArticleIcon,
+  recordRepresentation: "version",
 };
 
 export default codeOfConducts;
