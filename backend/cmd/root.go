@@ -121,6 +121,7 @@ func Execute() error {
 	rootCmd.AddCommand(databaseCmd)
 
 	rootCmd.AddCommand(NewDemozooCmd())
+	rootCmd.AddCommand(NewMediaCmd())
 
 	eventYearCmd := NewEventYearCmd()
 	rootCmd.AddCommand(eventYearCmd)
