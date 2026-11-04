@@ -1,4 +1,3 @@
-import { useWatch } from "react-hook-form";
 import {
   Edit,
   SimpleForm,
@@ -6,6 +5,7 @@ import {
   SelectInput,
   TextField,
   usePermissions,
+  FormDataConsumer,
   required,
 } from "react-admin";
 import { Alert } from "@mui/material";
@@ -13,7 +13,7 @@ import { DemozooScenerInput } from "../organizer/DemozooScenerInput";
 
 const statusMessages: Record<
   string,
-  { severity: "info" | "success" | "warning" | "error"; text: string }
+  { severity: "info" | "success" | "warning"; text: string }
 > = {
   sent: {
     severity: "success",
@@ -34,11 +34,6 @@ const statusMessages: Record<
 const InviteEdit = () => {
   const { permissions } = usePermissions();
   const isAdmin = Array.isArray(permissions) && permissions.includes("admin");
-  const status = useWatch({ name: "status" }) as string | undefined;
-  const info = statusMessages[status ?? ""] ?? {
-    severity: "info",
-    text: "Status unknown.",
-  };
 
   return (
     <Edit>
@@ -61,9 +56,15 @@ const InviteEdit = () => {
         ) : (
           <TextField source="status" />
         )}
-        <Alert severity={info.severity} sx={{ mt: 1 }}>
-          {info.text}
-        </Alert>
+        <FormDataConsumer>
+          {({ formData }) => {
+            const info = statusMessages[formData?.status ?? ""] ?? {
+              severity: "info",
+              text: "Status unknown.",
+            };
+            return <Alert severity={info.severity}>{info.text}</Alert>;
+          }}
+        </FormDataConsumer>
       </SimpleForm>
     </Edit>
   );
