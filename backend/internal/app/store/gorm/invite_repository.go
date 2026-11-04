@@ -114,6 +114,10 @@ func (r *inviteRepository) List(
 		query = query.Where("status = ?", string(*filters.Status))
 	}
 
+	if filters.InvitedByID != nil {
+		query = query.Where("invited_by_id = ?", *filters.InvitedByID)
+	}
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count invites: %w", err)
 	}

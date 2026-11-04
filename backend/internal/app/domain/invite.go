@@ -9,10 +9,11 @@ import (
 type InviteStatus string
 
 const (
-	InviteStatusSent          InviteStatus = "sent"
-	InviteStatusPendingReview InviteStatus = "pending_review"
-	InviteStatusApproved      InviteStatus = "approved"
-	InviteStatusRejected      InviteStatus = "rejected"
+	InviteStatusSent            InviteStatus = "sent"
+	InviteStatusPendingApproval InviteStatus = "pending_approval"
+	InviteStatusPendingReview   InviteStatus = "pending_review"
+	InviteStatusApproved        InviteStatus = "approved"
+	InviteStatusRejected        InviteStatus = "rejected"
 )
 
 // Invite is an invitation for someone who is not in the crew directory yet.

@@ -10,10 +10,11 @@ import (
 )
 
 type InviteListFilters struct {
-	Query  *string
-	ID     *uuid.UUID
-	Email  *string
-	Status *domain.InviteStatus
+	Query       *string
+	ID          *uuid.UUID
+	Email       *string
+	Status      *domain.InviteStatus
+	InvitedByID *uuid.UUID
 }
 
 type InviteListParams = ListParams

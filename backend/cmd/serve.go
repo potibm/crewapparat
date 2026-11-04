@@ -98,6 +98,8 @@ func NewServeCmd() *cobra.Command {
 				CodeOfConductRepo: dbStore.NewCodeOfConductRepository(),
 				AcceptanceRepo:    dbStore.NewCodeOfConductAcceptanceRepository(),
 				DemozooSceners:    demozooSceners,
+				Mailer:            initializer.InitializeMailer(mailerConfigValue(Cfg.Mailer)),
+				AdminRecipients:   Cfg.Mailer.AdminRecipients,
 			})
 			if err != nil {
 				return fmt.Errorf("failed to initialize server: %w", err)
@@ -170,4 +172,12 @@ func NewServeCmd() *cobra.Command {
 	_ = viper.BindPFlag("app.otel_endpoint", cmd.Flags().Lookup(otelEndpointFlagName))
 
 	return cmd
+}
+
+func mailerConfigValue(cfg *config.MailerConfig) config.MailerConfig {
+	if cfg == nil {
+		return config.MailerConfig{}
+	}
+
+	return *cfg
 }

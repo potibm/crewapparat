@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/potibm/crewapparat/internal/app/config"
 	"github.com/potibm/crewapparat/internal/app/demozoo"
+	"github.com/potibm/crewapparat/internal/app/mailer"
 	"github.com/potibm/crewapparat/internal/app/middleware"
 	"github.com/potibm/crewapparat/internal/app/repository"
 	sloggin "github.com/samber/slog-gin"
@@ -42,6 +43,9 @@ type Config struct {
 
 	DemozooSceners []demozoo.Scener
 
+	Mailer          mailer.Mailer
+	AdminRecipients []string
+
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
 	RegisterAdminRoutes func(*gin.RouterGroup)
@@ -62,6 +66,9 @@ type Server struct {
 	acceptanceRepo    repository.CodeOfConductAcceptanceRepository
 
 	demozooSceners []demozoo.Scener
+
+	mailer          mailer.Mailer
+	adminRecipients []string
 
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
@@ -84,6 +91,8 @@ func NewServer(cfg Config) (*Server, error) {
 		codeOfConductRepo:   cfg.CodeOfConductRepo,
 		acceptanceRepo:      cfg.AcceptanceRepo,
 		demozooSceners:      cfg.DemozooSceners,
+		mailer:              cfg.Mailer,
+		adminRecipients:     cfg.AdminRecipients,
 		RegisterAdminRoutes: cfg.RegisterAdminRoutes,
 	}, nil
 }

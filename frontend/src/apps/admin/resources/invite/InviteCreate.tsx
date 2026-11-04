@@ -14,6 +14,7 @@ const InviteCreate = () => (
         source="status"
         choices={[
           { id: "sent", name: "Sent" },
+          { id: "pending_approval", name: "Pending Approval" },
           { id: "pending_review", name: "Pending Review" },
           { id: "approved", name: "Approved" },
           { id: "rejected", name: "Rejected" },

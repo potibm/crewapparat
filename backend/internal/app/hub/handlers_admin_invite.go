@@ -11,12 +11,24 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/potibm/crewapparat/internal/app/domain"
+	"github.com/potibm/crewapparat/internal/app/mailer"
 	"github.com/potibm/crewapparat/internal/app/repository"
 )
 
 func (s *Server) ListInvites(c *gin.Context) {
 	params := parseInviteListParams(c)
 	filters := parseInviteFilters(c)
+
+	userID, _ := c.Get("userID")
+
+	uid, _ := userID.(string)
+	if !s.isAdmin(c, uid) {
+		organizer, err := s.organizerRepo.GetByOidcSub(c.Request.Context(), uid)
+		if err == nil && organizer != nil {
+			id := organizer.ID
+			filters.InvitedByID = &id
+		}
+	}
 
 	items, total, err := s.inviteRepo.List(c.Request.Context(), params, filters)
 	if err != nil {
@@ -54,6 +66,16 @@ func (s *Server) GetInvite(c *gin.Context) {
 }
 
 func (s *Server) CreateInvite(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	uid, _ := userID.(string)
+
+	organizer, err := s.organizerRepo.GetByOidcSub(c.Request.Context(), uid)
+	if err != nil {
+		respondWithForbiddenProblem(c, "Only linked organizers can create invites")
+
+		return
+	}
+
 	var invite domain.Invite
 	if err := c.ShouldBindJSON(&invite); err != nil {
 		respondWithFailedToParsePayloadProblem(c, err)
@@ -61,10 +83,40 @@ func (s *Server) CreateInvite(c *gin.Context) {
 		return
 	}
 
+	invite.InvitedByID = organizer.ID
+
+	isAdmin := s.isAdmin(c, uid)
+	if !isAdmin {
+		invite.Status = domain.InviteStatusPendingApproval
+	} else if invite.Status == "" {
+		invite.Status = domain.InviteStatusSent
+	}
+
 	if err := s.inviteRepo.Create(c.Request.Context(), &invite); err != nil {
 		respondWithInternalServerProblem(c, "Failed to create invite: "+err.Error())
 
 		return
+	}
+
+	if !isAdmin {
+		go func() {
+			link := s.mailer.FrontendBaseURL() + "/admin/#/invites/" + invite.ID.String()
+
+			data := mailer.InvitePendingApprovalData{
+				Email:         invite.Email,
+				InvitedByName: organizer.Realname,
+				Link:          link,
+			}
+			for _, recipient := range s.adminRecipients {
+				if err := s.mailer.SendInvitePendingApproval(recipient, data); err != nil {
+					slog.Warn("failed to send invite approval email",
+						"invite_id", invite.ID,
+						"recipient", recipient,
+						"error", err,
+					)
+				}
+			}
+		}()
 	}
 
 	slog.Info("Create Invite: Successfully created invite", "id", invite.ID)
@@ -79,6 +131,33 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 		return
 	}
 
+	userID, _ := c.Get("userID")
+	uid, _ := userID.(string)
+	isAdmin := s.isAdmin(c, uid)
+
+	existing, err := s.inviteRepo.GetByID(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			respondWithNotFoundProblem(c, inviteNotFound)
+
+			return
+		}
+
+		respondWithInternalServerProblem(c, "Failed to get invite: "+err.Error())
+
+		return
+	}
+
+	if !isAdmin {
+		organizer, oerr := s.organizerRepo.GetByOidcSub(c.Request.Context(), uid)
+		if oerr != nil || organizer == nil || existing.InvitedByID != organizer.ID ||
+			existing.Status != domain.InviteStatusPendingApproval {
+			respondWithForbiddenProblem(c, "You can only update your own pending invites")
+
+			return
+		}
+	}
+
 	var invite domain.Invite
 	if err := c.ShouldBindJSON(&invite); err != nil {
 		respondWithFailedToParsePayloadProblem(c, err)
@@ -87,6 +166,11 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 	}
 
 	invite.ID = id
+
+	if !isAdmin {
+		// Non-admins cannot change the status away from pending_approval.
+		invite.Status = domain.InviteStatusPendingApproval
+	}
 
 	if err := s.inviteRepo.Update(c.Request.Context(), &invite); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -110,6 +194,26 @@ func (s *Server) DeleteInvite(c *gin.Context) {
 		respondWithInvalidIDFormatProblem(c)
 
 		return
+	}
+
+	userID, _ := c.Get("userID")
+
+	uid, _ := userID.(string)
+	if !s.isAdmin(c, uid) {
+		existing, gerr := s.inviteRepo.GetByID(c.Request.Context(), id)
+		if gerr != nil {
+			respondWithNotFoundProblem(c, inviteNotFound)
+
+			return
+		}
+
+		organizer, oerr := s.organizerRepo.GetByOidcSub(c.Request.Context(), uid)
+		if oerr != nil || organizer == nil || existing.InvitedByID != organizer.ID ||
+			existing.Status != domain.InviteStatusPendingApproval {
+			respondWithForbiddenProblem(c, "You can only delete your own pending invites")
+
+			return
+		}
 	}
 
 	if err := s.inviteRepo.Delete(c.Request.Context(), id); err != nil {

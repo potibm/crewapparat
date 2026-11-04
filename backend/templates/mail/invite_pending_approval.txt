@@ -1,0 +1,9 @@
+A new invite requires your approval.
+
+Email: {{ .Email }}
+Invited by: {{ .InvitedByName }}
+
+Review it here:
+{{ .Link }}
+
+{{ template "footer" . }}
