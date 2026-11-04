@@ -4,12 +4,14 @@ import (
 	"embed"
 	"fmt"
 	"log/slog"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/potibm/crewapparat/internal/app/config"
+	"github.com/potibm/crewapparat/internal/app/demozoo"
 	"github.com/potibm/crewapparat/internal/app/hub"
 	"github.com/potibm/crewapparat/internal/app/initializer"
 	store "github.com/potibm/crewapparat/internal/app/store/gorm"
@@ -69,6 +71,17 @@ func NewServeCmd() *cobra.Command {
 
 			initializer.InitializeRedis(Cfg.App.RedisURL)
 
+			// Load the Demozoo scener list (optional, used for autocomplete).
+			demozooSceners := []demozoo.Scener{}
+
+			csvPath := filepath.Join(config.DataDirname, "import", "demozoo-sceners.csv")
+			if sceners, err := demozoo.ReadCSV(csvPath); err != nil {
+				logger.Warn("could not load demozoo sceners CSV", "error", err)
+			} else {
+				demozooSceners = sceners
+				logger.Info("loaded demozoo sceners", "count", len(sceners))
+			}
+
 			// =========================================================================
 			// PHASE 3: API Server
 			// =========================================================================
@@ -84,6 +97,7 @@ func NewServeCmd() *cobra.Command {
 				InviteRepo:        dbStore.NewInviteRepository(),
 				CodeOfConductRepo: dbStore.NewCodeOfConductRepository(),
 				AcceptanceRepo:    dbStore.NewCodeOfConductAcceptanceRepository(),
+				DemozooSceners:    demozooSceners,
 			})
 			if err != nil {
 				return fmt.Errorf("failed to initialize server: %w", err)
@@ -138,6 +152,10 @@ func NewServeCmd() *cobra.Command {
 				admin.PUT("/code-of-conducts/:id", server.UpdateCodeOfConduct)
 				admin.DELETE("/code-of-conducts/:id", server.DeleteCodeOfConduct)
 				admin.GET("/code-of-conduct-acceptances", server.ListCodeOfConductAcceptances)
+
+				// Demozoo sceners (autocomplete source)
+				admin.GET("/demozoo-sceners", server.ListDemozooSceners)
+				admin.GET("/demozoo-sceners/:id", server.GetDemozooScener)
 			}
 
 			return server.Run(ctx)

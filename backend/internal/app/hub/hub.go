@@ -15,6 +15,7 @@ import (
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/potibm/crewapparat/internal/app/config"
+	"github.com/potibm/crewapparat/internal/app/demozoo"
 	"github.com/potibm/crewapparat/internal/app/middleware"
 	"github.com/potibm/crewapparat/internal/app/repository"
 	sloggin "github.com/samber/slog-gin"
@@ -39,6 +40,8 @@ type Config struct {
 	CodeOfConductRepo repository.CodeOfConductRepository
 	AcceptanceRepo    repository.CodeOfConductAcceptanceRepository
 
+	DemozooSceners []demozoo.Scener
+
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
 	RegisterAdminRoutes func(*gin.RouterGroup)
@@ -57,6 +60,8 @@ type Server struct {
 	inviteRepo        repository.InviteRepository
 	codeOfConductRepo repository.CodeOfConductRepository
 	acceptanceRepo    repository.CodeOfConductAcceptanceRepository
+
+	demozooSceners []demozoo.Scener
 
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
@@ -78,6 +83,7 @@ func NewServer(cfg Config) (*Server, error) {
 		inviteRepo:          cfg.InviteRepo,
 		codeOfConductRepo:   cfg.CodeOfConductRepo,
 		acceptanceRepo:      cfg.AcceptanceRepo,
+		demozooSceners:      cfg.DemozooSceners,
 		RegisterAdminRoutes: cfg.RegisterAdminRoutes,
 	}, nil
 }

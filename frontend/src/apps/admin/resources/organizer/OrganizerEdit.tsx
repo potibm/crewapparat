@@ -18,6 +18,7 @@ import {
 import { Box, Card, CardContent, CardHeader, Link, Stack } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useAppConfig } from "@core/config/useConfig";
+import { DemozooScenerInput } from "./DemozooScenerInput";
 import { ParticipationSection } from "./ParticipationSection";
 
 const validateSlackProfileUrl = (value?: string) =>
@@ -218,7 +219,7 @@ const OrganizerEditForm = () => {
                 helperText="MediaWiki profile URL"
                 validate={validateHttpUrl}
               />
-              <NumberInput source="demozoo_id" helperText="Demozoo scener ID" />
+              <DemozooScenerInput />
             </Stack>
           </CardContent>
         </Card>

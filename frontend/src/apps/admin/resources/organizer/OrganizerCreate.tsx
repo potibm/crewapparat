@@ -10,6 +10,7 @@ import {
   AutocompleteArrayInput,
 } from "react-admin";
 import { useAppConfig } from "@core/config/useConfig";
+import { DemozooScenerInput } from "./DemozooScenerInput";
 
 const validateSlackProfileUrl = (value?: string) =>
   value && !/^https:\/\/[a-z0-9-]+\.slack\.com\/team\/[A-Za-z0-9]+$/.test(value)
@@ -118,7 +119,7 @@ const OrganizerCreate = () => {
             return undefined;
           }}
         />
-        <NumberInput source="demozoo_id" helperText="Demozoo scener ID" />
+        <DemozooScenerInput />
       </SimpleForm>
     </Create>
   );
