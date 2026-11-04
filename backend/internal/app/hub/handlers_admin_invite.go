@@ -189,6 +189,11 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 
 	invite.ID = id
 
+	// Preserve server-managed fields that are not part of the edit form.
+	invite.InvitedByID = existing.InvitedByID
+	invite.Token = existing.Token
+	invite.ExpiresAt = existing.ExpiresAt
+
 	// Preserve the fields submitted by the invitee through the magic link.
 	invite.ProvidedName = existing.ProvidedName
 	invite.ProvidedPhone = existing.ProvidedPhone
@@ -197,12 +202,17 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 	invite.CoCAcceptedAt = existing.CoCAcceptedAt
 
 	if !isAdmin {
-		invite.ReviewNote = existing.ReviewNote
-	}
-
-	if !isAdmin {
 		// Non-admins cannot change the status away from pending_approval.
 		invite.Status = domain.InviteStatusPendingApproval
+		invite.ReviewNote = existing.ReviewNote
+	} else {
+		userID, _ := c.Get("userID")
+
+		uid, _ := userID.(string)
+		if organizer, err := s.organizerRepo.GetByOidcSub(c.Request.Context(), uid); err == nil && organizer != nil {
+			reviewer := organizer.ID
+			invite.ReviewedByID = &reviewer
+		}
 	}
 
 	if err := s.inviteRepo.Update(c.Request.Context(), &invite); err != nil {
