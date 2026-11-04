@@ -3,7 +3,6 @@ import {
   SimpleForm,
   TextInput,
   SelectInput,
-  BooleanInput,
   required,
 } from "react-admin";
 import { DemozooScenerInput } from "../organizer/DemozooScenerInput";
@@ -25,10 +24,6 @@ const InviteEdit = () => (
           { id: "rejected", name: "Rejected" },
         ]}
       />
-      <TextInput source="provided_name" />
-      <TextInput source="provided_phone" />
-      <TextInput source="notes" />
-      <BooleanInput source="coc_accepted" />
     </SimpleForm>
   </Edit>
 );

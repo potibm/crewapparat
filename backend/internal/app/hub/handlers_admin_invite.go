@@ -98,6 +98,14 @@ func (s *Server) CreateInvite(c *gin.Context) {
 
 	invite.InvitedByID = organizer.ID
 
+	// These fields are filled in by the invitee through the magic link, never
+	// by the inviting organizer.
+	invite.ProvidedName = ""
+	invite.ProvidedPhone = ""
+	invite.Notes = ""
+	invite.CoCAccepted = false
+	invite.CoCAcceptedAt = nil
+
 	isAdmin := s.isAdmin(c, uid)
 	if !isAdmin {
 		invite.Status = domain.InviteStatusPendingApproval
@@ -179,6 +187,13 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 	}
 
 	invite.ID = id
+
+	// Preserve the fields submitted by the invitee through the magic link.
+	invite.ProvidedName = existing.ProvidedName
+	invite.ProvidedPhone = existing.ProvidedPhone
+	invite.Notes = existing.Notes
+	invite.CoCAccepted = existing.CoCAccepted
+	invite.CoCAcceptedAt = existing.CoCAcceptedAt
 
 	if !isAdmin {
 		// Non-admins cannot change the status away from pending_approval.
