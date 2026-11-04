@@ -4,12 +4,17 @@ import {
   TextInput,
   SelectInput,
   BooleanInput,
+  required,
 } from "react-admin";
+import { DemozooScenerInput } from "../organizer/DemozooScenerInput";
 
 const InviteEdit = () => (
   <Edit>
     <SimpleForm>
-      <TextInput source="email" />
+      <TextInput source="email" validate={required()} />
+      <TextInput source="handle" validate={required()} />
+      <DemozooScenerInput />
+      <TextInput source="reason" multiline />
       <SelectInput
         source="status"
         choices={[

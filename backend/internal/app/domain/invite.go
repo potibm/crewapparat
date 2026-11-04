@@ -25,6 +25,11 @@ type Invite struct {
 	Email  string       `json:"email"`
 	Status InviteStatus `json:"status"`
 
+	// Provided by the inviting organizer when creating the invite.
+	Handle    string `json:"handle,omitempty"`
+	DemozooID *uint  `json:"demozoo_id,omitempty"`
+	Reason    string `json:"reason,omitempty"`
+
 	// Token is the magic-link credential. It travels in the invitation URL and
 	// is validated when the link is opened.
 	Token     string    `json:"-"`

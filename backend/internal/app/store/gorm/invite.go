@@ -16,6 +16,11 @@ type dbInvite struct {
 	Email  string    `gorm:"uniqueIndex;column:email"`
 	Status string    `gorm:"index;column:status"`
 
+	// Provided by the inviting organizer when creating the invite.
+	Handle    string `gorm:"column:handle"`
+	DemozooID *uint  `gorm:"column:demozoo_id"`
+	Reason    string `gorm:"column:reason"`
+
 	// Magic-link credential, validated when the link is opened.
 	Token     string    `gorm:"uniqueIndex;column:token"`
 	ExpiresAt time.Time `gorm:"column:expires_at"`
@@ -42,6 +47,9 @@ func fromDomainInvite(inv *domain.Invite) *dbInvite {
 		ID:            inv.ID,
 		Email:         inv.Email,
 		Status:        string(inv.Status),
+		Handle:        inv.Handle,
+		DemozooID:     inv.DemozooID,
+		Reason:        inv.Reason,
 		Token:         inv.Token,
 		ExpiresAt:     inv.ExpiresAt,
 		ProvidedName:  inv.ProvidedName,
@@ -59,6 +67,9 @@ func toDomainInvite(db *dbInvite) *domain.Invite {
 		ID:            db.ID,
 		Email:         db.Email,
 		Status:        domain.InviteStatus(db.Status),
+		Handle:        db.Handle,
+		DemozooID:     db.DemozooID,
+		Reason:        db.Reason,
 		Token:         db.Token,
 		ExpiresAt:     db.ExpiresAt,
 		ProvidedName:  db.ProvidedName,

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -79,6 +80,18 @@ func (s *Server) CreateInvite(c *gin.Context) {
 	var invite domain.Invite
 	if err := c.ShouldBindJSON(&invite); err != nil {
 		respondWithFailedToParsePayloadProblem(c, err)
+
+		return
+	}
+
+	if strings.TrimSpace(invite.Email) == "" {
+		respondWithBadRequestProblem(c, "email is required")
+
+		return
+	}
+
+	if strings.TrimSpace(invite.Handle) == "" {
+		respondWithBadRequestProblem(c, "handle is required")
 
 		return
 	}

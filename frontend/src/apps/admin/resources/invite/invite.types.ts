@@ -4,12 +4,11 @@ export interface InviteRecord extends RaRecord {
   id: string;
   email: string;
   status:
-    | "sent"
-    | "pending_approval"
-    | "pending_review"
-    | "approved"
-    | "rejected";
+    "sent" | "pending_approval" | "pending_review" | "approved" | "rejected";
   expires_at: string;
+  handle?: string;
+  demozoo_id?: number;
+  reason?: string;
   provided_name?: string;
   provided_phone?: string;
   notes?: string;
