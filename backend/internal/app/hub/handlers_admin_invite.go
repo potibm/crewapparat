@@ -105,6 +105,7 @@ func (s *Server) CreateInvite(c *gin.Context) {
 	invite.Notes = ""
 	invite.CoCAccepted = false
 	invite.CoCAcceptedAt = nil
+	invite.ReviewNote = ""
 
 	isAdmin := s.isAdmin(c, uid)
 	if !isAdmin {
@@ -194,6 +195,10 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 	invite.Notes = existing.Notes
 	invite.CoCAccepted = existing.CoCAccepted
 	invite.CoCAcceptedAt = existing.CoCAcceptedAt
+
+	if !isAdmin {
+		invite.ReviewNote = existing.ReviewNote
+	}
 
 	if !isAdmin {
 		// Non-admins cannot change the status away from pending_approval.

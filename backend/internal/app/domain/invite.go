@@ -30,6 +30,9 @@ type Invite struct {
 	DemozooID *uint  `json:"demozoo_id,omitempty"`
 	Reason    string `json:"reason,omitempty"`
 
+	// Filled in by the reviewing admin.
+	ReviewNote string `json:"review_note,omitempty"`
+
 	// Token is the magic-link credential. It travels in the invitation URL and
 	// is validated when the link is opened.
 	Token     string    `json:"-"`

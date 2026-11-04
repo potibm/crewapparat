@@ -34,6 +34,9 @@ type dbInvite struct {
 
 	InvitedByID  uuid.UUID  `gorm:"index;column:invited_by_id"`
 	ReviewedByID *uuid.UUID `gorm:"column:reviewed_by_id"`
+
+	// Filled in by the reviewing admin.
+	ReviewNote string `gorm:"column:review_note"`
 }
 
 func (dbInvite) TableName() string { return "invites" }
@@ -59,6 +62,7 @@ func fromDomainInvite(inv *domain.Invite) *dbInvite {
 		CoCAcceptedAt: inv.CoCAcceptedAt,
 		InvitedByID:   inv.InvitedByID,
 		ReviewedByID:  inv.ReviewedByID,
+		ReviewNote:    inv.ReviewNote,
 	}
 }
 
@@ -79,5 +83,6 @@ func toDomainInvite(db *dbInvite) *domain.Invite {
 		CoCAcceptedAt: db.CoCAcceptedAt,
 		InvitedByID:   db.InvitedByID,
 		ReviewedByID:  db.ReviewedByID,
+		ReviewNote:    db.ReviewNote,
 	}
 }

@@ -9,6 +9,7 @@ export interface InviteRecord extends RaRecord {
   handle?: string;
   demozoo_id?: number;
   reason?: string;
+  review_note?: string;
   provided_name?: string;
   provided_phone?: string;
   notes?: string;
