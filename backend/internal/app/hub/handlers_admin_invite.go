@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -97,6 +98,10 @@ func (s *Server) CreateInvite(c *gin.Context) {
 	}
 
 	invite.InvitedByID = organizer.ID
+
+	// Magic-link credential and expiry are always generated server-side.
+	invite.Token = domain.NewInviteToken()
+	invite.ExpiresAt = time.Now().UTC().Add(14 * 24 * time.Hour)
 
 	// These fields are filled in by the invitee through the magic link, never
 	// by the inviting organizer.
