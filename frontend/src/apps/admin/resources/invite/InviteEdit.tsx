@@ -9,11 +9,9 @@ import {
   useNotify,
   useRedirect,
   useGetRecordId,
-  required,
   BooleanInput,
 } from "react-admin";
 import { Alert, Button, Stack } from "@mui/material";
-import { DemozooScenerInput } from "../organizer/DemozooScenerInput";
 
 const statusMessages: Record<
   string,
@@ -86,10 +84,10 @@ const InviteEdit = () => {
             return <Alert severity={info.severity}>{info.text}</Alert>;
           }}
         </FormDataConsumer>
-        <TextInput source="email" validate={required()} />
-        <TextInput source="handle" validate={required()} />
-        <DemozooScenerInput />
-        <TextInput source="reason" multiline />
+        <TextField source="email" />
+        <TextField source="handle" />
+        <TextField source="demozoo_id" />
+        <TextField source="reason" />
         <TextField source="notes" />
         {isAdmin ? (
           <>
