@@ -45,7 +45,7 @@ services:
     image: axllent/mailpit:latest
     container_name: crewapparat_mailpit
     ports:
-      - "1025:1025"
+      - "1026:1025"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.mailpit-crew.rule=Host(`mail.crewapparat.test`)"

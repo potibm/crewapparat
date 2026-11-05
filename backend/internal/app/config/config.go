@@ -46,7 +46,7 @@ func InitViper() {
 	viper.SetDefault("app.cors_allow_origins", []string{})
 	viper.SetDefault("app.redis_url", "")
 
-	viper.SetDefault("mailer.dsn", "smtp://user:password@localhost:1025")
+	viper.SetDefault("mailer.dsn", "smtp://user:password@localhost:1026")
 	viper.SetDefault("mailer.from", "crewapparat@example.com")
 	viper.SetDefault("mailer.subject_prefix", "[Crewapparat]")
 	viper.SetDefault("mailer.admin_recipients", []string{})

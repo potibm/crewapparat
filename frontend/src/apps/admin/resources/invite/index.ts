@@ -10,4 +10,5 @@ export default {
   create: InviteCreate,
   edit: InviteEdit,
   icon: MailIcon,
+  recordRepresentation: "handle",
 };
