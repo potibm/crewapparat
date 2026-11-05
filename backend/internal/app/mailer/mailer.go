@@ -5,6 +5,7 @@ import (
 	"net/smtp"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -126,6 +127,12 @@ func (m *Mailer) SendMail(to, subject, body string) error {
 	}
 
 	err := smtp.SendMail(m.address(), auth, m.from, []string{to}, message)
+	if err != nil && auth != nil && strings.Contains(err.Error(), "doesn't support AUTH") {
+		slog.Info("SMTP server does not support AUTH, retrying without authentication")
+
+		err = smtp.SendMail(m.address(), nil, m.from, []string{to}, message)
+	}
+
 	if err != nil {
 		slog.Error("Error sending mail", "error", err)
 	}
