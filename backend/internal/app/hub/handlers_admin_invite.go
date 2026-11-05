@@ -43,6 +43,37 @@ func (s *Server) ListInvites(c *gin.Context) {
 	c.JSON(http.StatusOK, items)
 }
 
+func canUpdateInvite(s *Server, c *gin.Context, existing *domain.Invite, uid string) bool {
+	organizer, err := s.organizerRepo.GetByOidcSub(c.Request.Context(), uid)
+	if err != nil || organizer == nil {
+		return false
+	}
+
+	if existing.InvitedByID != organizer.ID {
+		return false
+	}
+
+	return existing.Status == domain.InviteStatusPendingApproval
+}
+
+func triggerInviteLinkEmail(s *Server, invite domain.Invite) {
+	go func() {
+		link := strings.TrimRight(s.mailer.FrontendBaseURL(), "/") + "/invite/" + invite.Token
+
+		data := mailer.InviteLinkData{
+			EventName: s.eventName(),
+			Link:      link,
+			ExpiresAt: invite.ExpiresAt,
+		}
+		if err := s.mailer.SendInviteLink(invite.Email, data); err != nil {
+			slog.Warn("failed to send invite link email",
+				"invite_id", invite.ID,
+				"error", err,
+			)
+		}
+	}()
+}
+
 func (s *Server) GetInvite(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -127,7 +158,7 @@ func (s *Server) CreateInvite(c *gin.Context) {
 
 	if !isAdmin {
 		go func() {
-			link := s.mailer.FrontendBaseURL() + "/admin/#/invites/" + invite.ID.String()
+			link := strings.TrimRight(s.mailer.FrontendBaseURL(), "/") + "/invites/" + invite.ID.String()
 
 			data := mailer.InvitePendingApprovalData{
 				Email:         invite.Email,
@@ -175,14 +206,10 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 		return
 	}
 
-	if !isAdmin {
-		organizer, oerr := s.organizerRepo.GetByOidcSub(c.Request.Context(), uid)
-		if oerr != nil || organizer == nil || existing.InvitedByID != organizer.ID ||
-			existing.Status != domain.InviteStatusPendingApproval {
-			respondWithForbiddenProblem(c, "You can only update your own pending invites")
+	if !isAdmin && !canUpdateInvite(s, c, existing, uid) {
+		respondWithForbiddenProblem(c, "You can only update your own pending invites")
 
-			return
-		}
+		return
 	}
 
 	var invite domain.Invite
@@ -230,6 +257,10 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 		respondWithInternalServerProblem(c, "Failed to update invite: "+err.Error())
 
 		return
+	}
+
+	if isAdmin && invite.Status == domain.InviteStatusSent && existing.Status != domain.InviteStatusSent {
+		triggerInviteLinkEmail(s, invite)
 	}
 
 	slog.Info("Update Invite: Successfully updated invite", "id", invite.ID)

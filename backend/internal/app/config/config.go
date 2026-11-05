@@ -43,6 +43,7 @@ func InitViper() {
 	viper.SetDefault("app.env", "production")
 	viper.SetDefault("app.db_filename", DefaultDBFilename)
 	viper.SetDefault("app.frontend_url", "")
+	viper.SetDefault("app.event_name", "Evoke")
 	viper.SetDefault("app.cors_allow_origins", []string{})
 	viper.SetDefault("app.redis_url", "")
 

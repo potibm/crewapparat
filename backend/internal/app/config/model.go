@@ -21,6 +21,7 @@ type AppConfig struct {
 
 	DbFilename         string                 `mapstructure:"db_filename"         validate:"required"`
 	FrontendURL        string                 `mapstructure:"frontend_url"        validate:"required,http_url"`
+	EventName          string                 `mapstructure:"event_name"          validate:"omitempty"`
 	CorsAllowOrigins   CorsAllowOriginsConfig `mapstructure:"cors_allow_origins"  validate:"dive,required"`
 	EnvironmentMessage string                 `mapstructure:"environment_message"`
 	RedisURL           RedisURL               `mapstructure:"redis_url"           validate:"omitempty,url"`

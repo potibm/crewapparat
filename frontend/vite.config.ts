@@ -59,6 +59,7 @@ export default defineConfig({
     alias: {
       "@core": path.resolve(__dirname, "./src/core"),
       "@admin": path.resolve(__dirname, "./src/apps/admin"),
+      "@public": path.resolve(__dirname, "./src/apps/public"),
     },
   },
 });

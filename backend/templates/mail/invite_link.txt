@@ -1,0 +1,8 @@
+You are invited to {{ .EventName }}.
+
+Open the following link to complete your invitation:
+{{ .Link }}
+
+This link expires on {{ .ExpiresAt }}.
+
+{{ template "footer" . }}
