@@ -93,8 +93,6 @@ func TestMapperRoundtrip(t *testing.T) {
 			Status:        domain.InviteStatusPendingReview,
 			Token:         "8f14e45fceea167a5a36dedd4bea2543",
 			ExpiresAt:     expires,
-			ProvidedName:  "Provided Name",
-			ProvidedPhone: "+49 999",
 			Notes:         "extra notes",
 			CoCAccepted:   true,
 			CoCAcceptedAt: &cocAt,
@@ -109,8 +107,6 @@ func TestMapperRoundtrip(t *testing.T) {
 		require.Equal(t, in.Status, out.Status)
 		require.Equal(t, in.Token, out.Token)
 		require.True(t, in.ExpiresAt.Equal(out.ExpiresAt))
-		require.Equal(t, in.ProvidedName, out.ProvidedName)
-		require.Equal(t, in.ProvidedPhone, out.ProvidedPhone)
 		require.Equal(t, in.Notes, out.Notes)
 		require.Equal(t, in.CoCAccepted, out.CoCAccepted)
 		require.NotNil(t, out.CoCAcceptedAt)

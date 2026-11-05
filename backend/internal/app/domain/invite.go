@@ -39,8 +39,6 @@ type Invite struct {
 	ExpiresAt time.Time `json:"expires_at"`
 
 	// Submitted through the public form by the invitee.
-	ProvidedName  string     `json:"provided_name,omitempty"`
-	ProvidedPhone string     `json:"provided_phone,omitempty"`
 	Notes         string     `json:"notes,omitempty"`
 	CoCAccepted   bool       `json:"coc_accepted"`
 	CoCAcceptedAt *time.Time `json:"coc_accepted_at,omitempty"`

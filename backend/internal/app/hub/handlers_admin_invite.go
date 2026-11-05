@@ -136,8 +136,6 @@ func (s *Server) CreateInvite(c *gin.Context) {
 
 	// These fields are filled in by the invitee through the magic link, never
 	// by the inviting organizer.
-	invite.ProvidedName = ""
-	invite.ProvidedPhone = ""
 	invite.Notes = ""
 	invite.CoCAccepted = false
 	invite.CoCAcceptedAt = nil
@@ -227,8 +225,6 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 	invite.ExpiresAt = existing.ExpiresAt
 
 	// Preserve the fields submitted by the invitee through the magic link.
-	invite.ProvidedName = existing.ProvidedName
-	invite.ProvidedPhone = existing.ProvidedPhone
 	invite.Notes = existing.Notes
 	invite.CoCAccepted = existing.CoCAccepted
 	invite.CoCAcceptedAt = existing.CoCAcceptedAt

@@ -33,12 +33,24 @@ func (s *Server) GetPublicInvite(c *gin.Context) {
 		return
 	}
 
+	cocText := ""
+	cocVersion := ""
+
+	if s.codeOfConductRepo != nil {
+		if coc, err := s.codeOfConductRepo.GetLatestPublished(c.Request.Context()); err == nil && coc != nil {
+			cocText = coc.Text
+			cocVersion = coc.Version
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"email":      invite.Email,
-		"handle":     invite.Handle,
-		"reason":     invite.Reason,
-		"event_name": s.eventName(),
-		"expires_at": invite.ExpiresAt,
+		"email":                   invite.Email,
+		"handle":                  invite.Handle,
+		"reason":                  invite.Reason,
+		"event_name":              s.eventName(),
+		"expires_at":              invite.ExpiresAt,
+		"code_of_conduct":         cocText,
+		"code_of_conduct_version": cocVersion,
 	})
 }
 
@@ -65,10 +77,8 @@ func (s *Server) SubmitPublicInvite(c *gin.Context) {
 	}
 
 	var payload struct {
-		ProvidedName  string `json:"provided_name"`
-		ProvidedPhone string `json:"provided_phone"`
-		Notes         string `json:"notes"`
-		CoCAccepted   bool   `json:"coc_accepted"`
+		Notes       string `json:"notes"`
+		CoCAccepted bool   `json:"coc_accepted"`
 	}
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -85,8 +95,6 @@ func (s *Server) SubmitPublicInvite(c *gin.Context) {
 	if err := s.inviteWorkflowRepo.SubmitForReview(
 		c.Request.Context(),
 		invite.ID,
-		payload.ProvidedName,
-		payload.ProvidedPhone,
 		payload.Notes,
 		payload.CoCAccepted,
 	); err != nil {

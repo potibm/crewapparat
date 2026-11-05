@@ -12,15 +12,17 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { MarkdownContent } from "@admin/components/fields/MarkdownContent";
 
 const API_HOST = import.meta.env.VITE_API_HOST ?? "http://localhost:3400";
 
 interface InviteData {
   email: string;
   handle: string;
-  reason?: string;
   event_name: string;
   expires_at: string;
+  code_of_conduct: string;
+  code_of_conduct_version: string;
 }
 
 const InviteForm = () => {
@@ -30,8 +32,6 @@ const InviteForm = () => {
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
 
-  const [providedName, setProvidedName] = useState("");
-  const [providedPhone, setProvidedPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [cocAccepted, setCocAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -58,8 +58,6 @@ const InviteForm = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          provided_name: providedName,
-          provided_phone: providedPhone,
           notes,
           coc_accepted: cocAccepted,
         }),
@@ -95,28 +93,26 @@ const InviteForm = () => {
             {invite.handle ? (
               <Typography>Handle: {invite.handle}</Typography>
             ) : null}
-            {invite.reason ? (
-              <Typography>Reason: {invite.reason}</Typography>
-            ) : null}
             <TextField
-              label="Your name"
-              value={providedName}
-              onChange={(e) => setProvidedName(e.target.value)}
-              fullWidth
-            />
-            <TextField
-              label="Phone"
-              value={providedPhone}
-              onChange={(e) => setProvidedPhone(e.target.value)}
-              fullWidth
-            />
-            <TextField
-              label="Notes"
+              label="What you would like us to know"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               fullWidth
               multiline
             />
+            {invite.code_of_conduct ? (
+              <Box
+                sx={{
+                  maxHeight: 300,
+                  overflow: "auto",
+                  border: 1,
+                  borderColor: "divider",
+                  p: 1,
+                }}
+              >
+                <MarkdownContent value={invite.code_of_conduct} />
+              </Box>
+            ) : null}
             <FormControlLabel
               control={
                 <Checkbox

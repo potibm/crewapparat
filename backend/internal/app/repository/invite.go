@@ -38,7 +38,7 @@ type InviteWorkflowRepository interface {
 	SubmitForReview(
 		ctx context.Context,
 		id uuid.UUID,
-		providedName, providedPhone, notes string,
+		notes string,
 		cocAccepted bool,
 	) error
 	Review(ctx context.Context, id uuid.UUID, status domain.InviteStatus, reviewerID uuid.UUID) error

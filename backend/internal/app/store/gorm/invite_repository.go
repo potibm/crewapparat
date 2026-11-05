@@ -198,17 +198,13 @@ func (r *inviteRepository) EmailExists(ctx context.Context, email string) (bool,
 func (r *inviteRepository) SubmitForReview(
 	ctx context.Context,
 	id uuid.UUID,
-	providedName string,
-	providedPhone string,
 	notes string,
 	cocAccepted bool,
 ) error {
 	updates := map[string]any{
-		"provided_name":  providedName,
-		"provided_phone": providedPhone,
-		"notes":          notes,
-		"coc_accepted":   cocAccepted,
-		"status":         string(domain.InviteStatusPendingReview),
+		"notes":        notes,
+		"coc_accepted": cocAccepted,
+		"status":       string(domain.InviteStatusPendingReview),
 	}
 
 	if cocAccepted {
