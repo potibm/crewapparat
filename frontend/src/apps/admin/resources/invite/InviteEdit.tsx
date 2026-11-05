@@ -2,14 +2,14 @@ import {
   Edit,
   SimpleForm,
   TextInput,
-  TextField,
   usePermissions,
-  FormDataConsumer,
+  useRecordContext,
   useUpdate,
   useNotify,
   useRedirect,
   useGetRecordId,
   required,
+  FormDataConsumer,
 } from "react-admin";
 import { Alert, Button, Stack } from "@mui/material";
 import { DemozooScenerInput } from "../organizer/DemozooScenerInput";
@@ -37,10 +37,16 @@ const statusMessages: Record<
 const InviteEdit = () => {
   const { permissions } = usePermissions();
   const isAdmin = Array.isArray(permissions) && permissions.includes("admin");
+  const record = useRecordContext();
   const recordId = useGetRecordId();
   const [update] = useUpdate();
   const notify = useNotify();
   const redirect = useRedirect();
+
+  const info = statusMessages[record?.status ?? ""] ?? {
+    severity: "info",
+    text: "Status unknown.",
+  };
 
   const changeStatus = (status: string, formData: Record<string, unknown>) => {
     if (!recordId) return;
@@ -73,6 +79,9 @@ const InviteEdit = () => {
 
   return (
     <Edit>
+      <Alert severity={info.severity} sx={{ mb: 2 }}>
+        {info.text}
+      </Alert>
       <SimpleForm>
         <TextInput source="email" validate={required()} />
         <TextInput source="handle" validate={required()} />
@@ -80,7 +89,6 @@ const InviteEdit = () => {
         <TextInput source="reason" multiline />
         {isAdmin ? (
           <>
-            <TextField source="status" />
             <TextInput source="review_note" multiline />
             <FormDataConsumer>
               {({ formData }) => (
@@ -103,21 +111,7 @@ const InviteEdit = () => {
               )}
             </FormDataConsumer>
           </>
-        ) : (
-          <>
-            <TextField source="status" />
-            <TextField source="review_note" />
-          </>
-        )}
-        <FormDataConsumer>
-          {({ formData }) => {
-            const info = statusMessages[formData?.status ?? ""] ?? {
-              severity: "info",
-              text: "Status unknown.",
-            };
-            return <Alert severity={info.severity}>{info.text}</Alert>;
-          }}
-        </FormDataConsumer>
+        ) : null}
       </SimpleForm>
     </Edit>
   );
