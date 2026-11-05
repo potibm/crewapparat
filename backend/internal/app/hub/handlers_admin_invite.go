@@ -233,6 +233,8 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 		// Non-admins cannot change the status away from pending_approval.
 		invite.Status = domain.InviteStatusPendingApproval
 		invite.ReviewNote = existing.ReviewNote
+		invite.OpenIDAccountCreated = existing.OpenIDAccountCreated
+		invite.SlackInvited = existing.SlackInvited
 	} else {
 		userID, _ := c.Get("userID")
 

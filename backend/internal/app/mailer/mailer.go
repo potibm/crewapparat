@@ -114,8 +114,13 @@ func (m *Mailer) SendMail(to, subject, body string) error {
 		return nil
 	}
 
+	prefix := m.subjectPrefix
+	if prefix != "" && !strings.HasSuffix(prefix, " ") {
+		prefix += " "
+	}
+
 	header := "From: " + m.from + "\r\n" +
-		"Subject: " + m.subjectPrefix + subject + "\r\n" +
+		"Subject: " + prefix + subject + "\r\n" +
 		"To: " + to + "\r\n" +
 		"Content-Type: text/plain; charset=UTF-8\r\n\r\n"
 

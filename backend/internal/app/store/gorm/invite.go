@@ -35,6 +35,10 @@ type dbInvite struct {
 
 	// Filled in by the reviewing admin.
 	ReviewNote string `gorm:"column:review_note"`
+
+	// Tracking fields for onboarding steps.
+	OpenIDAccountCreated bool `gorm:"default:false;column:openid_account_created"`
+	SlackInvited         bool `gorm:"default:false;column:slack_invited"`
 }
 
 func (dbInvite) TableName() string { return "invites" }
@@ -45,38 +49,42 @@ func (i *dbInvite) SetID(id uuid.UUID) { i.ID = id }
 
 func fromDomainInvite(inv *domain.Invite) *dbInvite {
 	return &dbInvite{
-		ID:            inv.ID,
-		Email:         inv.Email,
-		Status:        string(inv.Status),
-		Handle:        inv.Handle,
-		DemozooID:     inv.DemozooID,
-		Reason:        inv.Reason,
-		Token:         inv.Token,
-		ExpiresAt:     inv.ExpiresAt,
-		Notes:         inv.Notes,
-		CoCAccepted:   inv.CoCAccepted,
-		CoCAcceptedAt: inv.CoCAcceptedAt,
-		InvitedByID:   inv.InvitedByID,
-		ReviewedByID:  inv.ReviewedByID,
-		ReviewNote:    inv.ReviewNote,
+		ID:                   inv.ID,
+		Email:                inv.Email,
+		Status:               string(inv.Status),
+		Handle:               inv.Handle,
+		DemozooID:            inv.DemozooID,
+		Reason:               inv.Reason,
+		Token:                inv.Token,
+		ExpiresAt:            inv.ExpiresAt,
+		Notes:                inv.Notes,
+		CoCAccepted:          inv.CoCAccepted,
+		CoCAcceptedAt:        inv.CoCAcceptedAt,
+		InvitedByID:          inv.InvitedByID,
+		ReviewedByID:         inv.ReviewedByID,
+		ReviewNote:           inv.ReviewNote,
+		OpenIDAccountCreated: inv.OpenIDAccountCreated,
+		SlackInvited:         inv.SlackInvited,
 	}
 }
 
 func toDomainInvite(db *dbInvite) *domain.Invite {
 	return &domain.Invite{
-		ID:            db.ID,
-		Email:         db.Email,
-		Status:        domain.InviteStatus(db.Status),
-		Handle:        db.Handle,
-		DemozooID:     db.DemozooID,
-		Reason:        db.Reason,
-		Token:         db.Token,
-		ExpiresAt:     db.ExpiresAt,
-		Notes:         db.Notes,
-		CoCAccepted:   db.CoCAccepted,
-		CoCAcceptedAt: db.CoCAcceptedAt,
-		InvitedByID:   db.InvitedByID,
-		ReviewedByID:  db.ReviewedByID,
-		ReviewNote:    db.ReviewNote,
+		ID:                   db.ID,
+		Email:                db.Email,
+		Status:               domain.InviteStatus(db.Status),
+		Handle:               db.Handle,
+		DemozooID:            db.DemozooID,
+		Reason:               db.Reason,
+		Token:                db.Token,
+		ExpiresAt:            db.ExpiresAt,
+		Notes:                db.Notes,
+		CoCAccepted:          db.CoCAccepted,
+		CoCAcceptedAt:        db.CoCAcceptedAt,
+		InvitedByID:          db.InvitedByID,
+		ReviewedByID:         db.ReviewedByID,
+		ReviewNote:           db.ReviewNote,
+		OpenIDAccountCreated: db.OpenIDAccountCreated,
+		SlackInvited:         db.SlackInvited,
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/potibm/crewapparat/templates"
 )
 
-const inviteLinkSubject = "You are invited"
+const inviteLinkSubject = "You are invited as an organizer to %s."
 
 type InviteLinkData struct {
 	EventName string
@@ -32,7 +32,7 @@ func (mailer *Mailer) SendInviteLink(to string, data InviteLinkData) error {
 		return fmt.Errorf("failed to execute email template: %w", err)
 	}
 
-	return mailer.SendMail(to, inviteLinkSubject, body.String())
+	return mailer.SendMail(to, fmt.Sprintf(inviteLinkSubject, data.EventName), body.String())
 }
 
 const inviteSubmittedSubject = "We received your submission"

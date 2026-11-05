@@ -33,6 +33,10 @@ type Invite struct {
 	// Filled in by the reviewing admin.
 	ReviewNote string `json:"review_note,omitempty"`
 
+	// Tracking fields for onboarding steps.
+	OpenIDAccountCreated bool `json:"openid_account_created"`
+	SlackInvited         bool `json:"slack_invited"`
+
 	// Token is the magic-link credential. It travels in the invitation URL and
 	// is validated when the link is opened.
 	Token     string    `json:"-"`

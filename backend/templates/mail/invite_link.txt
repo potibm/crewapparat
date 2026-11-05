@@ -3,6 +3,6 @@ You are invited to {{ .EventName }}.
 Open the following link to complete your invitation:
 {{ .Link }}
 
-This link expires on {{ .ExpiresAt }}.
+This link expires on {{ .ExpiresAt.Format "January 2, 2006" }}.
 
 {{ template "footer" . }}

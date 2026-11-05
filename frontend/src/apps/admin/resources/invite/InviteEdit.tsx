@@ -2,6 +2,7 @@ import {
   Edit,
   SimpleForm,
   TextInput,
+  TextField,
   usePermissions,
   FormDataConsumer,
   useUpdate,
@@ -9,6 +10,7 @@ import {
   useRedirect,
   useGetRecordId,
   required,
+  BooleanInput,
 } from "react-admin";
 import { Alert, Button, Stack } from "@mui/material";
 import { DemozooScenerInput } from "../organizer/DemozooScenerInput";
@@ -54,6 +56,8 @@ const InviteEdit = () => {
           reason: formData.reason,
           status,
           review_note: formData.review_note,
+          openid_account_created: formData.openid_account_created,
+          slack_invited: formData.slack_invited,
         },
       },
       {
@@ -86,8 +90,17 @@ const InviteEdit = () => {
         <TextInput source="handle" validate={required()} />
         <DemozooScenerInput />
         <TextInput source="reason" multiline />
+        <TextField source="notes" />
         {isAdmin ? (
           <>
+            <BooleanInput
+              source="openid_account_created"
+              label="OpenID account created (id.evoke.eu)"
+            />
+            <BooleanInput
+              source="slack_invited"
+              label="Invited to Slack (evoke-eu.slack.com/admin)"
+            />
             <TextInput source="review_note" multiline />
             <FormDataConsumer>
               {({ formData }) => (
@@ -110,7 +123,13 @@ const InviteEdit = () => {
               )}
             </FormDataConsumer>
           </>
-        ) : null}
+        ) : (
+          <>
+            <TextField source="openid_account_created" />
+            <TextField source="slack_invited" />
+            <TextField source="review_note" />
+          </>
+        )}
       </SimpleForm>
     </Edit>
   );

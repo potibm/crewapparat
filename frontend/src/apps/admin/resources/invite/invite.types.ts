@@ -10,6 +10,8 @@ export interface InviteRecord extends RaRecord {
   demozoo_id?: number;
   reason?: string;
   review_note?: string;
+  openid_account_created?: boolean;
+  slack_invited?: boolean;
   provided_name?: string;
   provided_phone?: string;
   notes?: string;
