@@ -19,6 +19,7 @@ import {
   applyShiftStatus,
   buildSchedule,
   nextShiftStatus,
+  parseShiftStart,
   shiftStatus,
   type ShiftBlock,
   type ShiftStatus,
@@ -194,18 +195,25 @@ export const ShiftSchedule = ({
                     : null;
                   const hourEvents = (timetableEvents ?? []).filter((event) => {
                     if (!hourStart || !hourEnd) return false;
-                    const start = new Date(event.start_time).getTime();
-                    const end = event.end_time
-                      ? new Date(event.end_time).getTime()
-                      : start;
+                    const eventStart = parseShiftStart(event.start_time);
+                    if (!eventStart) return false;
+                    const eventEnd = event.end_time
+                      ? parseShiftStart(event.end_time)
+                      : null;
+                    const start = eventStart.getTime();
+                    const end = eventEnd ? eventEnd.getTime() : start;
                     return start < hourEnd.getTime() && end > hourStart.getTime();
                   });
                   const timetableTooltip = hourEvents
                     .map((event) => {
-                      const start = timeFormat.format(new Date(event.start_time));
-                      const end = event.end_time
-                        ? timeFormat.format(new Date(event.end_time))
+                      const eventStart = parseShiftStart(event.start_time);
+                      const eventEnd = event.end_time
+                        ? parseShiftStart(event.end_time)
+                        : null;
+                      const start = eventStart
+                        ? timeFormat.format(eventStart)
                         : "";
+                      const end = eventEnd ? timeFormat.format(eventEnd) : "";
                       return end
                         ? `${event.title} (${start}–${end})`
                         : `${event.title} (${start})`;
