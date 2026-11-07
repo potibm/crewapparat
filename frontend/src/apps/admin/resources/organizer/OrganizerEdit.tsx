@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   Edit,
-  SimpleForm,
+  TabbedForm,
+  FormTab,
   TextInput,
   AutocompleteArrayInput,
   AutocompleteInput,
@@ -15,7 +16,7 @@ import {
   useNotify,
   useGetList,
 } from "react-admin";
-import { Box, Card, CardContent, CardHeader, Link, Stack } from "@mui/material";
+import { Box, Link, Stack } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useAppConfig } from "@core/config/useConfig";
 import { DemozooScenerInput } from "./DemozooScenerInput";
@@ -83,15 +84,13 @@ const OrganizerEditForm = () => {
 
   return (
     <>
-      <SimpleForm
+      <TabbedForm
         defaultValues={(rec: { avatar_url?: string }) => ({
           media_upload: rec?.avatar_url ? { src: rec.avatar_url } : undefined,
         })}
       >
-        <Card sx={{ width: "100%", mb: 2 }}>
-          <CardHeader title="Profile" />
-          <CardContent>
-            <Stack spacing={2}>
+        <FormTab label="Profile">
+          <Stack spacing={2}>
               <TextInput source="handle" />
               <TextInput source="realname" />
               <AutocompleteInput
@@ -134,13 +133,10 @@ const OrganizerEditForm = () => {
                 }}
               />
             </Stack>
-          </CardContent>
-        </Card>
+        </FormTab>
 
-        <Card sx={{ width: "100%", mb: 2 }}>
-          <CardHeader title="Contact" />
-          <CardContent>
-            <Stack spacing={2}>
+        <FormTab label="Contact">
+          <Stack spacing={2}>
               <TextInput source="email" />
               <TextInput source="phone" />
               <TextInput
@@ -221,29 +217,27 @@ const OrganizerEditForm = () => {
               />
               <DemozooScenerInput />
             </Stack>
-          </CardContent>
-        </Card>
+        </FormTab>
 
-        <Card sx={{ width: "100%", mb: 2 }}>
-          <CardHeader title="Avatar" />
-          <CardContent>
-            <Stack spacing={2}>
-              <ImageInput
-                source="media_upload"
-                accept={{ "image/*": [".png", ".jpg", ".jpeg"] }}
-                label="Avatar"
-                placeholder={<p>Drag image here or click to upload</p>}
-              >
-                <ImageField source="src" title="title" />
-              </ImageInput>
-            </Stack>
-          </CardContent>
-        </Card>
-      </SimpleForm>
+        <FormTab label="Avatar">
+          <Stack spacing={2}>
+            <ImageInput
+              source="media_upload"
+              accept={{ "image/*": [".png", ".jpg", ".jpeg"] }}
+              label="Avatar"
+              placeholder={<p>Drag image here or click to upload</p>}
+            >
+              <ImageField source="src" title="title" />
+            </ImageInput>
+          </Stack>
+        </FormTab>
 
-      {activeYear && record?.id && (
-        <ParticipationSection organizerId={record.id} activeYear={activeYear} />
-      )}
+        {activeYear && record?.id && (
+          <FormTab label="Participation">
+            <ParticipationSection organizerId={record.id} activeYear={activeYear} />
+          </FormTab>
+        )}
+      </TabbedForm>
     </>
   );
 };
