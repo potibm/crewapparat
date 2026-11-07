@@ -111,8 +111,8 @@ func (s *Server) UpdateParticipation(c *gin.Context) {
 		return
 	}
 
-	if s.cfg.App.TShirtDeadline != "" {
-		if deadline, err := time.Parse(time.RFC3339, s.cfg.App.TShirtDeadline); err == nil &&
+	if s.cfg.TShirtDeadline != "" {
+		if deadline, err := time.Parse(time.RFC3339, s.cfg.TShirtDeadline); err == nil &&
 			time.Now().UTC().After(deadline) &&
 			(participation.TShirtSize != existing.TShirtSize ||
 				participation.AdditionalPaidShirt != existing.AdditionalPaidShirt) {

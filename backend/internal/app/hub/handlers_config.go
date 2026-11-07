@@ -40,7 +40,7 @@ func mapToPublicConfig(cfg *config.Config) AppConfigPublic {
 		PronounOptions:     cfg.App.PronounOptions,
 		LanguageOptions:    cfg.App.LanguageOptions,
 		TShirtSizeOptions:  cfg.App.TShirtSizeOptions,
-		TShirtDeadline:     cfg.App.TShirtDeadline,
+		TShirtDeadline:     cfg.TShirtDeadline,
 		Shift:              cfg.Shift,
 	}
 }

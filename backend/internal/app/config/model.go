@@ -31,7 +31,6 @@ type AppConfig struct {
 	PronounOptions    []string `json:"pronoun_options"     mapstructure:"pronoun_options"`
 	LanguageOptions   []string `json:"language_options"    mapstructure:"language_options"`
 	TShirtSizeOptions []string `json:"tshirt_size_options" mapstructure:"tshirt_size_options"`
-	TShirtDeadline    string   `json:"tshirt_deadline"     mapstructure:"tshirt_deadline"     validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	Port              int      `mapstructure:"port"        validate:"required,gt=0,lte=65535"`
 }
 
@@ -77,10 +76,11 @@ type MailerConfig struct {
 }
 
 type Config struct {
-	App    AppConfig     `mapstructure:"app"`
-	Sentry SentryConfig  `mapstructure:"sentry"`
-	Format FormatConfig  `mapstructure:"format"`
-	Shift  ShiftConfig   `mapstructure:"shift"`
-	Auth   *AuthConfig   `mapstructure:"auth"   validate:"omitempty"`
-	Mailer *MailerConfig `mapstructure:"mailer" validate:"omitempty"`
+	App            AppConfig     `mapstructure:"app"`
+	Sentry         SentryConfig  `mapstructure:"sentry"`
+	Format         FormatConfig  `mapstructure:"format"`
+	Shift          ShiftConfig   `mapstructure:"shift"`
+	TShirtDeadline string        `mapstructure:"tshirt_deadline" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	Auth           *AuthConfig   `mapstructure:"auth"            validate:"omitempty"`
+	Mailer         *MailerConfig `mapstructure:"mailer"          validate:"omitempty"`
 }
