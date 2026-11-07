@@ -39,10 +39,7 @@ const ParticipationEdit = () => {
           }
           disabled={pastDeadline}
         />
-        <BooleanInput
-          source="additional_paid_shirt"
-          disabled={pastDeadline}
-        />
+        <BooleanInput source="additional_paid_shirt" disabled={pastDeadline} />
         <BooleanInput source="public_website_consent" />
       </SimpleForm>
     </Edit>
