@@ -217,39 +217,37 @@ export const ShiftSchedule = ({
                       <Box
                         sx={{
                           display: "flex",
-                          flexDirection: "column",
                           alignItems: "center",
+                          justifyContent: "center",
                           gap: 0.25,
-                          minHeight: 44,
                         }}
                       >
-                        <Box sx={{ height: 20, display: "flex", alignItems: "center" }}>
+                        <Box
+                          sx={{
+                            width: 24,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
                           {hourEvents.length > 0 && (
                             <Tooltip title={timetableTooltip}>
                               <EventIcon fontSize="small" sx={{ color: "info.main" }} />
                             </Tooltip>
                           )}
                         </Box>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            gap: 0.25,
-                          }}
-                        >
-                          {cell.blocks.map((block) => (
-                            <ShiftCell
-                              key={block.index}
-                              block={block}
-                              status={shiftStatus(
-                                block.index,
-                                preferred,
-                                unavailable,
-                              )}
-                              onToggle={() => handleToggle(block.index)}
-                            />
-                          ))}
-                        </Box>
+                        {cell.blocks.map((block) => (
+                          <ShiftCell
+                            key={block.index}
+                            block={block}
+                            status={shiftStatus(
+                              block.index,
+                              preferred,
+                              unavailable,
+                            )}
+                            onToggle={() => handleToggle(block.index)}
+                          />
+                        ))}
                       </Box>
                     </TableCell>
                   );
