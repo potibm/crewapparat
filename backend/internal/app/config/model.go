@@ -76,11 +76,19 @@ type MailerConfig struct {
 }
 
 type Config struct {
-	App            AppConfig     `mapstructure:"app"`
-	Sentry         SentryConfig  `mapstructure:"sentry"`
-	Format         FormatConfig  `mapstructure:"format"`
-	Shift          ShiftConfig   `mapstructure:"shift"`
-	TShirtDeadline string        `mapstructure:"tshirt_deadline" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
-	Auth           *AuthConfig   `mapstructure:"auth"            validate:"omitempty"`
-	Mailer         *MailerConfig `mapstructure:"mailer"          validate:"omitempty"`
+	App            AppConfig       `mapstructure:"app"`
+	Sentry         SentryConfig    `mapstructure:"sentry"`
+	Format         FormatConfig    `mapstructure:"format"`
+	Shift          ShiftConfig     `mapstructure:"shift"`
+	TShirtDeadline string          `mapstructure:"tshirt_deadline" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	Timetable      TimetableConfig `mapstructure:"timetable"`
+	Auth           *AuthConfig     `mapstructure:"auth"            validate:"omitempty"`
+	Mailer         *MailerConfig   `mapstructure:"mailer"          validate:"omitempty"`
+}
+
+type TimetableConfig struct {
+	Enabled       bool   `mapstructure:"enabled"`
+	StreamName    string `mapstructure:"stream_name"`
+	ConsumerGroup string `mapstructure:"consumer_group"`
+	ConsumerName  string `mapstructure:"consumer_name"`
 }

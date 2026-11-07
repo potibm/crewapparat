@@ -14,6 +14,7 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import CancelIcon from "@mui/icons-material/Cancel";
+import EventIcon from "@mui/icons-material/Event";
 import {
   applyShiftStatus,
   buildSchedule,
@@ -23,6 +24,13 @@ import {
   type ShiftStatus,
 } from "./shiftSchedule.logic";
 
+export interface TimetableOverlayEvent {
+  id: number;
+  title: string;
+  start_time: string;
+  end_time: string;
+}
+
 export interface ShiftScheduleProps {
   /** ISO 8601 start of block 0. The wall clock is used, the offset is ignored. */
   start: string;
@@ -30,6 +38,7 @@ export interface ShiftScheduleProps {
   preferred: number[];
   unavailable: number[];
   onChange: (preferred: number[], unavailable: number[]) => void;
+  timetableEvents?: TimetableOverlayEvent[];
 }
 
 const PREFERRED_COLOR = "#e91e63";
@@ -68,26 +77,58 @@ const ShiftCell = ({
   block,
   status,
   onToggle,
+  timetableEvents,
 }: {
   block: ShiftBlock;
   status: ShiftStatus;
   onToggle: () => void;
+  timetableEvents?: TimetableOverlayEvent[];
 }) => {
   const config = statusConfig[status];
   const Icon = config.icon;
   const time = timeFormat.format(block.date);
 
+  const blockStart = block.date.getTime();
+  const blockEnd = blockStart + 30 * 60 * 1000;
+  const overlapping = (timetableEvents ?? []).filter((event) => {
+    const start = new Date(event.start_time).getTime();
+    const end = event.end_time
+      ? new Date(event.end_time).getTime()
+      : start + 30 * 60 * 1000;
+    return start < blockEnd && end > blockStart;
+  });
+
+  const timetableTooltip =
+    overlapping.length > 0
+      ? overlapping
+          .map((event) => {
+            const start = timeFormat.format(new Date(event.start_time));
+            const end = event.end_time
+              ? timeFormat.format(new Date(event.end_time))
+              : "";
+            return end ? `${event.title} (${start}–${end})` : `${event.title} (${start})`;
+          })
+          .join("\n")
+      : "";
+
   return (
-    <Tooltip title={`${time} · ${config.label} — click to ${config.next}`}>
-      <IconButton
-        size="small"
-        onClick={onToggle}
-        aria-label={`${time} ${config.label}`}
-        sx={{ p: 0.25 }}
-      >
-        <Icon fontSize="small" sx={{ color: config.color }} />
-      </IconButton>
-    </Tooltip>
+    <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.25 }}>
+      <Tooltip title={`${time} · ${config.label} — click to ${config.next}`}>
+        <IconButton
+          size="small"
+          onClick={onToggle}
+          aria-label={`${time} ${config.label}`}
+          sx={{ p: 0.25 }}
+        >
+          <Icon fontSize="small" sx={{ color: config.color }} />
+        </IconButton>
+      </Tooltip>
+      {overlapping.length > 0 && (
+        <Tooltip title={timetableTooltip}>
+          <EventIcon fontSize="small" sx={{ color: "info.main" }} />
+        </Tooltip>
+      )}
+    </Box>
   );
 };
 
@@ -123,6 +164,7 @@ export const ShiftSchedule = ({
   preferred,
   unavailable,
   onChange,
+  timetableEvents,
 }: ShiftScheduleProps) => {
   const { days, rows } = buildSchedule(start, blockCount);
 
@@ -186,6 +228,7 @@ export const ShiftSchedule = ({
                             unavailable,
                           )}
                           onToggle={() => handleToggle(block.index)}
+                          timetableEvents={timetableEvents}
                         />
                       ))}
                     </Box>

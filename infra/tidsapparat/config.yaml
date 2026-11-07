@@ -1,0 +1,35 @@
+app:
+    cors_allow_origins: https://tidsapparat.crewapparat.test
+    db_filename: tidsapparat
+    frontend_url: "https://tidsapparat.crewapparat.test"
+    log_format: json
+    log_level: debug
+    version: dev
+    redis_url: redis://crewapparat_redis:6379/0
+
+sentry:
+    dsn: ""
+    environment: development
+    replay_error_sample_rate: 0.1
+    replay_session_sample_rate: 0.1
+    trace_sample_rate: 0.1
+
+format:
+    date:
+        locale: de-DE
+        options:
+            hour: 2-digit
+            minute: 2-digit
+            weekday: short
+
+party:
+    default_address: Köln, Deutschland
+    timezone: Europe/Berlin
+
+event_durations:
+    - 0
+    - 15
+    - 30
+    - 60
+    - 90
+    - 120

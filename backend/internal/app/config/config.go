@@ -61,6 +61,16 @@ func InitViper() {
 	viper.SetDefault("shift.start", DefaultShiftStart)
 	viper.SetDefault("shift.block_count", DefaultShiftBlockCount)
 
+	viper.SetDefault("timetable.enabled", false)
+	viper.SetDefault("timetable.stream_name", "party:timetable:events")
+	viper.SetDefault("timetable.consumer_group", "crewapparat_timetable")
+	viper.SetDefault("timetable.consumer_name", "instance_1")
+
+	viper.SetDefault("timetable.enabled", false)
+	viper.SetDefault("timetable.stream_name", "party:timetable:events")
+	viper.SetDefault("timetable.consumer_group", "crewapparat_timetable")
+	viper.SetDefault("timetable.consumer_name", "instance_1")
+
 	viper.SetDefault("sentry.dsn", "")
 	viper.SetDefault("sentry.trace_sample_rate", DefaultTraceSampleRate)
 

@@ -37,6 +37,7 @@ type Config struct {
 	EventYearRepo      repository.EventYearRepository
 	TeamRepo           repository.TeamRepository
 	ParticipationRepo  repository.ParticipationRepository
+	TimetableEventRepo repository.TimetableRepository
 	InviteRepo         repository.InviteRepository
 	InviteWorkflowRepo repository.InviteWorkflowRepository
 	CodeOfConductRepo  repository.CodeOfConductRepository
@@ -62,6 +63,7 @@ type Server struct {
 	eventYearRepo      repository.EventYearRepository
 	teamRepo           repository.TeamRepository
 	participationRepo  repository.ParticipationRepository
+	timetableEventRepo repository.TimetableRepository
 	inviteRepo         repository.InviteRepository
 	inviteWorkflowRepo repository.InviteWorkflowRepository
 	codeOfConductRepo  repository.CodeOfConductRepository
@@ -89,6 +91,7 @@ func NewServer(cfg Config) (*Server, error) {
 		eventYearRepo:       cfg.EventYearRepo,
 		teamRepo:            cfg.TeamRepo,
 		participationRepo:   cfg.ParticipationRepo,
+		timetableEventRepo:  cfg.TimetableEventRepo,
 		inviteRepo:          cfg.InviteRepo,
 		inviteWorkflowRepo:  cfg.InviteWorkflowRepo,
 		codeOfConductRepo:   cfg.CodeOfConductRepo,
