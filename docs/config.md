@@ -39,6 +39,7 @@ Core server settings, database paths, and basic network policies.
 | `pronoun_options` | list of strings | no | – | Available pronoun options for organizers. |
 | `language_options` | list of strings | no | – | Available language options. |
 | `tshirt_size_options` | list of strings | no | – | Available T-shirt sizes. |
+| `tshirt_deadline` | string (ISO 8601) | no | – | After this timestamp T-shirt size/additional paid shirt can no longer be changed. |
 | `port` | int | yes | `3401` | HTTP listen port (1–65535). |
 
 ### `auth`

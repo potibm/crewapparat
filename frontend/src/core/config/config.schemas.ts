@@ -28,6 +28,7 @@ export const AppConfigSchema = z.object({
   tshirt_size_options: z
     .array(z.string())
     .default(["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL"]),
+  tshirt_deadline: z.string().optional(),
   shift: z
     .object({
       start: z.string().default(""),

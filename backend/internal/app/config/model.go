@@ -31,6 +31,7 @@ type AppConfig struct {
 	PronounOptions    []string `json:"pronoun_options"     mapstructure:"pronoun_options"`
 	LanguageOptions   []string `json:"language_options"    mapstructure:"language_options"`
 	TShirtSizeOptions []string `json:"tshirt_size_options" mapstructure:"tshirt_size_options"`
+	TShirtDeadline    string   `json:"tshirt_deadline"     mapstructure:"tshirt_deadline"     validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	Port              int      `mapstructure:"port"        validate:"required,gt=0,lte=65535"`
 }
 
