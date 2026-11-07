@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -108,6 +109,17 @@ func (s *Server) UpdateParticipation(c *gin.Context) {
 		respondWithConflictProblem(c, "participation status cannot be reset to pending")
 
 		return
+	}
+
+	if s.cfg.TShirtDeadline != "" {
+		if deadline, err := time.Parse(time.RFC3339, s.cfg.TShirtDeadline); err == nil &&
+			time.Now().UTC().After(deadline) &&
+			(participation.TShirtSize != existing.TShirtSize ||
+				participation.AdditionalPaidShirt != existing.AdditionalPaidShirt) {
+			respondWithConflictProblem(c, "t-shirt changes are no longer allowed after the deadline")
+
+			return
+		}
 	}
 
 	if err := s.participationRepo.Update(c.Request.Context(), &participation); err != nil {

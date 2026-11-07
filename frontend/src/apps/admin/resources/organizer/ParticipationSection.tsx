@@ -50,6 +50,13 @@ export const ParticipationSection = ({
   const dataProvider = useDataProvider();
   const notify = useNotify();
   const config = useAppConfig();
+  const tshirtDeadline = config.tshirt_deadline;
+  const [tshirtPastDeadline] = useState(
+    () =>
+      !!tshirtDeadline &&
+      !Number.isNaN(Date.parse(tshirtDeadline)) &&
+      Date.now() > Date.parse(tshirtDeadline),
+  );
 
   const { data: participations, refetch: refetchParticipations } = useGetList(
     "participations",
@@ -242,6 +249,7 @@ export const ParticipationSection = ({
               <Autocomplete
                 size="small"
                 fullWidth
+                disabled={tshirtPastDeadline}
                 options={tshirtSizeChoices.map((c) => c.id)}
                 value={partTShirt || null}
                 onChange={(_event, newValue) => setPartTShirt(newValue ?? "")}
@@ -250,6 +258,11 @@ export const ParticipationSection = ({
                   <TextField
                     {...params}
                     label="T-Shirt size"
+                    helperText={
+                      tshirtDeadline
+                        ? `Changes allowed until ${new Date(tshirtDeadline).toLocaleString()}`
+                        : undefined
+                    }
                     inputRef={tshirtInputRef}
                   />
                 )}
@@ -258,6 +271,7 @@ export const ParticipationSection = ({
                 control={
                   <Checkbox
                     checked={partAdditionalPaid}
+                    disabled={tshirtPastDeadline}
                     onChange={(e) => setPartAdditionalPaid(e.target.checked)}
                   />
                 }

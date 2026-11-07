@@ -13,6 +13,7 @@ sentry:
   replay_error_sample_rate: 0.1
   replay_session_sample_rate: 0.1
   trace_sample_rate: 0.1
+# tshirt_deadline: "2026-08-01T23:59:00+02:00"
 shift:
   # Block 0 starts on Friday at 16:00; 90 half-hour blocks cover Fri-Sun.
   start: "2026-08-07T16:00:00+02:00"
