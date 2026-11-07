@@ -2,6 +2,7 @@ package hub
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -30,5 +31,6 @@ func (s *Server) ListTimetableEvents(c *gin.Context) {
 		return
 	}
 
+	c.Header("X-Total-Count", strconv.Itoa(len(items)))
 	c.JSON(http.StatusOK, items)
 }
