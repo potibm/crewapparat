@@ -170,6 +170,7 @@ var apiOnlyFields = map[string]bool{
 	"CurrentParticipationStatus": true,
 	"CurrentParticipationTeams":  true,
 	"AcceptedCount":              true,
+	"InvitedByName":              true,
 }
 
 // infrastructureFields come from TimestampModel and AuditModel. They exist

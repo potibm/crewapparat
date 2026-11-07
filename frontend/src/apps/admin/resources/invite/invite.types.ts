@@ -7,6 +7,7 @@ export interface InviteRecord extends RaRecord {
     "sent" | "pending_approval" | "pending_review" | "approved" | "rejected";
   expires_at: string;
   handle?: string;
+  invited_by_name?: string;
   demozoo_id?: number;
   reason?: string;
   review_note?: string;

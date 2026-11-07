@@ -18,11 +18,12 @@ type inviteRepository struct {
 }
 
 var inviteSortColumns = map[string]string{
-	"id":      "id",
-	"email":   "email",
-	"status":  "status",
-	"expires": "expires_at",
-	"created": "created_at",
+	"id":         "id",
+	"email":      "email",
+	"handle":     "handle",
+	"status":     "status",
+	"expires_at": "expires_at",
+	"created_at": "created_at",
 }
 
 func (s *Store) NewInviteRepository() repository.InviteRepository {

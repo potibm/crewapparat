@@ -47,8 +47,9 @@ type Invite struct {
 	CoCAccepted   bool       `json:"coc_accepted"`
 	CoCAcceptedAt *time.Time `json:"coc_accepted_at,omitempty"`
 
-	InvitedByID  uuid.UUID  `json:"invited_by_id"`
-	ReviewedByID *uuid.UUID `json:"reviewed_by_id,omitempty"`
+	InvitedByID     uuid.UUID  `json:"invited_by_id"`
+	InvitedByName   string     `json:"invited_by_name,omitempty"`
+	ReviewedByID    *uuid.UUID `json:"reviewed_by_id,omitempty"`
 }
 
 // NewInviteToken returns a fresh magic-link token.

@@ -2,16 +2,15 @@ import {
   Edit,
   SimpleForm,
   TextInput,
-  TextField,
+  BooleanInput,
   usePermissions,
   FormDataConsumer,
   useUpdate,
   useNotify,
   useRedirect,
   useGetRecordId,
-  BooleanInput,
 } from "react-admin";
-import { Alert, Button, Stack } from "@mui/material";
+import { Alert, Button, Stack, Typography } from "@mui/material";
 
 const statusMessages: Record<
   string,
@@ -74,60 +73,151 @@ const InviteEdit = () => {
 
   return (
     <Edit>
-      <SimpleForm>
+      <SimpleForm toolbar={false}>
         <FormDataConsumer>
           {({ formData }) => {
-            const info = statusMessages[formData?.status ?? ""] ?? {
+            const status = formData?.status ?? "";
+            const showSubmission =
+              status === "pending_review" ||
+              status === "approved" ||
+              status === "rejected";
+            const info = statusMessages[status] ?? {
               severity: "info",
               text: "Status unknown.",
             };
-            return <Alert severity={info.severity}>{info.text}</Alert>;
+            return (
+              <>
+                <Alert
+                  severity={info.severity}
+                  sx={{
+                    width: "100%",
+                    border: "1px solid",
+                    borderColor: "info.light",
+                    borderRadius: 1,
+                  }}
+                >
+                  {info.text}
+                </Alert>
+
+                <Typography variant="subtitle2" sx={{ mt: 2 }}>
+                  Invitation data (from the inviter)
+                </Typography>
+                <TextInput source="email" disabled />
+                <TextInput source="handle" disabled />
+                <TextInput source="demozoo_id" disabled />
+                <TextInput
+                  source="reason"
+                  disabled
+                  multiline
+                  label="Reason (from the inviter)"
+                />
+
+                {showSubmission && (
+                  <>
+                    <Typography variant="subtitle2" sx={{ mt: 2 }}>
+                      Submission (from the invitee)
+                    </Typography>
+                    <TextInput
+                      source="notes"
+                      disabled
+                      multiline
+                      label="Notes (from the invitee)"
+                    />
+                    <Typography variant="body2">
+                      Code of Conduct accepted:{" "}
+                      {formData?.coc_accepted ? "Yes" : "No"}
+                    </Typography>
+                  </>
+                )}
+
+                {(status === "pending_approval" ||
+                  status === "sent" ||
+                  showSubmission) && (
+                  <>
+                    <Typography variant="subtitle2" sx={{ mt: 2 }}>
+                      Review (admin)
+                    </Typography>
+                    <TextInput
+                      source="review_note"
+                      multiline
+                      label="Review note (from the admin)"
+                      disabled={!isAdmin || status === "sent"}
+                    />
+                  </>
+                )}
+
+                {isAdmin && (
+                  <FormDataConsumer>
+                    {({ formData: inner }) => (
+                      <Stack direction="row" spacing={1} sx={{ mt: 2, mb: 2 }}>
+                        {inner?.status === "pending_approval" && (
+                          <Button
+                            variant="contained"
+                            color="success"
+                            onClick={() => changeStatus("sent", inner ?? {})}
+                          >
+                            Approve &amp; Send
+                          </Button>
+                        )}
+                        {inner?.status === "pending_review" && (
+                          <Button
+                            variant="contained"
+                            color="success"
+                            onClick={() =>
+                              changeStatus("approved", inner ?? {})
+                            }
+                          >
+                            Approve &amp; create organizer
+                          </Button>
+                        )}
+                        {(inner?.status === "pending_approval" ||
+                          inner?.status === "pending_review") && (
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => changeStatus("rejected", inner ?? {})}
+                          >
+                            Reject
+                          </Button>
+                        )}
+                      </Stack>
+                    )}
+                  </FormDataConsumer>
+                )}
+
+                {isAdmin && status === "approved" && (
+                  <>
+                    <Typography variant="subtitle2" sx={{ mt: 2 }}>
+                      Onboarding checklist (manual)
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ mb: 1, display: "block" }}
+                    >
+                      These steps do not change the invite status.
+                    </Typography>
+                    <BooleanInput
+                      source="openid_account_created"
+                      label="OpenID account created (id.evoke.eu)"
+                    />
+                    <BooleanInput
+                      source="slack_invited"
+                      label="Invited to Slack (evoke-eu.slack.com/admin)"
+                    />
+                    <Button
+                      variant="contained"
+                      sx={{ mt: 1 }}
+                      onClick={() => changeStatus(status, formData ?? {})}
+                    >
+                      Save changes
+                    </Button>
+                  </>
+                )}
+              </>
+            );
           }}
         </FormDataConsumer>
-        <TextField source="email" />
-        <TextField source="handle" />
-        <TextField source="demozoo_id" />
-        <TextField source="reason" />
-        <TextField source="notes" />
-        {isAdmin ? (
-          <>
-            <BooleanInput
-              source="openid_account_created"
-              label="OpenID account created (id.evoke.eu)"
-            />
-            <BooleanInput
-              source="slack_invited"
-              label="Invited to Slack (evoke-eu.slack.com/admin)"
-            />
-            <TextInput source="review_note" multiline />
-            <FormDataConsumer>
-              {({ formData }) => (
-                <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    onClick={() => changeStatus("sent", formData ?? {})}
-                  >
-                    Approve &amp; Send
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => changeStatus("rejected", formData ?? {})}
-                  >
-                    Reject
-                  </Button>
-                </Stack>
-              )}
-            </FormDataConsumer>
-          </>
-        ) : (
-          <>
-            <TextField source="openid_account_created" />
-            <TextField source="slack_invited" />
-            <TextField source="review_note" />
-          </>
-        )}
       </SimpleForm>
     </Edit>
   );
