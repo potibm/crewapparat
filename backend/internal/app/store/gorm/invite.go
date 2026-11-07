@@ -26,9 +26,10 @@ type dbInvite struct {
 	ExpiresAt time.Time `gorm:"column:expires_at"`
 
 	// Submitted through the public form by the invitee.
-	Notes         string     `gorm:"column:notes"`
-	CoCAccepted   bool       `gorm:"default:false;column:coc_accepted"`
-	CoCAcceptedAt *time.Time `gorm:"column:coc_accepted_at"`
+	Notes              string     `gorm:"column:notes"`
+	CoCAccepted        bool       `gorm:"default:false;column:coc_accepted"`
+	CoCAcceptedAt      *time.Time `gorm:"column:coc_accepted_at"`
+	CoCAcceptedVersion string     `gorm:"column:coc_accepted_version"`
 
 	InvitedByID  uuid.UUID  `gorm:"index;column:invited_by_id"`
 	ReviewedByID *uuid.UUID `gorm:"column:reviewed_by_id"`
@@ -60,6 +61,7 @@ func fromDomainInvite(inv *domain.Invite) *dbInvite {
 		Notes:                inv.Notes,
 		CoCAccepted:          inv.CoCAccepted,
 		CoCAcceptedAt:        inv.CoCAcceptedAt,
+		CoCAcceptedVersion:   inv.CoCAcceptedVersion,
 		InvitedByID:          inv.InvitedByID,
 		ReviewedByID:         inv.ReviewedByID,
 		ReviewNote:           inv.ReviewNote,
@@ -81,6 +83,7 @@ func toDomainInvite(db *dbInvite) *domain.Invite {
 		Notes:                db.Notes,
 		CoCAccepted:          db.CoCAccepted,
 		CoCAcceptedAt:        db.CoCAcceptedAt,
+		CoCAcceptedVersion:   db.CoCAcceptedVersion,
 		InvitedByID:          db.InvitedByID,
 		ReviewedByID:         db.ReviewedByID,
 		ReviewNote:           db.ReviewNote,

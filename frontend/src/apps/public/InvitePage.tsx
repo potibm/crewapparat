@@ -38,16 +38,21 @@ const InviteForm = () => {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${API_HOST}/api/invites/${token}`)
+    const controller = new AbortController();
+    fetch(`${API_HOST}/api/invites/${token}`, { signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error(await res.text());
         return res.json();
       })
       .then((data) => setInvite(data))
-      .catch((e) =>
-        setError(e instanceof Error ? e.message : "Failed to load invite"),
-      )
-      .finally(() => setLoading(false));
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setError(e instanceof Error ? e.message : "Failed to load invite");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [token]);
 
   const submit = async () => {
@@ -60,6 +65,7 @@ const InviteForm = () => {
         body: JSON.stringify({
           notes,
           coc_accepted: cocAccepted,
+          coc_version: invite?.code_of_conduct_version,
         }),
       });
       if (!res.ok) throw new Error(await res.text());

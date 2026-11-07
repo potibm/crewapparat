@@ -43,9 +43,10 @@ type Invite struct {
 	ExpiresAt time.Time `json:"expires_at"`
 
 	// Submitted through the public form by the invitee.
-	Notes         string     `json:"notes,omitempty"`
-	CoCAccepted   bool       `json:"coc_accepted"`
-	CoCAcceptedAt *time.Time `json:"coc_accepted_at,omitempty"`
+	Notes               string     `json:"notes,omitempty"`
+	CoCAccepted         bool       `json:"coc_accepted"`
+	CoCAcceptedAt       *time.Time `json:"coc_accepted_at,omitempty"`
+	CoCAcceptedVersion  string     `json:"coc_accepted_version,omitempty"`
 
 	InvitedByID     uuid.UUID  `json:"invited_by_id"`
 	InvitedByName   string     `json:"invited_by_name,omitempty"`

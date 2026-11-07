@@ -80,7 +80,7 @@ func TestInviteRepository_SubmitForReview(t *testing.T) {
 	invite := newInviteFixture(t, store, nil)
 	require.NoError(t, repo.Create(ctx, invite))
 
-	require.NoError(t, workflowRepo.SubmitForReview(ctx, invite.ID, "hier notiert", true))
+	require.NoError(t, workflowRepo.SubmitForReview(ctx, invite.ID, "hier notiert", true, "1.0.0"))
 
 	loaded, err := repo.GetByID(ctx, invite.ID)
 	require.NoError(t, err)
@@ -98,7 +98,7 @@ func TestInviteRepository_Review(t *testing.T) {
 
 	invite := newInviteFixture(t, store, nil)
 	require.NoError(t, repo.Create(ctx, invite))
-	require.NoError(t, workflowRepo.SubmitForReview(ctx, invite.ID, "", true))
+	require.NoError(t, workflowRepo.SubmitForReview(ctx, invite.ID, "", true, "1.0.0"))
 
 	reviewer := newOrganizerForParticipation(t, store)
 	require.NoError(t, workflowRepo.Review(ctx, invite.ID, domain.InviteStatusApproved, reviewer.ID))
@@ -171,7 +171,7 @@ func TestInviteRepository_PurgeExpiredBehaeltEingereichte(t *testing.T) {
 	past := time.Now().UTC().Add(-48 * time.Hour)
 	submitted := newInviteFixture(t, store, func(i *domain.Invite) { i.ExpiresAt = past })
 	require.NoError(t, repo.Create(ctx, submitted))
-	require.NoError(t, workflowRepo.SubmitForReview(ctx, submitted.ID, "", true))
+	require.NoError(t, workflowRepo.SubmitForReview(ctx, submitted.ID, "", true, "1.0.0"))
 
 	deleted, err := workflowRepo.PurgeExpired(ctx, time.Now().UTC())
 	require.NoError(t, err)

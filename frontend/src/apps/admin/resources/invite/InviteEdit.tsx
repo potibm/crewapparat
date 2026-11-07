@@ -127,6 +127,11 @@ const InviteEdit = () => {
                       Code of Conduct accepted:{" "}
                       {formData?.coc_accepted ? "Yes" : "No"}
                     </Typography>
+                    {formData?.coc_accepted_version && (
+                      <Typography variant="body2">
+                        Code of Conduct version: {formData.coc_accepted_version}
+                      </Typography>
+                    )}
                   </>
                 )}
 

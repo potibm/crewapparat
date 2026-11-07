@@ -17,4 +17,5 @@ export interface InviteRecord extends RaRecord {
   provided_phone?: string;
   notes?: string;
   coc_accepted: boolean;
+  coc_accepted_version?: string;
 }

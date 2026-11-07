@@ -79,6 +79,7 @@ func (s *Server) SubmitPublicInvite(c *gin.Context) {
 	var payload struct {
 		Notes       string `json:"notes"`
 		CoCAccepted bool   `json:"coc_accepted"`
+		CoCVersion  string `json:"coc_version"`
 	}
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -92,11 +93,19 @@ func (s *Server) SubmitPublicInvite(c *gin.Context) {
 		return
 	}
 
+	cocVersion := payload.CoCVersion
+	if cocVersion == "" && s.codeOfConductRepo != nil {
+		if coc, err := s.codeOfConductRepo.GetLatestPublished(c.Request.Context()); err == nil && coc != nil {
+			cocVersion = coc.Version
+		}
+	}
+
 	if err := s.inviteWorkflowRepo.SubmitForReview(
 		c.Request.Context(),
 		invite.ID,
 		payload.Notes,
 		payload.CoCAccepted,
+		cocVersion,
 	); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to submit invite"})
 

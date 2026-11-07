@@ -201,11 +201,13 @@ func (r *inviteRepository) SubmitForReview(
 	id uuid.UUID,
 	notes string,
 	cocAccepted bool,
+	cocVersion string,
 ) error {
 	updates := map[string]any{
-		"notes":        notes,
-		"coc_accepted": cocAccepted,
-		"status":       string(domain.InviteStatusPendingReview),
+		"notes":                 notes,
+		"coc_accepted":          cocAccepted,
+		"status":                string(domain.InviteStatusPendingReview),
+		"coc_accepted_version":  cocVersion,
 	}
 
 	if cocAccepted {
