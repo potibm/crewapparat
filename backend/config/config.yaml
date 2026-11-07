@@ -2,6 +2,7 @@ app:
   cors_allow_origins: https://crewapparat.test
   db_filename: crewapparat
   frontend_url: "https://crewapparat.test"
+  # tshirt_deadline: "2026-08-01T23:59:00+02:00"
   log_format: json
   log_level: debug
   version: dev
