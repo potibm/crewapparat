@@ -77,58 +77,26 @@ const ShiftCell = ({
   block,
   status,
   onToggle,
-  timetableEvents,
 }: {
   block: ShiftBlock;
   status: ShiftStatus;
   onToggle: () => void;
-  timetableEvents?: TimetableOverlayEvent[];
 }) => {
   const config = statusConfig[status];
   const Icon = config.icon;
   const time = timeFormat.format(block.date);
 
-  const blockStart = block.date.getTime();
-  const blockEnd = blockStart + 30 * 60 * 1000;
-  const overlapping = (timetableEvents ?? []).filter((event) => {
-    const start = new Date(event.start_time).getTime();
-    const end = event.end_time
-      ? new Date(event.end_time).getTime()
-      : start + 30 * 60 * 1000;
-    return start < blockEnd && end > blockStart;
-  });
-
-  const timetableTooltip =
-    overlapping.length > 0
-      ? overlapping
-          .map((event) => {
-            const start = timeFormat.format(new Date(event.start_time));
-            const end = event.end_time
-              ? timeFormat.format(new Date(event.end_time))
-              : "";
-            return end ? `${event.title} (${start}–${end})` : `${event.title} (${start})`;
-          })
-          .join("\n")
-      : "";
-
   return (
-    <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.25 }}>
-      <Tooltip title={`${time} · ${config.label} — click to ${config.next}`}>
-        <IconButton
-          size="small"
-          onClick={onToggle}
-          aria-label={`${time} ${config.label}`}
-          sx={{ p: 0.25 }}
-        >
-          <Icon fontSize="small" sx={{ color: config.color }} />
-        </IconButton>
-      </Tooltip>
-      {overlapping.length > 0 && (
-        <Tooltip title={timetableTooltip}>
-          <EventIcon fontSize="small" sx={{ color: "info.main" }} />
-        </Tooltip>
-      )}
-    </Box>
+    <Tooltip title={`${time} · ${config.label} — click to ${config.next}`}>
+      <IconButton
+        size="small"
+        onClick={onToggle}
+        aria-label={`${time} ${config.label}`}
+        sx={{ p: 0.25 }}
+      >
+        <Icon fontSize="small" sx={{ color: config.color }} />
+      </IconButton>
+    </Tooltip>
   );
 };
 
@@ -209,31 +177,83 @@ export const ShiftSchedule = ({
                 >
                   {row.label}
                 </TableCell>
-                {row.cells.map((cell) => (
-                  <TableCell key={cell.dayKey} align="center" padding="none">
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: 0.25,
-                      }}
-                    >
-                      {cell.blocks.map((block) => (
-                        <ShiftCell
-                          key={block.index}
-                          block={block}
-                          status={shiftStatus(
-                            block.index,
-                            preferred,
-                            unavailable,
+                {row.cells.map((cell) => {
+                  const firstBlock = cell.blocks[0];
+                  const hourStart = firstBlock
+                    ? new Date(
+                        firstBlock.date.getFullYear(),
+                        firstBlock.date.getMonth(),
+                        firstBlock.date.getDate(),
+                        firstBlock.date.getHours(),
+                        0,
+                        0,
+                      )
+                    : null;
+                  const hourEnd = hourStart
+                    ? new Date(hourStart.getTime() + 60 * 60 * 1000)
+                    : null;
+                  const hourEvents = (timetableEvents ?? []).filter((event) => {
+                    if (!hourStart || !hourEnd) return false;
+                    const start = new Date(event.start_time).getTime();
+                    const end = event.end_time
+                      ? new Date(event.end_time).getTime()
+                      : start;
+                    return start < hourEnd.getTime() && end > hourStart.getTime();
+                  });
+                  const timetableTooltip = hourEvents
+                    .map((event) => {
+                      const start = timeFormat.format(new Date(event.start_time));
+                      const end = event.end_time
+                        ? timeFormat.format(new Date(event.end_time))
+                        : "";
+                      return end
+                        ? `${event.title} (${start}–${end})`
+                        : `${event.title} (${start})`;
+                    })
+                    .join("\n");
+
+                  return (
+                    <TableCell key={cell.dayKey} align="center" padding="none">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 0.25,
+                          minHeight: 44,
+                        }}
+                      >
+                        <Box sx={{ height: 20, display: "flex", alignItems: "center" }}>
+                          {hourEvents.length > 0 && (
+                            <Tooltip title={timetableTooltip}>
+                              <EventIcon fontSize="small" sx={{ color: "info.main" }} />
+                            </Tooltip>
                           )}
-                          onToggle={() => handleToggle(block.index)}
-                          timetableEvents={timetableEvents}
-                        />
-                      ))}
-                    </Box>
-                  </TableCell>
-                ))}
+                        </Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            gap: 0.25,
+                          }}
+                        >
+                          {cell.blocks.map((block) => (
+                            <ShiftCell
+                              key={block.index}
+                              block={block}
+                              status={shiftStatus(
+                                block.index,
+                                preferred,
+                                unavailable,
+                              )}
+                              onToggle={() => handleToggle(block.index)}
+                            />
+                          ))}
+                        </Box>
+                      </Box>
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))}
           </TableBody>
