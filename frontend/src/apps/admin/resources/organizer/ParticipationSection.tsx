@@ -135,7 +135,9 @@ export const ParticipationSection = ({
   const shiftStartDate = parseShiftStart(effectiveShiftStart);
   const shiftEndDate =
     shiftStartDate && config.shift.block_count > 0
-      ? new Date(shiftStartDate.getTime() + config.shift.block_count * 30 * 60 * 1000)
+      ? new Date(
+          shiftStartDate.getTime() + config.shift.block_count * 30 * 60 * 1000,
+        )
       : null;
 
   const { data: timetableData } = useGetList(
@@ -150,14 +152,16 @@ export const ParticipationSection = ({
     { enabled: showShifts && !!shiftStartDate && config.shift.block_count > 0 },
   );
 
-  const timetableEvents = ((timetableData as { id: number; title: string; start_time: string; end_time: string }[] | undefined) ?? []).map(
-    (event) => ({
-      id: event.id,
-      title: event.title,
-      start_time: event.start_time,
-      end_time: event.end_time,
-    }),
-  );
+  const timetableEvents = (
+    (timetableData as
+      | { id: number; title: string; start_time: string; end_time: string }[]
+      | undefined) ?? []
+  ).map((event) => ({
+    id: event.id,
+    title: event.title,
+    start_time: event.start_time,
+    end_time: event.end_time,
+  }));
 
   // Organizers who share a shift team this year, used as partner choices.
   const { data: yearParticipations } = useGetList(

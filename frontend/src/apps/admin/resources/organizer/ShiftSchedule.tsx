@@ -202,7 +202,9 @@ export const ShiftSchedule = ({
                       : null;
                     const start = eventStart.getTime();
                     const end = eventEnd ? eventEnd.getTime() : start;
-                    return start < hourEnd.getTime() && end > hourStart.getTime();
+                    return (
+                      start < hourEnd.getTime() && end > hourStart.getTime()
+                    );
                   });
                   const timetableTooltip = hourEvents
                     .map((event) => {
@@ -240,7 +242,10 @@ export const ShiftSchedule = ({
                         >
                           {hourEvents.length > 0 && (
                             <Tooltip title={timetableTooltip}>
-                              <EventIcon fontSize="small" sx={{ color: "info.main" }} />
+                              <EventIcon
+                                fontSize="small"
+                                sx={{ color: "info.main" }}
+                              />
                             </Tooltip>
                           )}
                         </Box>

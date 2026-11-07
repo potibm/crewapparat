@@ -91,132 +91,132 @@ const OrganizerEditForm = () => {
       >
         <FormTab label="Profile">
           <Stack spacing={2}>
-              <TextInput source="handle" />
-              <TextInput source="realname" />
-              <AutocompleteInput
-                source="pronouns"
-                choices={pronounChoices}
-                onCreate={(filter) => {
-                  const newValue = (filter ?? "").trim();
-                  if (!newValue) return undefined;
-                  setExtraPronouns((prev) =>
-                    prev.includes(newValue) ? prev : [...prev, newValue],
-                  );
-                  return { id: newValue, name: newValue };
-                }}
-                autoSelect
-              />
-              <AutocompleteArrayInput
-                source="languages"
-                choices={languageChoices}
-                onCreate={(filter) => {
-                  const newValue = (filter ?? "").trim().toLowerCase();
-                  if (newValue.length !== 2) return undefined;
-                  setExtraLanguages((prev) =>
-                    prev.includes(newValue) ? prev : [...prev, newValue],
-                  );
-                  return { id: newValue, name: newValue };
-                }}
-                translateChoice={false}
-                autoSelect
-              />
-              <NumberInput
-                source="first_year_as_organizer"
-                helperText="Year of first participation as organizer for this event"
-                validate={(value) => {
-                  if (value == null || value === "") return undefined;
-                  const n = Number(value);
-                  const max = new Date().getFullYear() + 1;
-                  if (n < 1980 || n > max)
-                    return `Must be between 1980 and ${max}`;
-                  return undefined;
-                }}
-              />
-            </Stack>
+            <TextInput source="handle" />
+            <TextInput source="realname" />
+            <AutocompleteInput
+              source="pronouns"
+              choices={pronounChoices}
+              onCreate={(filter) => {
+                const newValue = (filter ?? "").trim();
+                if (!newValue) return undefined;
+                setExtraPronouns((prev) =>
+                  prev.includes(newValue) ? prev : [...prev, newValue],
+                );
+                return { id: newValue, name: newValue };
+              }}
+              autoSelect
+            />
+            <AutocompleteArrayInput
+              source="languages"
+              choices={languageChoices}
+              onCreate={(filter) => {
+                const newValue = (filter ?? "").trim().toLowerCase();
+                if (newValue.length !== 2) return undefined;
+                setExtraLanguages((prev) =>
+                  prev.includes(newValue) ? prev : [...prev, newValue],
+                );
+                return { id: newValue, name: newValue };
+              }}
+              translateChoice={false}
+              autoSelect
+            />
+            <NumberInput
+              source="first_year_as_organizer"
+              helperText="Year of first participation as organizer for this event"
+              validate={(value) => {
+                if (value == null || value === "") return undefined;
+                const n = Number(value);
+                const max = new Date().getFullYear() + 1;
+                if (n < 1980 || n > max)
+                  return `Must be between 1980 and ${max}`;
+                return undefined;
+              }}
+            />
+          </Stack>
         </FormTab>
 
         <FormTab label="Contact">
           <Stack spacing={2}>
-              <TextInput source="email" />
-              <TextInput source="phone" />
-              <TextInput
-                source="slack_handle"
-                helperText={
-                  <Box
-                    component="span"
-                    sx={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      flexWrap: "wrap",
-                    }}
+            <TextInput source="email" />
+            <TextInput source="phone" />
+            <TextInput
+              source="slack_handle"
+              helperText={
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  Click on
+                  <Link
+                    href="https://evoke-eu.slack.com/account/profile"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    Click on
-                    <Link
-                      href="https://evoke-eu.slack.com/account/profile"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      your profile
-                    </Link>
-                    , click the three dots button
-                    <MoreVertIcon
-                      fontSize="inherit"
-                      sx={{
-                        border: 1,
-                        borderColor: "divider",
-                        borderRadius: 1,
-                        p: 0.25,
-                        bgcolor: "action.hover",
-                      }}
-                    />
-                    and choose &quot;Copy display name&quot;.
-                  </Box>
-                }
-              />
-              <TextInput
-                source="slack_profile_url"
-                validate={validateSlackProfileUrl}
-                helperText={
-                  <Box
-                    component="span"
+                    your profile
+                  </Link>
+                  , click the three dots button
+                  <MoreVertIcon
+                    fontSize="inherit"
                     sx={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      flexWrap: "wrap",
+                      border: 1,
+                      borderColor: "divider",
+                      borderRadius: 1,
+                      p: 0.25,
+                      bgcolor: "action.hover",
                     }}
+                  />
+                  and choose &quot;Copy display name&quot;.
+                </Box>
+              }
+            />
+            <TextInput
+              source="slack_profile_url"
+              validate={validateSlackProfileUrl}
+              helperText={
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  Click on
+                  <Link
+                    href="https://evoke-eu.slack.com/account/profile"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    Click on
-                    <Link
-                      href="https://evoke-eu.slack.com/account/profile"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      your profile
-                    </Link>
-                    , click the three dots button
-                    <MoreVertIcon
-                      fontSize="inherit"
-                      sx={{
-                        border: 1,
-                        borderColor: "divider",
-                        borderRadius: 1,
-                        p: 0.25,
-                        bgcolor: "action.hover",
-                      }}
-                    />
-                    and choose &quot;Copy link to profile&quot;.
-                  </Box>
-                }
-              />
-              <TextInput
-                source="mediawiki_profile_url"
-                helperText="MediaWiki profile URL"
-                validate={validateHttpUrl}
-              />
-              <DemozooScenerInput />
-            </Stack>
+                    your profile
+                  </Link>
+                  , click the three dots button
+                  <MoreVertIcon
+                    fontSize="inherit"
+                    sx={{
+                      border: 1,
+                      borderColor: "divider",
+                      borderRadius: 1,
+                      p: 0.25,
+                      bgcolor: "action.hover",
+                    }}
+                  />
+                  and choose &quot;Copy link to profile&quot;.
+                </Box>
+              }
+            />
+            <TextInput
+              source="mediawiki_profile_url"
+              helperText="MediaWiki profile URL"
+              validate={validateHttpUrl}
+            />
+            <DemozooScenerInput />
+          </Stack>
         </FormTab>
 
         <FormTab label="Avatar">
@@ -234,7 +234,10 @@ const OrganizerEditForm = () => {
 
         {activeYear && record?.id && (
           <FormTab label="Participation">
-            <ParticipationSection organizerId={record.id} activeYear={activeYear} />
+            <ParticipationSection
+              organizerId={record.id}
+              activeYear={activeYear}
+            />
           </FormTab>
         )}
       </TabbedForm>
