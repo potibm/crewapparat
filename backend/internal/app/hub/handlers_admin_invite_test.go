@@ -48,12 +48,12 @@ func TestUpdateInvite_ApproveCreatesOrganizer(t *testing.T) {
 	require.NoError(t, inviteRepo.Create(context.Background(), invite))
 
 	server, err := NewServer(Config{
-		Cfg:            config.Config{Auth: &config.AuthConfig{ProxyAdmins: []string{"tester"}}},
-		OrganizerRepo:   organizerRepo,
-		InviteRepo:      inviteRepo,
-		InviteWorkflowRepo:  workflowRepo,
-		EventYearRepo:       eventYearRepo,
-		ParticipationRepo:   participationRepo,
+		Cfg:                config.Config{Auth: &config.AuthConfig{ProxyAdmins: []string{"tester"}}},
+		OrganizerRepo:      organizerRepo,
+		InviteRepo:         inviteRepo,
+		InviteWorkflowRepo: workflowRepo,
+		EventYearRepo:      eventYearRepo,
+		ParticipationRepo:  participationRepo,
 	})
 	require.NoError(t, err)
 
@@ -66,9 +66,9 @@ func TestUpdateInvite_ApproveCreatesOrganizer(t *testing.T) {
 	admin.PUT("/invites/:id", server.UpdateInvite)
 
 	body, err := json.Marshal(map[string]any{
-		"email":   invite.Email,
-		"handle":  invite.Handle,
-		"status":  "approved",
+		"email":  invite.Email,
+		"handle": invite.Handle,
+		"status": "approved",
 	})
 	require.NoError(t, err)
 
@@ -126,12 +126,12 @@ func TestUpdateInvite_ApproveIsIdempotent(t *testing.T) {
 	}))
 
 	server, err := NewServer(Config{
-		Cfg:               config.Config{Auth: &config.AuthConfig{ProxyAdmins: []string{"tester"}}},
+		Cfg:                config.Config{Auth: &config.AuthConfig{ProxyAdmins: []string{"tester"}}},
 		OrganizerRepo:      organizerRepo,
-		InviteRepo:        inviteRepo,
-		InviteWorkflowRepo:  workflowRepo,
-		EventYearRepo:       eventYearRepo,
-		ParticipationRepo:   participationRepo,
+		InviteRepo:         inviteRepo,
+		InviteWorkflowRepo: workflowRepo,
+		EventYearRepo:      eventYearRepo,
+		ParticipationRepo:  participationRepo,
 	})
 	require.NoError(t, err)
 

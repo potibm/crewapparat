@@ -44,16 +44,12 @@ func (s *Server) ListInvites(c *gin.Context) {
 	names := make(map[uuid.UUID]string)
 	for i := range items {
 		if _, ok := names[items[i].InvitedByID]; !ok {
-			if s.organizerRepo != nil {
-				if org, oerr := s.organizerRepo.GetByID(c.Request.Context(), items[i].InvitedByID); oerr == nil && org != nil {
-					if org.Realname != "" {
-						names[items[i].InvitedByID] = org.Realname
-					} else {
-						names[items[i].InvitedByID] = org.Handle
-					}
-				}
-			}
+			names[items[i].InvitedByID] = s.organizerDisplayName(
+				c.Request.Context(),
+				items[i].InvitedByID,
+			)
 		}
+
 		items[i].InvitedByName = names[items[i].InvitedByID]
 	}
 
@@ -239,62 +235,12 @@ func (s *Server) UpdateInvite(c *gin.Context) {
 
 	invite.ID = id
 
-	// Preserve server-managed fields that are not part of the edit form.
-	invite.InvitedByID = existing.InvitedByID
-	invite.Token = existing.Token
-	invite.ExpiresAt = existing.ExpiresAt
+	preserveInviteFields(&invite, existing)
 
-	// Preserve the fields submitted by the invitee through the magic link.
-	invite.Notes = existing.Notes
-	invite.CoCAccepted = existing.CoCAccepted
-	invite.CoCAcceptedAt = existing.CoCAcceptedAt
+	s.applyInviteRoleFields(c, &invite, existing, isAdmin)
 
-	// Preserve invite-provided fields when the edit form omits them.
-	if invite.Email == "" {
-		invite.Email = existing.Email
-	}
-	if strings.TrimSpace(invite.Handle) == "" {
-		invite.Handle = existing.Handle
-	}
-	if invite.DemozooID == nil {
-		invite.DemozooID = existing.DemozooID
-	}
-	if invite.Reason == "" {
-		invite.Reason = existing.Reason
-	}
-
-	if !isAdmin {
-		// Non-admins cannot change the status away from pending_approval.
-		invite.Status = domain.InviteStatusPendingApproval
-		invite.ReviewNote = existing.ReviewNote
-		invite.OpenIDAccountCreated = existing.OpenIDAccountCreated
-		invite.SlackInvited = existing.SlackInvited
-	} else {
-		userID, _ := c.Get("userID")
-
-		uid, _ := userID.(string)
-		if organizer, err := s.organizerRepo.GetByOidcSub(c.Request.Context(), uid); err == nil && organizer != nil {
-			reviewer := organizer.ID
-			invite.ReviewedByID = &reviewer
-		}
-	}
-
-	// Provisioning step (concept §4.1.4): approving a submitted invite creates
-	// the corresponding organizer record so the invitee can link their account
-	// on first login. Idempotent: an existing organizer with the same email is
-	// reused.
-	if isAdmin && invite.Status == domain.InviteStatusApproved {
-		if strings.TrimSpace(invite.Handle) == "" {
-			respondWithBadRequestProblem(c, "handle is required to approve an invite")
-
-			return
-		}
-
-		if err := s.provisionOrganizerFromInvite(c.Request.Context(), &invite); err != nil {
-			respondWithInternalServerProblem(c, "Failed to provision organizer: "+err.Error())
-
-			return
-		}
+	if !s.maybeProvisionOrganizer(c, &invite, isAdmin) {
+		return
 	}
 
 	if err := s.inviteRepo.Update(c.Request.Context(), &invite); err != nil {
@@ -384,6 +330,52 @@ func parseInviteListParams(c *gin.Context) repository.InviteListParams {
 // invite (plus a confirmed participation for the active event year, if any).
 // It is idempotent: if an organizer with the invite's email already exists, no
 // duplicate is created and the existing record is reused.
+func (s *Server) organizerDisplayName(ctx context.Context, id uuid.UUID) string {
+	if s.organizerRepo == nil {
+		return ""
+	}
+
+	org, err := s.organizerRepo.GetByID(ctx, id)
+	if err != nil || org == nil {
+		return ""
+	}
+
+	if org.Realname != "" {
+		return org.Realname
+	}
+
+	return org.Handle
+}
+
+func (s *Server) createParticipationIfActive(ctx context.Context, organizerID uuid.UUID) {
+	if s.eventYearRepo == nil || s.participationRepo == nil {
+		return
+	}
+
+	active, err := s.eventYearRepo.GetActive(ctx)
+	if err != nil || active == nil {
+		return
+	}
+
+	_, gerr := s.participationRepo.GetByOrganizerAndYear(ctx, organizerID, active.Year)
+	if !errors.Is(gerr, gorm.ErrRecordNotFound) {
+		return
+	}
+
+	participation := domain.Participation{
+		OrganizerID: organizerID,
+		EventYearID: active.Year,
+		Status:      domain.ParticipationStatusConfirmed,
+	}
+	if cerr := s.participationRepo.Create(ctx, &participation); cerr != nil {
+		slog.Warn("failed to create participation for approved invite",
+			"organizer_id", organizerID,
+			"event_year", active.Year,
+			"error", cerr,
+		)
+	}
+}
+
 func (s *Server) provisionOrganizerFromInvite(ctx context.Context, invite *domain.Invite) error {
 	organizer, err := s.organizerRepo.GetByEmail(ctx, invite.Email)
 	if err != nil {
@@ -405,30 +397,11 @@ func (s *Server) provisionOrganizerFromInvite(ctx context.Context, invite *domai
 		if createErr := s.organizerRepo.Create(ctx, &newOrganizer); createErr != nil {
 			return createErr
 		}
+
 		organizer = &newOrganizer
 	}
 
-	// Create a confirmed participation for the active event year, if one is
-	// configured and none exists yet.
-	if s.eventYearRepo != nil && s.participationRepo != nil {
-		active, aerr := s.eventYearRepo.GetActive(ctx)
-		if aerr == nil && active != nil {
-			if _, gerr := s.participationRepo.GetByOrganizerAndYear(ctx, organizer.ID, active.Year); errors.Is(gerr, gorm.ErrRecordNotFound) {
-				participation := domain.Participation{
-					OrganizerID: organizer.ID,
-					EventYearID: active.Year,
-					Status:      domain.ParticipationStatusConfirmed,
-				}
-				if cerr := s.participationRepo.Create(ctx, &participation); cerr != nil {
-					slog.Warn("failed to create participation for approved invite",
-						"organizer_id", organizer.ID,
-						"event_year", active.Year,
-						"error", cerr,
-					)
-				}
-			}
-		}
-	}
+	s.createParticipationIfActive(ctx, organizer.ID)
 
 	return nil
 }
@@ -446,4 +419,82 @@ func parseInviteFilters(c *gin.Context) repository.InviteListFilters {
 	}
 
 	return filters
+}
+
+func preserveInviteFields(invite, existing *domain.Invite) {
+	// Server-managed fields that are not part of the edit form.
+	invite.InvitedByID = existing.InvitedByID
+	invite.Token = existing.Token
+	invite.ExpiresAt = existing.ExpiresAt
+
+	// Fields submitted by the invitee through the magic link.
+	invite.Notes = existing.Notes
+	invite.CoCAccepted = existing.CoCAccepted
+	invite.CoCAcceptedAt = existing.CoCAcceptedAt
+	invite.CoCAcceptedVersion = existing.CoCAcceptedVersion
+
+	// Invite-provided fields, kept when the edit form omits them.
+	if invite.Email == "" {
+		invite.Email = existing.Email
+	}
+
+	if strings.TrimSpace(invite.Handle) == "" {
+		invite.Handle = existing.Handle
+	}
+
+	if invite.DemozooID == nil {
+		invite.DemozooID = existing.DemozooID
+	}
+
+	if invite.Reason == "" {
+		invite.Reason = existing.Reason
+	}
+}
+
+func (s *Server) applyInviteRoleFields(
+	c *gin.Context,
+	invite, existing *domain.Invite,
+	isAdmin bool,
+) {
+	if !isAdmin {
+		// Non-admins cannot change the status away from pending_approval.
+		invite.Status = domain.InviteStatusPendingApproval
+		invite.ReviewNote = existing.ReviewNote
+		invite.OpenIDAccountCreated = existing.OpenIDAccountCreated
+		invite.SlackInvited = existing.SlackInvited
+
+		return
+	}
+
+	userID, _ := c.Get("userID")
+
+	uid, _ := userID.(string)
+	if organizer, err := s.organizerRepo.GetByOidcSub(c.Request.Context(), uid); err == nil && organizer != nil {
+		reviewer := organizer.ID
+		invite.ReviewedByID = &reviewer
+	}
+}
+
+func (s *Server) maybeProvisionOrganizer(
+	c *gin.Context,
+	invite *domain.Invite,
+	isAdmin bool,
+) bool {
+	if !isAdmin || invite.Status != domain.InviteStatusApproved {
+		return true
+	}
+
+	if strings.TrimSpace(invite.Handle) == "" {
+		respondWithBadRequestProblem(c, "handle is required to approve an invite")
+
+		return false
+	}
+
+	if err := s.provisionOrganizerFromInvite(c.Request.Context(), invite); err != nil {
+		respondWithInternalServerProblem(c, "Failed to provision organizer: "+err.Error())
+
+		return false
+	}
+
+	return true
 }

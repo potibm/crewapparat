@@ -204,10 +204,10 @@ func (r *inviteRepository) SubmitForReview(
 	cocVersion string,
 ) error {
 	updates := map[string]any{
-		"notes":                 notes,
-		"coc_accepted":          cocAccepted,
-		"status":                string(domain.InviteStatusPendingReview),
-		"coc_accepted_version":  cocVersion,
+		"notes":                notes,
+		"coc_accepted":         cocAccepted,
+		"status":               string(domain.InviteStatusPendingReview),
+		"coc_accepted_version": cocVersion,
 	}
 
 	if cocAccepted {
