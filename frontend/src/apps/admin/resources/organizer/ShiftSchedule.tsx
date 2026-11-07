@@ -14,14 +14,23 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import CancelIcon from "@mui/icons-material/Cancel";
+import EventIcon from "@mui/icons-material/Event";
 import {
   applyShiftStatus,
   buildSchedule,
   nextShiftStatus,
+  parseShiftStart,
   shiftStatus,
   type ShiftBlock,
   type ShiftStatus,
 } from "./shiftSchedule.logic";
+
+export interface TimetableOverlayEvent {
+  id: number;
+  title: string;
+  start_time: string;
+  end_time: string;
+}
 
 export interface ShiftScheduleProps {
   /** ISO 8601 start of block 0. The wall clock is used, the offset is ignored. */
@@ -30,6 +39,7 @@ export interface ShiftScheduleProps {
   preferred: number[];
   unavailable: number[];
   onChange: (preferred: number[], unavailable: number[]) => void;
+  timetableEvents?: TimetableOverlayEvent[];
 }
 
 const PREFERRED_COLOR = "#e91e63";
@@ -123,6 +133,7 @@ export const ShiftSchedule = ({
   preferred,
   unavailable,
   onChange,
+  timetableEvents,
 }: ShiftScheduleProps) => {
   const { days, rows } = buildSchedule(start, blockCount);
 
@@ -167,30 +178,93 @@ export const ShiftSchedule = ({
                 >
                   {row.label}
                 </TableCell>
-                {row.cells.map((cell) => (
-                  <TableCell key={cell.dayKey} align="center" padding="none">
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: 0.25,
-                      }}
-                    >
-                      {cell.blocks.map((block) => (
-                        <ShiftCell
-                          key={block.index}
-                          block={block}
-                          status={shiftStatus(
-                            block.index,
-                            preferred,
-                            unavailable,
+                {row.cells.map((cell) => {
+                  const firstBlock = cell.blocks[0];
+                  const hourStart = firstBlock
+                    ? new Date(
+                        firstBlock.date.getFullYear(),
+                        firstBlock.date.getMonth(),
+                        firstBlock.date.getDate(),
+                        firstBlock.date.getHours(),
+                        0,
+                        0,
+                      )
+                    : null;
+                  const hourEnd = hourStart
+                    ? new Date(hourStart.getTime() + 60 * 60 * 1000)
+                    : null;
+                  const hourEvents = (timetableEvents ?? []).filter((event) => {
+                    if (!hourStart || !hourEnd) return false;
+                    const eventStart = parseShiftStart(event.start_time);
+                    if (!eventStart) return false;
+                    const eventEnd = event.end_time
+                      ? parseShiftStart(event.end_time)
+                      : null;
+                    const start = eventStart.getTime();
+                    const end = eventEnd ? eventEnd.getTime() : start;
+                    return (
+                      start < hourEnd.getTime() && end > hourStart.getTime()
+                    );
+                  });
+                  const timetableTooltip = hourEvents
+                    .map((event) => {
+                      const eventStart = parseShiftStart(event.start_time);
+                      const eventEnd = event.end_time
+                        ? parseShiftStart(event.end_time)
+                        : null;
+                      const start = eventStart
+                        ? timeFormat.format(eventStart)
+                        : "";
+                      const end = eventEnd ? timeFormat.format(eventEnd) : "";
+                      return end
+                        ? `${event.title} (${start}–${end})`
+                        : `${event.title} (${start})`;
+                    })
+                    .join("\n");
+
+                  return (
+                    <TableCell key={cell.dayKey} align="center" padding="none">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 0.25,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 24,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {hourEvents.length > 0 && (
+                            <Tooltip title={timetableTooltip}>
+                              <EventIcon
+                                fontSize="small"
+                                sx={{ color: "info.main" }}
+                              />
+                            </Tooltip>
                           )}
-                          onToggle={() => handleToggle(block.index)}
-                        />
-                      ))}
-                    </Box>
-                  </TableCell>
-                ))}
+                        </Box>
+                        {cell.blocks.map((block) => (
+                          <ShiftCell
+                            key={block.index}
+                            block={block}
+                            status={shiftStatus(
+                              block.index,
+                              preferred,
+                              unavailable,
+                            )}
+                            onToggle={() => handleToggle(block.index)}
+                          />
+                        ))}
+                      </Box>
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))}
           </TableBody>

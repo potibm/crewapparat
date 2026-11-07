@@ -22,6 +22,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import { useAppConfig } from "@core/config/useConfig";
 import type { ParticipationRecord } from "../participation/participation.types";
 import { ShiftSchedule } from "./ShiftSchedule";
+import { parseShiftStart } from "./shiftSchedule.logic";
 
 interface ParticipationSectionProps {
   organizerId?: string;
@@ -115,6 +116,52 @@ export const ParticipationSection = ({
   );
 
   const showShifts = shiftTeamIds.size > 0;
+
+  const effectiveShiftStart =
+    config.shift.start ||
+    (() => {
+      const now = new Date();
+      const day = now.getDay();
+      const diff = (5 - day + 7) % 7;
+      const friday = new Date(now);
+      friday.setDate(now.getDate() + diff);
+      friday.setHours(16, 0, 0, 0);
+      const y = friday.getFullYear();
+      const m = String(friday.getMonth() + 1).padStart(2, "0");
+      const d = String(friday.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}T16:00:00`;
+    })();
+
+  const shiftStartDate = parseShiftStart(effectiveShiftStart);
+  const shiftEndDate =
+    shiftStartDate && config.shift.block_count > 0
+      ? new Date(
+          shiftStartDate.getTime() + config.shift.block_count * 30 * 60 * 1000,
+        )
+      : null;
+
+  const { data: timetableData } = useGetList(
+    "timetable-events",
+    {
+      pagination: { page: 1, perPage: 1000 },
+      filter: {
+        start: shiftStartDate ? shiftStartDate.toISOString() : "",
+        end: shiftEndDate ? shiftEndDate.toISOString() : "",
+      },
+    },
+    { enabled: showShifts && !!shiftStartDate && config.shift.block_count > 0 },
+  );
+
+  const timetableEvents = (
+    (timetableData as
+      | { id: number; title: string; start_time: string; end_time: string }[]
+      | undefined) ?? []
+  ).map((event) => ({
+    id: event.id,
+    title: event.title,
+    start_time: event.start_time,
+    end_time: event.end_time,
+  }));
 
   // Organizers who share a shift team this year, used as partner choices.
   const { data: yearParticipations } = useGetList(
@@ -306,9 +353,9 @@ export const ParticipationSection = ({
                 <>
                   <Divider />
                   <Typography variant="h6">Shift planning</Typography>
-                  {config.shift.start && config.shift.block_count > 0 ? (
+                  {effectiveShiftStart && config.shift.block_count > 0 ? (
                     <ShiftSchedule
-                      start={config.shift.start}
+                      start={effectiveShiftStart}
                       blockCount={config.shift.block_count}
                       preferred={shiftPreferredTimes}
                       unavailable={shiftUnavailableTimes}
@@ -316,6 +363,7 @@ export const ParticipationSection = ({
                         setShiftPreferredTimes(preferred);
                         setShiftUnavailableTimes(unavailable);
                       }}
+                      timetableEvents={timetableEvents}
                     />
                   ) : (
                     <Typography variant="body2" color="text.secondary">

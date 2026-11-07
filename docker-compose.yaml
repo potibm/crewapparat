@@ -115,7 +115,39 @@ services:
       - "traefik.http.routers.redis-crew.tls=true"
       - "traefik.http.services.redis-crew.loadbalancer.server.port=5540"
 
+  tidsapparat-seed:
+    image: ghcr.io/potibm/tidsapparat:latest
+    container_name: crewapparat_tidsapparat_seed
+    pull_policy: always
+    command: database reset --force --seed
+    volumes:
+      - ./infra/tidsapparat:/app/config
+      - tidsapparat_data:/app/data
+
+  tidsapparat:
+    image: ghcr.io/potibm/tidsapparat:latest
+    container_name: crewapparat_tidsapparat
+    pull_policy: always
+    volumes:
+      - ./infra/tidsapparat:/app/config
+      - tidsapparat_data:/app/data
+    command: serve --otel-endpoint=otel-collector:4317
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tidsapparat-crew.rule=Host(`tidsapparat.crewapparat.test`)"
+      - "traefik.http.routers.tidsapparat-crew.entrypoints=websecure"
+      - "traefik.http.routers.tidsapparat-crew.tls=true"
+      - "traefik.http.services.tidsapparat-crew.loadbalancer.server.port=8080"
+    depends_on:
+      tidsapparat-seed:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+
 volumes:
   o2_data:
   redis_data:
+  tidsapparat_data:
   redisinsight_data:

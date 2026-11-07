@@ -16,5 +16,5 @@ sentry:
 # tshirt_deadline: "2026-08-01T23:59:00+02:00"
 shift:
   # Block 0 starts on Friday at 16:00; 90 half-hour blocks cover Fri-Sun.
-  start: "2026-08-07T16:00:00+02:00"
+  #start: "2026-08-07T16:00:00+02:00"
   block_count: 90

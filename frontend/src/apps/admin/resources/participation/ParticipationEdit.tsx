@@ -26,6 +26,7 @@ const ParticipationEdit = () => {
         <SelectInput
           source="status"
           choices={[
+            { id: "pending", name: "Pending" },
             { id: "confirmed", name: "Confirmed" },
             { id: "declined", name: "Declined" },
           ]}

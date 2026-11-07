@@ -15,6 +15,7 @@ import (
 	"github.com/potibm/crewapparat/internal/app/hub"
 	"github.com/potibm/crewapparat/internal/app/initializer"
 	store "github.com/potibm/crewapparat/internal/app/store/gorm"
+	"github.com/potibm/crewapparat/internal/app/timetableconsumer"
 )
 
 //go:embed assets
@@ -94,6 +95,7 @@ func NewServeCmd() *cobra.Command {
 				EventYearRepo:      dbStore.NewEventYearRepository(),
 				TeamRepo:           dbStore.NewTeamRepository(),
 				ParticipationRepo:  dbStore.NewParticipationRepository(),
+				TimetableEventRepo: dbStore.NewTimetableRepository(),
 				InviteRepo:         dbStore.NewInviteRepository(),
 				InviteWorkflowRepo: dbStore.NewInviteWorkflowRepository(),
 				CodeOfConductRepo:  dbStore.NewCodeOfConductRepository(),
@@ -148,6 +150,9 @@ func NewServeCmd() *cobra.Command {
 				admin.PUT("/invites/:id", server.UpdateInvite)
 				admin.DELETE("/invites/:id", server.DeleteInvite)
 
+				// Timetable events (synchronized from tidsapparat)
+				admin.GET("/timetable-events", server.ListTimetableEvents)
+
 				// Code of Conduct
 				admin.GET("/code-of-conducts", server.ListCodeOfConducts)
 				admin.POST("/code-of-conducts", server.CreateCodeOfConduct)
@@ -159,6 +164,20 @@ func NewServeCmd() *cobra.Command {
 				// Demozoo sceners (autocomplete source)
 				admin.GET("/demozoo-sceners", server.ListDemozooSceners)
 				admin.GET("/demozoo-sceners/:id", server.GetDemozooScener)
+			}
+
+			if Cfg.Timetable.Enabled && Cfg.App.RedisURL != "" {
+				go func() {
+					if err := timetableconsumer.Run(
+						ctx,
+						Cfg.Timetable,
+						string(Cfg.App.RedisURL),
+						dbStore.NewTimetableRepository(),
+						logger,
+					); err != nil {
+						logger.Error("timetable sync failed", "error", err)
+					}
+				}()
 			}
 
 			return server.Run(ctx)

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   Edit,
-  SimpleForm,
+  TabbedForm,
+  FormTab,
   TextInput,
   AutocompleteArrayInput,
   AutocompleteInput,
@@ -15,7 +16,7 @@ import {
   useNotify,
   useGetList,
 } from "react-admin";
-import { Box, Card, CardContent, CardHeader, Link, Stack } from "@mui/material";
+import { Box, Link, Stack } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useAppConfig } from "@core/config/useConfig";
 import { DemozooScenerInput } from "./DemozooScenerInput";
@@ -83,167 +84,163 @@ const OrganizerEditForm = () => {
 
   return (
     <>
-      <SimpleForm
+      <TabbedForm
         defaultValues={(rec: { avatar_url?: string }) => ({
           media_upload: rec?.avatar_url ? { src: rec.avatar_url } : undefined,
         })}
       >
-        <Card sx={{ width: "100%", mb: 2 }}>
-          <CardHeader title="Profile" />
-          <CardContent>
-            <Stack spacing={2}>
-              <TextInput source="handle" />
-              <TextInput source="realname" />
-              <AutocompleteInput
-                source="pronouns"
-                choices={pronounChoices}
-                onCreate={(filter) => {
-                  const newValue = (filter ?? "").trim();
-                  if (!newValue) return undefined;
-                  setExtraPronouns((prev) =>
-                    prev.includes(newValue) ? prev : [...prev, newValue],
-                  );
-                  return { id: newValue, name: newValue };
-                }}
-                autoSelect
-              />
-              <AutocompleteArrayInput
-                source="languages"
-                choices={languageChoices}
-                onCreate={(filter) => {
-                  const newValue = (filter ?? "").trim().toLowerCase();
-                  if (newValue.length !== 2) return undefined;
-                  setExtraLanguages((prev) =>
-                    prev.includes(newValue) ? prev : [...prev, newValue],
-                  );
-                  return { id: newValue, name: newValue };
-                }}
-                translateChoice={false}
-                autoSelect
-              />
-              <NumberInput
-                source="first_year_as_organizer"
-                helperText="Year of first participation as organizer for this event"
-                validate={(value) => {
-                  if (value == null || value === "") return undefined;
-                  const n = Number(value);
-                  const max = new Date().getFullYear() + 1;
-                  if (n < 1980 || n > max)
-                    return `Must be between 1980 and ${max}`;
-                  return undefined;
-                }}
-              />
-            </Stack>
-          </CardContent>
-        </Card>
+        <FormTab label="Profile">
+          <Stack spacing={2}>
+            <TextInput source="handle" />
+            <TextInput source="realname" />
+            <AutocompleteInput
+              source="pronouns"
+              choices={pronounChoices}
+              onCreate={(filter) => {
+                const newValue = (filter ?? "").trim();
+                if (!newValue) return undefined;
+                setExtraPronouns((prev) =>
+                  prev.includes(newValue) ? prev : [...prev, newValue],
+                );
+                return { id: newValue, name: newValue };
+              }}
+              autoSelect
+            />
+            <AutocompleteArrayInput
+              source="languages"
+              choices={languageChoices}
+              onCreate={(filter) => {
+                const newValue = (filter ?? "").trim().toLowerCase();
+                if (newValue.length !== 2) return undefined;
+                setExtraLanguages((prev) =>
+                  prev.includes(newValue) ? prev : [...prev, newValue],
+                );
+                return { id: newValue, name: newValue };
+              }}
+              translateChoice={false}
+              autoSelect
+            />
+            <NumberInput
+              source="first_year_as_organizer"
+              helperText="Year of first participation as organizer for this event"
+              validate={(value) => {
+                if (value == null || value === "") return undefined;
+                const n = Number(value);
+                const max = new Date().getFullYear() + 1;
+                if (n < 1980 || n > max)
+                  return `Must be between 1980 and ${max}`;
+                return undefined;
+              }}
+            />
+          </Stack>
+        </FormTab>
 
-        <Card sx={{ width: "100%", mb: 2 }}>
-          <CardHeader title="Contact" />
-          <CardContent>
-            <Stack spacing={2}>
-              <TextInput source="email" />
-              <TextInput source="phone" />
-              <TextInput
-                source="slack_handle"
-                helperText={
-                  <Box
-                    component="span"
-                    sx={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      flexWrap: "wrap",
-                    }}
+        <FormTab label="Contact">
+          <Stack spacing={2}>
+            <TextInput source="email" />
+            <TextInput source="phone" />
+            <TextInput
+              source="slack_handle"
+              helperText={
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  Click on
+                  <Link
+                    href="https://evoke-eu.slack.com/account/profile"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    Click on
-                    <Link
-                      href="https://evoke-eu.slack.com/account/profile"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      your profile
-                    </Link>
-                    , click the three dots button
-                    <MoreVertIcon
-                      fontSize="inherit"
-                      sx={{
-                        border: 1,
-                        borderColor: "divider",
-                        borderRadius: 1,
-                        p: 0.25,
-                        bgcolor: "action.hover",
-                      }}
-                    />
-                    and choose &quot;Copy display name&quot;.
-                  </Box>
-                }
-              />
-              <TextInput
-                source="slack_profile_url"
-                validate={validateSlackProfileUrl}
-                helperText={
-                  <Box
-                    component="span"
+                    your profile
+                  </Link>
+                  , click the three dots button
+                  <MoreVertIcon
+                    fontSize="inherit"
                     sx={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      flexWrap: "wrap",
+                      border: 1,
+                      borderColor: "divider",
+                      borderRadius: 1,
+                      p: 0.25,
+                      bgcolor: "action.hover",
                     }}
+                  />
+                  and choose &quot;Copy display name&quot;.
+                </Box>
+              }
+            />
+            <TextInput
+              source="slack_profile_url"
+              validate={validateSlackProfileUrl}
+              helperText={
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  Click on
+                  <Link
+                    href="https://evoke-eu.slack.com/account/profile"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    Click on
-                    <Link
-                      href="https://evoke-eu.slack.com/account/profile"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      your profile
-                    </Link>
-                    , click the three dots button
-                    <MoreVertIcon
-                      fontSize="inherit"
-                      sx={{
-                        border: 1,
-                        borderColor: "divider",
-                        borderRadius: 1,
-                        p: 0.25,
-                        bgcolor: "action.hover",
-                      }}
-                    />
-                    and choose &quot;Copy link to profile&quot;.
-                  </Box>
-                }
-              />
-              <TextInput
-                source="mediawiki_profile_url"
-                helperText="MediaWiki profile URL"
-                validate={validateHttpUrl}
-              />
-              <DemozooScenerInput />
-            </Stack>
-          </CardContent>
-        </Card>
+                    your profile
+                  </Link>
+                  , click the three dots button
+                  <MoreVertIcon
+                    fontSize="inherit"
+                    sx={{
+                      border: 1,
+                      borderColor: "divider",
+                      borderRadius: 1,
+                      p: 0.25,
+                      bgcolor: "action.hover",
+                    }}
+                  />
+                  and choose &quot;Copy link to profile&quot;.
+                </Box>
+              }
+            />
+            <TextInput
+              source="mediawiki_profile_url"
+              helperText="MediaWiki profile URL"
+              validate={validateHttpUrl}
+            />
+            <DemozooScenerInput />
+          </Stack>
+        </FormTab>
 
-        <Card sx={{ width: "100%", mb: 2 }}>
-          <CardHeader title="Avatar" />
-          <CardContent>
-            <Stack spacing={2}>
-              <ImageInput
-                source="media_upload"
-                accept={{ "image/*": [".png", ".jpg", ".jpeg"] }}
-                label="Avatar"
-                placeholder={<p>Drag image here or click to upload</p>}
-              >
-                <ImageField source="src" title="title" />
-              </ImageInput>
-            </Stack>
-          </CardContent>
-        </Card>
-      </SimpleForm>
+        <FormTab label="Avatar">
+          <Stack spacing={2}>
+            <ImageInput
+              source="media_upload"
+              accept={{ "image/*": [".png", ".jpg", ".jpeg"] }}
+              label="Avatar"
+              placeholder={<p>Drag image here or click to upload</p>}
+            >
+              <ImageField source="src" title="title" />
+            </ImageInput>
+          </Stack>
+        </FormTab>
 
-      {activeYear && record?.id && (
-        <ParticipationSection organizerId={record.id} activeYear={activeYear} />
-      )}
+        {activeYear && record?.id && (
+          <FormTab label="Participation">
+            <ParticipationSection
+              organizerId={record.id}
+              activeYear={activeYear}
+            />
+          </FormTab>
+        )}
+      </TabbedForm>
     </>
   );
 };
