@@ -39,6 +39,21 @@ services:
       - "traefik.http.services.dex-crew.loadbalancer.server.port=5556"
 
   # --------------------------------------------------------
+  # Mail
+  # --------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: crewapparat_mailpit
+    ports:
+      - "1026:1025"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailpit-crew.rule=Host(`mail.crewapparat.test`)"
+      - "traefik.http.routers.mailpit-crew.entrypoints=websecure"
+      - "traefik.http.routers.mailpit-crew.tls=true"
+      - "traefik.http.services.mailpit-crew.loadbalancer.server.port=8025"
+
+  # --------------------------------------------------------
   # Observability
   # --------------------------------------------------------
   openobserve:

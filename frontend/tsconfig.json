@@ -6,7 +6,8 @@
     "skipLibCheck": true,
     "paths": {
       "@core/*": ["./src/core/*"],
-      "@admin/*": ["./src/apps/admin/*"]
+      "@admin/*": ["./src/apps/admin/*"],
+      "@public/*": ["./src/apps/public/*"]
     },
 
     /* Bundler mode */

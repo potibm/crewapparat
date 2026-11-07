@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/potibm/crewapparat/internal/app/config"
 	"github.com/potibm/crewapparat/internal/app/demozoo"
+	"github.com/potibm/crewapparat/internal/app/mailer"
 	"github.com/potibm/crewapparat/internal/app/middleware"
 	"github.com/potibm/crewapparat/internal/app/repository"
 	sloggin "github.com/samber/slog-gin"
@@ -32,15 +33,19 @@ type Config struct {
 	StaticFiles embed.FS
 	Cfg         config.Config
 
-	OrganizerRepo     repository.OrganizerRepository
-	EventYearRepo     repository.EventYearRepository
-	TeamRepo          repository.TeamRepository
-	ParticipationRepo repository.ParticipationRepository
-	InviteRepo        repository.InviteRepository
-	CodeOfConductRepo repository.CodeOfConductRepository
-	AcceptanceRepo    repository.CodeOfConductAcceptanceRepository
+	OrganizerRepo      repository.OrganizerRepository
+	EventYearRepo      repository.EventYearRepository
+	TeamRepo           repository.TeamRepository
+	ParticipationRepo  repository.ParticipationRepository
+	InviteRepo         repository.InviteRepository
+	InviteWorkflowRepo repository.InviteWorkflowRepository
+	CodeOfConductRepo  repository.CodeOfConductRepository
+	AcceptanceRepo     repository.CodeOfConductAcceptanceRepository
 
 	DemozooSceners []demozoo.Scener
+
+	Mailer          mailer.Mailer
+	AdminRecipients []string
 
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
@@ -53,15 +58,19 @@ type Server struct {
 	cfg         config.Config
 	logger      *slog.Logger
 
-	organizerRepo     repository.OrganizerRepository
-	eventYearRepo     repository.EventYearRepository
-	teamRepo          repository.TeamRepository
-	participationRepo repository.ParticipationRepository
-	inviteRepo        repository.InviteRepository
-	codeOfConductRepo repository.CodeOfConductRepository
-	acceptanceRepo    repository.CodeOfConductAcceptanceRepository
+	organizerRepo      repository.OrganizerRepository
+	eventYearRepo      repository.EventYearRepository
+	teamRepo           repository.TeamRepository
+	participationRepo  repository.ParticipationRepository
+	inviteRepo         repository.InviteRepository
+	inviteWorkflowRepo repository.InviteWorkflowRepository
+	codeOfConductRepo  repository.CodeOfConductRepository
+	acceptanceRepo     repository.CodeOfConductAcceptanceRepository
 
 	demozooSceners []demozoo.Scener
+
+	mailer          mailer.Mailer
+	adminRecipients []string
 
 	// RegisterAdminRoutes attaches domain endpoints to the protected
 	// /api/admin group. nil means: platform infrastructure only, no domain logic.
@@ -81,9 +90,12 @@ func NewServer(cfg Config) (*Server, error) {
 		teamRepo:            cfg.TeamRepo,
 		participationRepo:   cfg.ParticipationRepo,
 		inviteRepo:          cfg.InviteRepo,
+		inviteWorkflowRepo:  cfg.InviteWorkflowRepo,
 		codeOfConductRepo:   cfg.CodeOfConductRepo,
 		acceptanceRepo:      cfg.AcceptanceRepo,
 		demozooSceners:      cfg.DemozooSceners,
+		mailer:              cfg.Mailer,
+		adminRecipients:     cfg.AdminRecipients,
 		RegisterAdminRoutes: cfg.RegisterAdminRoutes,
 	}, nil
 }
@@ -159,6 +171,12 @@ func (s *Server) setupRouter() (*gin.Engine, error) {
 
 	api := r.Group("/api")
 	api.GET("/config", s.handleGetPublicConfig)
+
+	// Public invite endpoints (magic link), no auth required.
+	if s.inviteRepo != nil {
+		api.GET("/invites/:token", s.GetPublicInvite)
+		api.POST("/invites/:token/submit", s.SubmitPublicInvite)
+	}
 
 	// Admin group: protected by the auth middleware as soon as `auth.type: oidc`
 	// is set. Domain routes hook in via RegisterAdminRoutes.

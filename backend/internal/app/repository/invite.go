@@ -10,10 +10,11 @@ import (
 )
 
 type InviteListFilters struct {
-	Query  *string
-	ID     *uuid.UUID
-	Email  *string
-	Status *domain.InviteStatus
+	Query       *string
+	ID          *uuid.UUID
+	Email       *string
+	Status      *domain.InviteStatus
+	InvitedByID *uuid.UUID
 }
 
 type InviteListParams = ListParams
@@ -37,8 +38,9 @@ type InviteWorkflowRepository interface {
 	SubmitForReview(
 		ctx context.Context,
 		id uuid.UUID,
-		providedName, providedPhone, notes string,
+		notes string,
 		cocAccepted bool,
+		cocVersion string,
 	) error
 	Review(ctx context.Context, id uuid.UUID, status domain.InviteStatus, reviewerID uuid.UUID) error
 	EmailExists(ctx context.Context, email string) (bool, error)

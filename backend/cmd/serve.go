@@ -87,17 +87,20 @@ func NewServeCmd() *cobra.Command {
 			// =========================================================================
 
 			server, err := hub.NewServer(hub.Config{
-				Port:              Cfg.App.Port,
-				StaticFiles:       staticFiles,
-				Cfg:               Cfg,
-				OrganizerRepo:     dbStore.NewOrganizerRepository(),
-				EventYearRepo:     dbStore.NewEventYearRepository(),
-				TeamRepo:          dbStore.NewTeamRepository(),
-				ParticipationRepo: dbStore.NewParticipationRepository(),
-				InviteRepo:        dbStore.NewInviteRepository(),
-				CodeOfConductRepo: dbStore.NewCodeOfConductRepository(),
-				AcceptanceRepo:    dbStore.NewCodeOfConductAcceptanceRepository(),
-				DemozooSceners:    demozooSceners,
+				Port:               Cfg.App.Port,
+				StaticFiles:        staticFiles,
+				Cfg:                Cfg,
+				OrganizerRepo:      dbStore.NewOrganizerRepository(),
+				EventYearRepo:      dbStore.NewEventYearRepository(),
+				TeamRepo:           dbStore.NewTeamRepository(),
+				ParticipationRepo:  dbStore.NewParticipationRepository(),
+				InviteRepo:         dbStore.NewInviteRepository(),
+				InviteWorkflowRepo: dbStore.NewInviteWorkflowRepository(),
+				CodeOfConductRepo:  dbStore.NewCodeOfConductRepository(),
+				AcceptanceRepo:     dbStore.NewCodeOfConductAcceptanceRepository(),
+				DemozooSceners:     demozooSceners,
+				Mailer:             initializer.InitializeMailer(mailerConfigValue(Cfg.Mailer)),
+				AdminRecipients:    Cfg.Mailer.AdminRecipients,
 			})
 			if err != nil {
 				return fmt.Errorf("failed to initialize server: %w", err)
@@ -170,4 +173,12 @@ func NewServeCmd() *cobra.Command {
 	_ = viper.BindPFlag("app.otel_endpoint", cmd.Flags().Lookup(otelEndpointFlagName))
 
 	return cmd
+}
+
+func mailerConfigValue(cfg *config.MailerConfig) config.MailerConfig {
+	if cfg == nil {
+		return config.MailerConfig{}
+	}
+
+	return *cfg
 }

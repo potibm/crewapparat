@@ -18,11 +18,12 @@ type inviteRepository struct {
 }
 
 var inviteSortColumns = map[string]string{
-	"id":      "id",
-	"email":   "email",
-	"status":  "status",
-	"expires": "expires_at",
-	"created": "created_at",
+	"id":         "id",
+	"email":      "email",
+	"handle":     "handle",
+	"status":     "status",
+	"expires_at": "expires_at",
+	"created_at": "created_at",
 }
 
 func (s *Store) NewInviteRepository() repository.InviteRepository {
@@ -114,6 +115,10 @@ func (r *inviteRepository) List(
 		query = query.Where("status = ?", string(*filters.Status))
 	}
 
+	if filters.InvitedByID != nil {
+		query = query.Where("invited_by_id = ?", *filters.InvitedByID)
+	}
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count invites: %w", err)
 	}
@@ -194,17 +199,15 @@ func (r *inviteRepository) EmailExists(ctx context.Context, email string) (bool,
 func (r *inviteRepository) SubmitForReview(
 	ctx context.Context,
 	id uuid.UUID,
-	providedName string,
-	providedPhone string,
 	notes string,
 	cocAccepted bool,
+	cocVersion string,
 ) error {
 	updates := map[string]any{
-		"provided_name":  providedName,
-		"provided_phone": providedPhone,
-		"notes":          notes,
-		"coc_accepted":   cocAccepted,
-		"status":         string(domain.InviteStatusPendingReview),
+		"notes":                notes,
+		"coc_accepted":         cocAccepted,
+		"status":               string(domain.InviteStatusPendingReview),
+		"coc_accepted_version": cocVersion,
 	}
 
 	if cocAccepted {

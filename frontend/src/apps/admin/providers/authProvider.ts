@@ -253,6 +253,16 @@ export const authProvider: AuthProvider = {
     }
 
     if (
+      resource === "invites" &&
+      (action === "create" ||
+        action === "edit" ||
+        action === "show" ||
+        action === "view")
+    ) {
+      return true;
+    }
+
+    if (
       resource === "code-of-conducts" &&
       (action === "show" || action === "view" || action === "list")
     ) {

@@ -43,9 +43,14 @@ func InitViper() {
 	viper.SetDefault("app.env", "production")
 	viper.SetDefault("app.db_filename", DefaultDBFilename)
 	viper.SetDefault("app.frontend_url", "")
+	viper.SetDefault("app.event_name", "Evoke")
 	viper.SetDefault("app.cors_allow_origins", []string{})
 	viper.SetDefault("app.redis_url", "")
 
+	viper.SetDefault("mailer.dsn", "smtp://localhost:1026")
+	viper.SetDefault("mailer.from", "crewapparat@example.com")
+	viper.SetDefault("mailer.subject_prefix", "[Crewapparat]")
+	viper.SetDefault("mailer.admin_recipients", []string{})
 	viper.SetDefault("app.pronoun_options", []string{"she/her", "he/him", "they/them"})
 	viper.SetDefault("app.language_options", []string{"de", "en", "fr", "hu", "no", "nl", "ru", "pl"})
 	viper.SetDefault("app.tshirt_size_options", []string{"XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL"})
@@ -63,6 +68,7 @@ func InitViper() {
 	viper.SetDefault("sentry.replay_session_sample_rate", DefaultReplaySessionSampleRate)
 	viper.SetDefault("sentry.replay_error_sample_rate", DefaultReplayErrorSampleRate)
 
+	viper.RegisterAlias("mailer.frontend_url", "app.frontend_url")
 	viper.RegisterAlias("sentry.environment", "app.env")
 	viper.RegisterAlias("sentry.version", "app.version")
 }

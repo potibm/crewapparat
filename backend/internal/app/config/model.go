@@ -21,6 +21,7 @@ type AppConfig struct {
 
 	DbFilename         string                 `mapstructure:"db_filename"         validate:"required"`
 	FrontendURL        string                 `mapstructure:"frontend_url"        validate:"required,http_url"`
+	EventName          string                 `mapstructure:"event_name"          validate:"omitempty"`
 	CorsAllowOrigins   CorsAllowOriginsConfig `mapstructure:"cors_allow_origins"  validate:"dive,required"`
 	EnvironmentMessage string                 `mapstructure:"environment_message"`
 	RedisURL           RedisURL               `mapstructure:"redis_url"           validate:"omitempty,url"`
@@ -66,10 +67,19 @@ type AuthConfig struct {
 	HeaderUserGroups string   `json:"-"         mapstructure:"header_user_groups"`
 }
 
+type MailerConfig struct {
+	DSN               string   `mapstructure:"dsn"              validate:"required"`
+	FromEmail         string   `mapstructure:"from"             validate:"email"`
+	MailSubjectPrefix string   `mapstructure:"subject_prefix"   validate:"required"`
+	FrontendURL       string   `mapstructure:"frontend_url"     validate:"required,http_url"`
+	AdminRecipients   []string `mapstructure:"admin_recipients" validate:"dive,email"`
+}
+
 type Config struct {
-	App    AppConfig    `mapstructure:"app"`
-	Sentry SentryConfig `mapstructure:"sentry"`
-	Format FormatConfig `mapstructure:"format"`
-	Shift  ShiftConfig  `mapstructure:"shift"`
-	Auth   *AuthConfig  `mapstructure:"auth"   validate:"omitempty"`
+	App    AppConfig     `mapstructure:"app"`
+	Sentry SentryConfig  `mapstructure:"sentry"`
+	Format FormatConfig  `mapstructure:"format"`
+	Shift  ShiftConfig   `mapstructure:"shift"`
+	Auth   *AuthConfig   `mapstructure:"auth"   validate:"omitempty"`
+	Mailer *MailerConfig `mapstructure:"mailer" validate:"omitempty"`
 }

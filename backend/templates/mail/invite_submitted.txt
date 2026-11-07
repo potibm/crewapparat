@@ -1,0 +1,5 @@
+Thank you for submitting your details for {{ .EventName }}.
+
+We have received your information and an organizer will review it shortly.
+
+{{ template "footer" . }}
