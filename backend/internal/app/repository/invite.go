@@ -40,6 +40,7 @@ type InviteWorkflowRepository interface {
 		id uuid.UUID,
 		notes string,
 		cocAccepted bool,
+		cocVersion string,
 	) error
 	Review(ctx context.Context, id uuid.UUID, status domain.InviteStatus, reviewerID uuid.UUID) error
 	EmailExists(ctx context.Context, email string) (bool, error)

@@ -180,7 +180,9 @@ const InviteEdit = () => {
                           <Button
                             variant="outlined"
                             color="error"
-                            onClick={() => changeStatus("rejected", inner ?? {})}
+                            onClick={() =>
+                              changeStatus("rejected", inner ?? {})
+                            }
                           >
                             Reject
                           </Button>

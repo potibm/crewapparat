@@ -1,4 +1,10 @@
-import { List, DataTable, TextInput, SelectInput, FunctionField } from "react-admin";
+import {
+  List,
+  DataTable,
+  TextInput,
+  SelectInput,
+  FunctionField,
+} from "react-admin";
 
 const statusChoices = [
   { id: "pending_approval", name: "Pending approval" },
@@ -24,7 +30,9 @@ const InviteList = () => (
       <DataTable.Col source="invited_by_name" label="Invited by" />
       <DataTable.Col source="status" label="Status">
         <FunctionField
-          render={(record: { status?: string }) => statusLabel(record?.status ?? "")}
+          render={(record: { status?: string }) =>
+            statusLabel(record?.status ?? "")
+          }
         />
       </DataTable.Col>
       <DataTable.Col source="expires_at" label="Expires">
