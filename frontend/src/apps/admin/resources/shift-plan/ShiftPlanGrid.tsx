@@ -1,5 +1,17 @@
 import React from "react";
-import { Box, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography, useTheme } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Tooltip,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import { parseShiftStart } from "../organizer/shiftSchedule.logic";
 import type { TimetableOverlayEvent } from "../organizer/ShiftSchedule";
 
@@ -13,17 +25,43 @@ export interface ShiftPlanGridProps {
 }
 
 const LIGHT_PALETTE = [
-  "#f0fdf4", "#eff6ff", "#fefce8", "#fdf2f8", "#fff7ed", "#faf5ff",
-  "#f0fdfa", "#fef2f2", "#f5f3ff", "#ecfdf5", "#f0f9ff", "#fdf4ff",
-  "#fff1f2", "#fef8ec", "#ecfeff", "#f8fafc",
+  "#f0fdf4",
+  "#eff6ff",
+  "#fefce8",
+  "#fdf2f8",
+  "#fff7ed",
+  "#faf5ff",
+  "#f0fdfa",
+  "#fef2f2",
+  "#f5f3ff",
+  "#ecfdf5",
+  "#f0f9ff",
+  "#fdf4ff",
+  "#fff1f2",
+  "#fef8ec",
+  "#ecfeff",
+  "#f8fafc",
 ];
 
 // Dark-mode equivalents: same hue family, lowered lightness so they read as
 // distinct, muted tints on a dark background instead of bright pastel patches.
 const DARK_PALETTE = [
-  "#14532d", "#1e3a8a", "#713f12", "#831843", "#7c2d12", "#581c87",
-  "#134e4a", "#7f1d1d", "#4c1d95", "#064e3b", "#0c4a6e", "#701a75",
-  "#881337", "#78350f", "#164e63", "#1e293b",
+  "#14532d",
+  "#1e3a8a",
+  "#713f12",
+  "#831843",
+  "#7c2d12",
+  "#581c87",
+  "#134e4a",
+  "#7f1d1d",
+  "#4c1d95",
+  "#064e3b",
+  "#0c4a6e",
+  "#701a75",
+  "#881337",
+  "#78350f",
+  "#164e63",
+  "#1e293b",
 ];
 
 const colorIndexFor = (key: string): number => {
@@ -137,7 +175,9 @@ export const ShiftPlanGrid = ({
   const dayLabel = (dayKey: string): string => {
     const info = slotInfos.find((s) => s.dayKey === dayKey);
     if (!info) return dayKey;
-    return new Intl.DateTimeFormat("en-GB", { weekday: "short" }).format(info.date);
+    return new Intl.DateTimeFormat("en-GB", { weekday: "short" }).format(
+      info.date,
+    );
   };
 
   const rows: number[] = [];
@@ -211,14 +251,14 @@ export const ShiftPlanGrid = ({
   return (
     <TableContainer sx={{ overflowX: "auto" }}>
       <Table
-      size="small"
-      sx={{
-        minWidth: 1100,
-        borderCollapse: "collapse",
-        tableLayout: "fixed",
-        width: "100%",
-      }}
-    >
+        size="small"
+        sx={{
+          minWidth: 1100,
+          borderCollapse: "collapse",
+          tableLayout: "fixed",
+          width: "100%",
+        }}
+      >
         <TableHead>
           <TableRow>
             <TableCell
@@ -296,9 +336,12 @@ export const ShiftPlanGrid = ({
                   const mSpan = mainSpans[day][rowIndex];
                   const iSpan = infodeskSpans[day][rowIndex];
 
-                  const evTitle = idx !== null ? eventContent[day][rowIndex] : "";
-                  const mainHandle = idx !== null ? mainContent[day][rowIndex] : "";
-                  const infoHandles = idx !== null ? infodeskContent[day][rowIndex] : "";
+                  const evTitle =
+                    idx !== null ? eventContent[day][rowIndex] : "";
+                  const mainHandle =
+                    idx !== null ? mainContent[day][rowIndex] : "";
+                  const infoHandles =
+                    idx !== null ? infodeskContent[day][rowIndex] : "";
 
                   const cells: React.ReactNode[] = [];
 
@@ -310,7 +353,9 @@ export const ShiftPlanGrid = ({
                         sx={{
                           verticalAlign: "middle",
                           textAlign: "center",
-                          bgcolor: evTitle ? "action.hover" : "background.paper",
+                          bgcolor: evTitle
+                            ? "action.hover"
+                            : "background.paper",
                           borderRight: "1px solid",
                           borderColor: "divider",
                           p: 0.5,
@@ -334,7 +379,9 @@ export const ShiftPlanGrid = ({
                   }
 
                   if (!mSpan.skip) {
-                    const color = mainHandle ? colorFor(mainHandle, isDark) : undefined;
+                    const color = mainHandle
+                      ? colorFor(mainHandle, isDark)
+                      : undefined;
                     cells.push(
                       <TableCell
                         key={`${day}-main`}
@@ -342,7 +389,8 @@ export const ShiftPlanGrid = ({
                         sx={{
                           verticalAlign: "middle",
                           textAlign: "center",
-                          bgcolor: color ?? (night ? "action.hover" : undefined),
+                          bgcolor:
+                            color ?? (night ? "action.hover" : undefined),
                           borderRight: "1px solid",
                           borderColor: "divider",
                           p: 0.5,
@@ -351,11 +399,18 @@ export const ShiftPlanGrid = ({
                         {mainHandle && slotDate ? (
                           <Stack spacing={0.25} sx={{ alignItems: "center" }}>
                             <Typography
-                              sx={{ fontSize: 9, color: "text.secondary", fontWeight: 700 }}
+                              sx={{
+                                fontSize: 9,
+                                color: "text.secondary",
+                                fontWeight: 700,
+                              }}
                             >
                               {timeFormat.format(slotDate)} –{" "}
                               {timeFormat.format(
-                                new Date(slotDate.getTime() + mSpan.span * 30 * 60 * 1000),
+                                new Date(
+                                  slotDate.getTime() +
+                                    mSpan.span * 30 * 60 * 1000,
+                                ),
                               )}
                             </Typography>
                             <Tooltip title={mainHandle}>
@@ -394,7 +449,9 @@ export const ShiftPlanGrid = ({
                   }
 
                   if (!iSpan.skip) {
-                    const color = infoHandles ? colorFor(infoHandles, isDark) : undefined;
+                    const color = infoHandles
+                      ? colorFor(infoHandles, isDark)
+                      : undefined;
                     cells.push(
                       <TableCell
                         key={`${day}-info`}
@@ -402,29 +459,44 @@ export const ShiftPlanGrid = ({
                         sx={{
                           verticalAlign: "middle",
                           textAlign: "center",
-                          bgcolor: color ?? (night ? "action.hover" : undefined),
+                          bgcolor:
+                            color ?? (night ? "action.hover" : undefined),
                           p: 0.5,
                         }}
                       >
                         {infoHandles && slotDate ? (
                           <Stack spacing={0.25} sx={{ alignItems: "center" }}>
                             <Typography
-                              sx={{ fontSize: 9, color: "text.secondary", fontWeight: 700 }}
+                              sx={{
+                                fontSize: 9,
+                                color: "text.secondary",
+                                fontWeight: 700,
+                              }}
                             >
                               {timeFormat.format(slotDate)} –{" "}
                               {timeFormat.format(
-                                new Date(slotDate.getTime() + iSpan.span * 30 * 60 * 1000),
+                                new Date(
+                                  slotDate.getTime() +
+                                    iSpan.span * 30 * 60 * 1000,
+                                ),
                               )}
                             </Typography>
                             <Stack
                               direction="row"
                               spacing={0.5}
-                              sx={{ flexWrap: "wrap", justifyContent: "center" }}
+                              sx={{
+                                flexWrap: "wrap",
+                                justifyContent: "center",
+                              }}
                             >
                               {(idx !== null
-                                ? (slotByIndex.get(idx)?.organizers ?? []).slice().sort((a, b) =>
-                                    organizerHandle(a).localeCompare(organizerHandle(b)),
-                                  )
+                                ? (slotByIndex.get(idx)?.organizers ?? [])
+                                    .slice()
+                                    .sort((a, b) =>
+                                      organizerHandle(a).localeCompare(
+                                        organizerHandle(b),
+                                      ),
+                                    )
                                 : []
                               ).map((id) => {
                                 const isMe = id === currentOrganizerId;
@@ -432,8 +504,12 @@ export const ShiftPlanGrid = ({
                                   <Tooltip key={id} title={organizerHandle(id)}>
                                     <Box
                                       sx={{
-                                        bgcolor: isMe ? "warning.main" : "background.paper",
-                                        color: isMe ? "warning.contrastText" : "text.primary",
+                                        bgcolor: isMe
+                                          ? "warning.main"
+                                          : "background.paper",
+                                        color: isMe
+                                          ? "warning.contrastText"
+                                          : "text.primary",
                                         border: "1px solid",
                                         borderColor: "divider",
                                         borderRadius: 0.5,

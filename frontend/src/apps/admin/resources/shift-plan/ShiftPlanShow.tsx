@@ -1,5 +1,18 @@
-import { Show, useGetIdentity, useGetList, useRecordContext } from "react-admin";
-import { Button, Card, CardContent, CardHeader, Chip, Stack, Typography } from "@mui/material";
+import {
+  Show,
+  useGetIdentity,
+  useGetList,
+  useRecordContext,
+} from "react-admin";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Chip,
+  Stack,
+  Typography,
+} from "@mui/material";
 import PrintIcon from "@mui/icons-material/Print";
 import { useAppConfig } from "@core/config/useConfig";
 import type { ShiftPlanRecord } from "./shift-plan.types";
@@ -15,14 +28,16 @@ const ShiftPlanShowContent = () => {
 
   const { data: organizers } = useGetList(
     "organizers",
-    { pagination: { page: 1, perPage: 1000 }, sort: { field: "handle", order: "ASC" } },
+    {
+      pagination: { page: 1, perPage: 1000 },
+      sort: { field: "handle", order: "ASC" },
+    },
     { enabled: !!record },
   );
 
   const organizerHandle = (id: string) => {
     const org = (organizers ?? []).find((o: { id: string }) => o.id === id) as
-      | { handle?: string }
-      | undefined;
+      { handle?: string } | undefined;
     return org?.handle ?? id.slice(0, 8);
   };
 
@@ -106,7 +121,11 @@ const ShiftPlanShowContent = () => {
         subheader={
           <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
             <Chip label={record.status} size="small" />
-            <Chip label={record.event_year_id} size="small" variant="outlined" />
+            <Chip
+              label={record.event_year_id}
+              size="small"
+              variant="outlined"
+            />
             {record.generated_at && (
               <Typography variant="caption" color="text.secondary">
                 Generated {new Date(record.generated_at).toLocaleString()}
@@ -123,7 +142,9 @@ const ShiftPlanShowContent = () => {
             slots={record.slots ?? []}
             organizerHandle={organizerHandle}
             timetableEvents={timetableEvents}
-            currentOrganizerId={identity?.id != null ? String(identity.id) : undefined}
+            currentOrganizerId={
+              identity?.id != null ? String(identity.id) : undefined
+            }
           />
         ) : (
           <Typography variant="body2" color="text.secondary">
