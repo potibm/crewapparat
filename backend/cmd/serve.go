@@ -100,6 +100,7 @@ func NewServeCmd() *cobra.Command {
 				InviteWorkflowRepo: dbStore.NewInviteWorkflowRepository(),
 				CodeOfConductRepo:  dbStore.NewCodeOfConductRepository(),
 				AcceptanceRepo:     dbStore.NewCodeOfConductAcceptanceRepository(),
+				ShiftPlanRepo:      dbStore.NewShiftPlanRepository(),
 				DemozooSceners:     demozooSceners,
 				Mailer:             initializer.InitializeMailer(mailerConfigValue(Cfg.Mailer)),
 				AdminRecipients:    Cfg.Mailer.AdminRecipients,
@@ -160,6 +161,10 @@ func NewServeCmd() *cobra.Command {
 				admin.PUT("/code-of-conducts/:id", server.UpdateCodeOfConduct)
 				admin.DELETE("/code-of-conducts/:id", server.DeleteCodeOfConduct)
 				admin.GET("/code-of-conduct-acceptances", server.ListCodeOfConductAcceptances)
+
+				// Shift plans (read-only)
+				admin.GET("/shift-plans", server.ListShiftPlans)
+				admin.GET("/shift-plans/:id", server.GetShiftPlan)
 
 				// Demozoo sceners (autocomplete source)
 				admin.GET("/demozoo-sceners", server.ListDemozooSceners)

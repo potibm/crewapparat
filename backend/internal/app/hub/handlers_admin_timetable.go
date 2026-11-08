@@ -13,13 +13,17 @@ func (s *Server) ListTimetableEvents(c *gin.Context) {
 	end := time.Now().UTC().Add(7 * 24 * time.Hour)
 
 	if v := c.Query("start"); v != "" {
-		if parsed, err := time.Parse(time.RFC3339, v); err == nil {
+		if parsed, err := time.Parse(time.RFC3339Nano, v); err == nil {
+			start = parsed
+		} else if parsed, err := time.Parse(time.RFC3339, v); err == nil {
 			start = parsed
 		}
 	}
 
 	if v := c.Query("end"); v != "" {
-		if parsed, err := time.Parse(time.RFC3339, v); err == nil {
+		if parsed, err := time.Parse(time.RFC3339Nano, v); err == nil {
+			end = parsed
+		} else if parsed, err := time.Parse(time.RFC3339, v); err == nil {
 			end = parsed
 		}
 	}

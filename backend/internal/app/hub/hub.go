@@ -42,6 +42,7 @@ type Config struct {
 	InviteWorkflowRepo repository.InviteWorkflowRepository
 	CodeOfConductRepo  repository.CodeOfConductRepository
 	AcceptanceRepo     repository.CodeOfConductAcceptanceRepository
+	ShiftPlanRepo      repository.ShiftPlanRepository
 
 	DemozooSceners []demozoo.Scener
 
@@ -68,6 +69,7 @@ type Server struct {
 	inviteWorkflowRepo repository.InviteWorkflowRepository
 	codeOfConductRepo  repository.CodeOfConductRepository
 	acceptanceRepo     repository.CodeOfConductAcceptanceRepository
+	shiftPlanRepo      repository.ShiftPlanRepository
 
 	demozooSceners []demozoo.Scener
 
@@ -96,6 +98,7 @@ func NewServer(cfg Config) (*Server, error) {
 		inviteWorkflowRepo:  cfg.InviteWorkflowRepo,
 		codeOfConductRepo:   cfg.CodeOfConductRepo,
 		acceptanceRepo:      cfg.AcceptanceRepo,
+		shiftPlanRepo:       cfg.ShiftPlanRepo,
 		demozooSceners:      cfg.DemozooSceners,
 		mailer:              cfg.Mailer,
 		adminRecipients:     cfg.AdminRecipients,

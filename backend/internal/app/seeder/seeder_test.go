@@ -306,6 +306,7 @@ func newTestStore(t *testing.T) Repositories {
 		EventYears:     store.NewEventYearRepository(),
 		Participations: store.NewParticipationRepository(),
 		CodeOfConducts: store.NewCodeOfConductRepository(),
+		ShiftPlans:     store.NewShiftPlanRepository(),
 	}
 }
 

@@ -146,6 +146,30 @@ func TestMapperRoundtrip(t *testing.T) {
 		require.True(t, now.Equal(*out.PublishedAt))
 	})
 
+	t.Run("ShiftPlan", func(t *testing.T) {
+		now := time.Now()
+		in := &domain.ShiftPlan{
+			ID:          uuid.New(),
+			EventYearID: "2026",
+			Version:     "1.0.0",
+			Status:      domain.ShiftPlanStatusPublished,
+			GeneratedAt: &now,
+			Slots: []domain.ShiftPlanSlot{
+				{Slot: 0, MainOrganizerID: "main-uuid", Organizers: []string{"a", "b", "c"}},
+			},
+		}
+		out := toDomainShiftPlan(fromDomainShiftPlan(in))
+		require.Equal(t, in.ID, out.ID)
+		require.Equal(t, in.EventYearID, out.EventYearID)
+		require.Equal(t, in.Version, out.Version)
+		require.Equal(t, in.Status, out.Status)
+		require.NotNil(t, out.GeneratedAt)
+		require.Len(t, out.Slots, 1)
+		require.Equal(t, 0, out.Slots[0].Slot)
+		require.Equal(t, "main-uuid", out.Slots[0].MainOrganizerID)
+		require.Equal(t, []string{"a", "b", "c"}, out.Slots[0].Organizers)
+	})
+
 	t.Run("CodeOfConductAcceptance", func(t *testing.T) {
 		acceptedAt := time.Date(2026, 5, 1, 12, 0, 0, 0, time.UTC)
 		in := &domain.CodeOfConductAcceptance{
@@ -200,6 +224,7 @@ func TestFeldNamenParitaet(t *testing.T) {
 		{"EventYear", reflect.TypeOf(domain.EventYear{}), reflect.TypeOf(dbEventYear{})},
 		{"Invite", reflect.TypeOf(domain.Invite{}), reflect.TypeOf(dbInvite{})},
 		{"CodeOfConduct", reflect.TypeOf(domain.CodeOfConduct{}), reflect.TypeOf(dbCodeOfConduct{})},
+		{"ShiftPlan", reflect.TypeOf(domain.ShiftPlan{}), reflect.TypeOf(dbShiftPlan{})},
 		{
 			"CodeOfConductAcceptance",
 			reflect.TypeOf(domain.CodeOfConductAcceptance{}),
