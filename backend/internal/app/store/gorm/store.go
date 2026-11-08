@@ -36,6 +36,7 @@ var allModels = []interface{}{
 	&dbCodeOfConduct{},
 	&dbCodeOfConductAcceptance{},
 	&dbTimetableEvent{},
+	&dbShiftPlan{},
 }
 
 var joinTables = []interface{}{

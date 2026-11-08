@@ -122,6 +122,7 @@ type Repositories struct {
 	EventYears     repository.EventYearRepository
 	Participations repository.ParticipationRepository
 	CodeOfConducts repository.CodeOfConductRepository
+	ShiftPlans     repository.ShiftPlanRepository
 }
 
 // Seeder fills the database with a plausible crew.
@@ -202,6 +203,10 @@ func (s *Seeder) Run(ctx context.Context) error {
 	}
 
 	if err := s.seedCodeOfConduct(ctx); err != nil {
+		return err
+	}
+
+	if err := s.seedShiftPlan(ctx, organizers); err != nil {
 		return err
 	}
 
@@ -368,6 +373,72 @@ func (s *Seeder) seedCodeOfConduct(ctx context.Context) error {
 	}
 
 	slog.Info("Seeded code of conduct", "id", coc.ID)
+
+	return nil
+}
+
+// seedShiftPlan creates one published shift plan for the active year. Idempotent:
+// if a published plan already exists for that year, nothing is created.
+func (s *Seeder) seedShiftPlan(ctx context.Context, organizers []domain.Organizer) error {
+	_, err := s.repos.ShiftPlans.GetLatestPublished(ctx, DefaultActiveYear)
+	if err == nil {
+		return nil
+	}
+
+	if !gorm.IsNotFound(err) {
+		return fmt.Errorf("failed to look up shift plan: %w", err)
+	}
+
+	// All organizers except the main organizers take Infodesk shifts. Team
+	// membership (70 % Infodesk) stays consistent via pickTeams; the shift
+	// plan itself uses the full crew so the load is distributed realistically.
+	confirmed := append([]domain.Organizer(nil), organizers...)
+
+	if len(confirmed) == 0 {
+		return nil
+	}
+
+	// Pick the first three confirmed organizers as main organizers.
+	mainCount := 3
+	if len(confirmed) < mainCount {
+		mainCount = len(confirmed)
+	}
+
+	mains := confirmed[:mainCount]
+
+	mainSet := make(map[uuid.UUID]bool, mainCount)
+	for _, m := range mains {
+		mainSet[m.ID] = true
+	}
+
+	// Infodesk candidates exclude main organizers.
+	infodeskCandidates := make([]domain.Organizer, 0, len(confirmed))
+	for _, o := range confirmed {
+		if !mainSet[o.ID] {
+			infodeskCandidates = append(infodeskCandidates, o)
+		}
+	}
+
+	if len(infodeskCandidates) == 0 {
+		infodeskCandidates = confirmed
+	}
+
+	slots := buildShiftPlanSlots(confirmed, mains, infodeskCandidates)
+
+	now := time.Now()
+
+	plan := &domain.ShiftPlan{
+		EventYearID: DefaultActiveYear,
+		Version:     "1.0.0",
+		Status:      domain.ShiftPlanStatusPublished,
+		GeneratedAt: &now,
+		Slots:       slots,
+	}
+	if err := s.repos.ShiftPlans.Create(ctx, plan); err != nil {
+		return fmt.Errorf("failed to create shift plan: %w", err)
+	}
+
+	slog.Info("Seeded shift plan", "id", plan.ID, "slots", len(slots))
 
 	return nil
 }
@@ -686,6 +757,13 @@ func pickTeams(teams []domain.Team, names []string, random bool) []domain.Team {
 		selected = append(selected, team)
 	}
 
+	// Roughly 70 % of organizers join the Infodesk team, so the shift plan has
+	// a realistic crew instead of a handful of people.
+	infodeskIdx := slices.IndexFunc(teams, func(t domain.Team) bool { return t.Name == "Infodesk" })
+	if infodeskIdx >= 0 && gofakeit.Number(0, 99) < 70 && !seen[teams[infodeskIdx].ID] {
+		selected = append(selected, teams[infodeskIdx])
+	}
+
 	return selected
 }
 
@@ -703,6 +781,161 @@ func dexTeamsFor(email string) ([]string, bool) {
 
 func pick[T any](options []T) T {
 	return options[gofakeit.Number(0, len(options)-1)]
+}
+
+// buildShiftPlanSlots generates a plausible 90-slot shift plan. Infodesk shifts
+// are 3-3.5h (6-7 slots) blocks of three organizers, with at least 8h (16
+// slots) of rest between two blocks for the same person. Main organizers work
+// 5h (10 slots) blocks.
+func buildShiftPlanSlots(
+	_ []domain.Organizer,
+	mains []domain.Organizer,
+	infodeskCandidates []domain.Organizer,
+) []domain.ShiftPlanSlot {
+	const totalSlots = 90
+
+	slots := make([]domain.ShiftPlanSlot, totalSlots)
+	for i := range slots {
+		slots[i].Slot = i
+		slots[i].Organizers = []string{}
+	}
+
+	assignMainOrganizers(slots, mains, totalSlots)
+	blocks := buildInfodeskBlocks(totalSlots)
+	assignInfodeskCrew(slots, blocks, infodeskCandidates)
+
+	return slots
+}
+
+func assignMainOrganizers(slots []domain.ShiftPlanSlot, mains []domain.Organizer, totalSlots int) {
+	for i, org := range mains {
+		start := i * 10
+
+		end := start + 10
+		if end > totalSlots {
+			end = totalSlots
+		}
+
+		for s := start; s < end; s++ {
+			slots[s].MainOrganizerID = org.ID.String()
+		}
+	}
+}
+
+type shiftBlock struct{ start, end int }
+
+func buildInfodeskBlocks(totalSlots int) []shiftBlock {
+	var blocks []shiftBlock
+
+	cursor := 0
+
+	useSeven := true
+	for cursor < totalSlots {
+		size := blockSize(useSeven)
+		if cursor+size > totalSlots {
+			size = totalSlots - cursor
+		}
+
+		if size <= 0 {
+			break
+		}
+
+		blocks = append(blocks, shiftBlock{start: cursor, end: cursor + size})
+		cursor += size
+		useSeven = !useSeven
+	}
+
+	return blocks
+}
+
+func blockSize(useSeven bool) int {
+	if useSeven {
+		return 7
+	}
+
+	return 6
+}
+
+func assignInfodeskCrew(slots []domain.ShiftPlanSlot, blocks []shiftBlock, candidates []domain.Organizer) {
+	lastEnd := make(map[uuid.UUID]int)
+	for _, b := range blocks {
+		chosen := pickInfodeskOrganizers(b.start, candidates, lastEnd)
+		for _, org := range chosen {
+			lastEnd[org.ID] = b.end
+			for s := b.start; s < b.end; s++ {
+				slots[s].Organizers = append(slots[s].Organizers, org.ID.String())
+			}
+		}
+	}
+}
+
+func pickInfodeskOrganizers(start int, candidates []domain.Organizer, lastEnd map[uuid.UUID]int) []domain.Organizer {
+	sorted := sortCandidatesByLastEnd(candidates, lastEnd)
+	chosen := make([]domain.Organizer, 0, 3)
+
+	for _, org := range sorted {
+		if len(chosen) >= 3 {
+			break
+		}
+
+		if le, ok := lastEnd[org.ID]; ok && le+16 > start {
+			continue
+		}
+
+		chosen = append(chosen, org)
+	}
+
+	if len(chosen) < 3 {
+		chosen = relaxRestConstraint(chosen, sorted)
+	}
+
+	return chosen
+}
+
+func sortCandidatesByLastEnd(candidates []domain.Organizer, lastEnd map[uuid.UUID]int) []domain.Organizer {
+	cands := append([]domain.Organizer(nil), candidates...)
+	for i := 1; i < len(cands); i++ {
+		j := i
+		for j > 0 {
+			li := lastEnd[cands[j-1].ID]
+
+			lj := lastEnd[cands[j].ID]
+			if li <= lj {
+				break
+			}
+
+			cands[j-1], cands[j] = cands[j], cands[j-1]
+			j--
+		}
+	}
+
+	return cands
+}
+
+func relaxRestConstraint(chosen, sorted []domain.Organizer) []domain.Organizer {
+	for _, org := range sorted {
+		if len(chosen) >= 3 {
+			break
+		}
+
+		if containsOrganizer(chosen, org.ID) {
+			continue
+		}
+
+		chosen = append(chosen, org)
+	}
+
+	return chosen
+}
+
+func containsOrganizer(list []domain.Organizer, id uuid.UUID) bool {
+	for _, o := range list {
+		if o.ID == id {
+			return true
+		}
+	}
+
+	return false
 }
 
 // listAll disables sorting surprises by using the default column and no limit.

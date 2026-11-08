@@ -13,6 +13,7 @@ import eventYears from "./resources/event-year";
 import teams from "./resources/team";
 import invites from "./resources/invite";
 import codeOfConducts from "./resources/code-of-conduct";
+import shiftPlans from "./resources/shift-plan";
 
 export const AdminApp = () => (
   <BrowserRouter>
@@ -39,6 +40,7 @@ export const AppBootstrapper = () => {
       <Resource {...teams} />
       <Resource {...invites} />
       <Resource {...codeOfConducts} />
+      <Resource {...shiftPlans} />
       <CustomRoutes>
         <Route path="/u/:slug" element={<SlugRedirect />} />
       </CustomRoutes>
