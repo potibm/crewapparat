@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/MicahParks/keyfunc/v2 v2.1.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.79.5
-	github.com/brianvoe/gofakeit/v7 v7.18.1
+	github.com/brianvoe/gofakeit/v7 v7.18.2
 	github.com/getsentry/sentry-go v0.50.0
 	github.com/getsentry/sentry-go/gin v0.50.0
 	github.com/gin-contrib/cors v1.7.10
